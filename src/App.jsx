@@ -139,17 +139,20 @@ async function fetchVerses(surahNum, startAyah, endAyah) {
 
 // Fetch one Mus'haf page from Quran.com v4 with Clear Quran translation (131)
 async function fetchByPage(pageNum) {
-  const res = await fetch(
-    `https://api.quran.com/api/v4/verses/by_page/${pageNum}?language=en&words=false&translations=131&fields=text_uthmani,verse_key&per_page=50`
-  );
-  if (!res.ok) throw new Error("Page fetch failed");
-  const data = await res.json();
-  return data.verses.map((v) => ({
-    verseKey: v.verse_key,         // "2:1"
-    surahNum: Number(v.verse_key.split(":")[0]),
-    ayahNum:  Number(v.verse_key.split(":")[1]),
-    arabic:   v.text_uthmani,
-    english:  v.translations?.[0]?.text?.replace(/<[^>]+>/g, "") ?? "",
+  const [arRes, enRes] = await Promise.all([
+    fetch(`https://api.alquran.cloud/v1/page/${pageNum}/quran-uthmani`),
+    fetch(`https://api.alquran.cloud/v1/page/${pageNum}/en.clearquran`),
+  ]);
+  if (!arRes.ok || !enRes.ok) throw new Error("Page fetch failed");
+  const [arData, enData] = await Promise.all([arRes.json(), enRes.json()]);
+  const arAyahs = arData.data.ayahs;
+  const enAyahs = enData.data.ayahs;
+  return arAyahs.map((a, i) => ({
+    verseKey: `${a.surah.number}:${a.numberInSurah}`,
+    surahNum: a.surah.number,
+    ayahNum:  a.numberInSurah,
+    arabic:   a.text,
+    english:  enAyahs[i]?.text ?? "",
   }));
 }
 
