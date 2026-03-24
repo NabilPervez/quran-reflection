@@ -103,6 +103,23 @@ const SURAHS = [
   [112,"Al-Ikhlas",4],[113,"Al-Falaq",5],[114,"An-Nas",6],
 ];
 
+// ── Surah → Mus'haf page map (standard 604-page Mus'haf) ─────────────────────
+// Each entry: surahNumber → starting page
+const SURAH_START_PAGE = {
+  1:1,2:2,3:50,4:77,5:106,6:128,7:151,8:177,9:187,10:208,
+  11:221,12:235,13:249,14:255,15:262,16:267,17:282,18:293,19:305,20:312,
+  21:322,22:332,23:342,24:350,25:359,26:367,27:377,28:385,29:396,30:404,
+  31:411,32:415,33:418,34:428,35:434,36:440,37:446,38:453,39:458,40:467,
+  41:477,42:483,43:489,44:496,45:499,46:502,47:507,48:511,49:515,50:518,
+  51:520,52:523,53:526,54:528,55:531,56:534,57:537,58:542,59:545,60:549,
+  61:551,62:553,63:554,64:556,65:558,66:560,67:562,68:564,69:566,70:568,
+  71:570,72:572,73:574,74:575,75:577,76:578,77:580,78:582,79:583,80:585,
+  81:586,82:587,83:587,84:589,85:590,86:591,87:591,88:592,89:593,90:594,
+  91:595,92:595,93:596,94:596,95:597,96:597,97:598,98:598,99:599,100:599,
+  101:600,102:600,103:601,104:601,105:601,106:602,107:602,108:602,109:603,110:603,
+  111:603,112:604,113:604,114:604,
+};
+
 // ── API ──────────────────────────────────────────────────────────────────────
 async function fetchVerses(surahNum, startAyah, endAyah) {
   const [arRes, enRes] = await Promise.all([
@@ -118,6 +135,22 @@ async function fetchVerses(surahNum, startAyah, endAyah) {
     arabic: arAyahs.map((a) => ({ number: a.numberInSurah, text: a.text })),
     english: enAyahs.map((a) => ({ number: a.numberInSurah, text: a.text })),
   };
+}
+
+// Fetch one Mus'haf page from Quran.com v4 with Clear Quran translation (131)
+async function fetchByPage(pageNum) {
+  const res = await fetch(
+    `https://api.quran.com/api/v4/verses/by_page/${pageNum}?language=en&words=false&translations=131&fields=text_uthmani,verse_key&per_page=50`
+  );
+  if (!res.ok) throw new Error("Page fetch failed");
+  const data = await res.json();
+  return data.verses.map((v) => ({
+    verseKey: v.verse_key,         // "2:1"
+    surahNum: Number(v.verse_key.split(":")[0]),
+    ayahNum:  Number(v.verse_key.split(":")[1]),
+    arabic:   v.text_uthmani,
+    english:  v.translations?.[0]?.text?.replace(/<[^>]+>/g, "") ?? "",
+  }));
 }
 
 // ── Toast ────────────────────────────────────────────────────────────────────
@@ -177,7 +210,7 @@ function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = "Confirm", 
 }
 
 // ── REFLECT TAB ───────────────────────────────────────────────────────────────
-function ReflectTab({ onSaved, showToast }) {
+function ReflectTab({ onSaved, showToast, readHandoff, clearHandoff }) {
   const [surahIdx, setSurahIdx] = useState("");
   const [startAyah, setStartAyah] = useState("");
   const [endAyah, setEndAyah] = useState("");
@@ -190,6 +223,21 @@ function ReflectTab({ onSaved, showToast }) {
   const [showSurahDrop, setShowSurahDrop] = useState(false);
   const surahRef = useRef(null);
   const textRef = useRef(null);
+
+  // Pre-fill from Read tab handoff
+  useEffect(() => {
+    if (!readHandoff) return;
+    const { surahNum, start, end } = readHandoff;
+    const idx = SURAHS.findIndex((s) => s[0] === surahNum);
+    if (idx === -1) return;
+    setSurahIdx(idx);
+    setSurahSearch("");
+    setStartAyah(String(start));
+    setEndAyah(String(end));
+    setVerses(null);
+    setReflection("");
+    if (clearHandoff) clearHandoff();
+  }, [readHandoff]);
 
   const selectedSurah = surahIdx !== "" ? SURAHS[surahIdx] : null;
   const ayahCount = selectedSurah ? selectedSurah[2] : 0;
@@ -823,11 +871,289 @@ function SettingsTab({ showToast, theme, setTheme }) {
   );
 }
 
+// ── READ TAB ──────────────────────────────────────────────────────────────────────
+function ReadTab({ onReflect }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [ayahs, setAyahs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState("");
+  const [surahSearch, setSurahSearch] = useState("");
+  const [showSurahDrop, setShowSurahDrop] = useState(false);
+  const [selectedSurahNum, setSelectedSurahNum] = useState(null);
+  const surahRef = useRef(null);
+  const topRef = useRef(null);
+
+  const filteredSurahs = SURAHS.filter(
+    (s) => s[1].toLowerCase().includes(surahSearch.toLowerCase()) || String(s[0]).includes(surahSearch)
+  );
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (surahRef.current && !surahRef.current.contains(e.target)) setShowSurahDrop(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Fetch page whenever currentPage changes
+  useEffect(() => {
+    setAyahs([]);
+    setFetchError("");
+    setLoading(true);
+    fetchByPage(currentPage)
+      .then((data) => { setAyahs(data); setLoading(false); })
+      .catch(() => { setFetchError("Could not load this page. Please check your internet connection."); setLoading(false); });
+  }, [currentPage]);
+
+  const goToPage = (p) => {
+    const clamped = Math.max(1, Math.min(604, p));
+    setCurrentPage(clamped);
+    topRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleSurahSelect = (surahNum) => {
+    setSelectedSurahNum(surahNum);
+    setSurahSearch("");
+    setShowSurahDrop(false);
+    const page = SURAH_START_PAGE[surahNum] ?? 1;
+    goToPage(page);
+  };
+
+  const selectedSurahLabel = selectedSurahNum
+    ? `${selectedSurahNum}. ${SURAHS.find((s) => s[0] === selectedSurahNum)?.[1] ?? ""}`
+    : null;
+
+  // Group ayahs by Surah for sub-headers
+  let lastSurah = null;
+
+  return (
+    <div style={{ padding: "36px 24px 140px", maxWidth: 720, margin: "0 auto" }} ref={topRef}>
+      <h1 style={pageTitleStyle}>Read</h1>
+      <p style={pageSubtitleStyle}>Read the Quran and capture reflections as you go</p>
+
+      {/* Surah Selector */}
+      <div style={{ marginBottom: 24 }} ref={surahRef}>
+        <label style={labelStyle}>Jump to Surah</label>
+        <div style={{ position: "relative" }}>
+          <input
+            id="read-surah-search"
+            value={surahSearch}
+            onChange={(e) => { setSurahSearch(e.target.value); setShowSurahDrop(true); }}
+            onFocus={() => setShowSurahDrop(true)}
+            placeholder={selectedSurahLabel ?? "Search by name or number…"}
+            style={{ ...underlineInputStyle, width: "100%", boxSizing: "border-box" }}
+            autoComplete="off"
+          />
+          {showSurahDrop && (
+            <div style={{
+              position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0,
+              background: "var(--surface-lowest)",
+              borderRadius: 14, maxHeight: 240, overflowY: "auto",
+              zIndex: 200,
+              boxShadow: "0 40px 60px rgba(26,28,26,0.06)",
+              outline: "1px solid rgba(193,201,191,0.15)",
+            }}>
+              {filteredSurahs.length === 0 && (
+                <div style={{ padding: "14px 18px", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 13 }}>No results</div>
+              )}
+              {filteredSurahs.map((s) => (
+                <div
+                  key={s[0]}
+                  onClick={() => handleSurahSelect(s[0])}
+                  style={{
+                    padding: "11px 18px", cursor: "pointer",
+                    fontFamily: "'Inter',sans-serif", fontSize: 13,
+                    color: "var(--on-surface)",
+                    background: selectedSurahNum === s[0] ? "var(--primary-light)" : "transparent",
+                    transition: "background 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-light)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = selectedSurahNum === s[0] ? "var(--primary-light)" : "transparent"}
+                >
+                  <span style={{ color: "var(--primary-container)", fontWeight: 600, marginRight: 8, fontSize: 12 }}>{s[0]}.</span>
+                  {s[1]}
+                  <span style={{ color: "var(--on-surface-variant)", fontSize: 11, marginLeft: 6 }}>({s[2]} āyāt)</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Page indicator */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        marginBottom: 28,
+        padding: "8px 20px",
+        background: "var(--primary-light)",
+        borderRadius: 40,
+        width: "fit-content",
+        margin: "0 auto 28px",
+      }}>
+        <span style={{
+          fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600,
+          color: "var(--primary-container)", letterSpacing: "0.06em", textTransform: "uppercase",
+        }}>
+          Page {currentPage} of 604
+        </span>
+      </div>
+
+      {/* Loading skeletons */}
+      {loading && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} style={{ ...verseAreaStyle, padding: "28px 24px" }}>
+              <div style={{ textAlign: "right", marginBottom: 16 }}>
+                <div style={{ ...skeletonLine(70), marginLeft: "auto", marginBottom: 10 }} />
+                <div style={{ ...skeletonLine(85), marginLeft: "auto", marginBottom: 10 }} />
+                <div style={{ ...skeletonLine(55), marginLeft: "auto" }} />
+              </div>
+              <div style={skeletonLine(90)} />
+              <div style={skeletonLine(75)} />
+              <div style={skeletonLine(60)} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Error */}
+      {fetchError && !loading && (
+        <div style={{ ...verseAreaStyle, background: "#fef2f2" }}>
+          <p style={{ color: "#b91c1c", fontFamily: "'Inter',sans-serif", fontSize: 13, margin: 0 }}>⚠ {fetchError}</p>
+        </div>
+      )}
+
+      {/* Ayah list */}
+      {!loading && !fetchError && ayahs.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {ayahs.map((ayah) => {
+            const isNewSurah = ayah.surahNum !== lastSurah;
+            if (isNewSurah) lastSurah = ayah.surahNum;
+            const surahName = SURAHS.find((s) => s[0] === ayah.surahNum)?.[1] ?? "";
+            return (
+              <div key={ayah.verseKey}>
+                {/* Surah sub-header */}
+                {isNewSurah && (
+                  <div style={{
+                    textAlign: "center", marginBottom: 16,
+                    padding: "10px 0",
+                    borderBottom: "1px solid var(--outline-ghost)",
+                  }}>
+                    <span style={{
+                      fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 600,
+                      color: "var(--on-surface-variant)", letterSpacing: "0.1em", textTransform: "uppercase",
+                    }}>
+                      Surah {ayah.surahNum} — {surahName}
+                    </span>
+                  </div>
+                )}
+
+                {/* Ayah card */}
+                <div style={{ ...cardStyle, padding: "24px" }}>
+                  {/* Ayah number badge */}
+                  <div style={{
+                    display: "flex", justifyContent: "flex-end", marginBottom: 12,
+                  }}>
+                    <span style={{
+                      background: "var(--primary-light)",
+                      color: "var(--primary-container)",
+                      fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 700,
+                      padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em",
+                    }}>
+                      {ayah.surahNum}:{ayah.ayahNum}
+                    </span>
+                  </div>
+
+                  {/* Arabic */}
+                  <p style={{
+                    fontFamily: "'Amiri','Scheherazade New',serif",
+                    fontSize: 26, lineHeight: 2.4,
+                    color: "var(--on-surface)",
+                    direction: "rtl", textAlign: "right",
+                    margin: "0 0 20px",
+                  }}>
+                    {ayah.arabic}
+                  </p>
+
+                  {/* English */}
+                  <p style={{
+                    fontFamily: "'Inter',sans-serif", fontSize: 14.5, lineHeight: 1.85,
+                    color: "var(--on-surface-variant)",
+                    margin: "0 0 20px", fontWeight: 400,
+                  }}>
+                    {ayah.english}
+                  </p>
+
+                  {/* Reflect button */}
+                  <button
+                    id={`reflect-${ayah.verseKey}`}
+                    onClick={() => onReflect({ surahNum: ayah.surahNum, start: ayah.ayahNum, end: ayah.ayahNum })}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "7px 16px", borderRadius: 40,
+                      border: "1px solid var(--outline-ghost)",
+                      background: "transparent",
+                      color: "var(--primary-container)",
+                      fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600,
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.borderColor = "var(--primary-container)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "var(--outline-ghost)"; }}
+                  >
+                    <span style={{ fontSize: 14 }}>✎</span> Reflect
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Pagination controls */}
+      {!loading && !fetchError && (
+        <div style={{
+          display: "flex", gap: 12, justifyContent: "center", marginTop: 40,
+        }}>
+          <button
+            id="prev-page"
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage <= 1}
+            style={{
+              ...secondaryBtnStyle,
+              padding: "12px 24px", borderRadius: 6,
+              opacity: currentPage <= 1 ? 0.35 : 1,
+              cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+            }}
+          >
+            ← Previous
+          </button>
+          <button
+            id="next-page"
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage >= 604}
+            style={{
+              ...primaryBtnStyle,
+              padding: "12px 24px",
+              opacity: currentPage >= 604 ? 0.35 : 1,
+              cursor: currentPage >= 604 ? "not-allowed" : "pointer",
+            }}
+          >
+            Next →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── BOTTOM NAV — Glassmorphism ────────────────────────────────────────────────
 function BottomNav({ tab, setTab }) {
   const tabs = [
-    { id: "reflect", label: "Reflect", icon: "✦" },
-    { id: "journal", label: "Journal", icon: "☰" },
+    { id: "read",     label: "Read",     icon: "📖" },
+    { id: "reflect",  label: "Reflect",  icon: "✦" },
+    { id: "journal",  label: "Journal",  icon: "☰" },
     { id: "settings", label: "Settings", icon: "⚙" },
   ];
   return (
@@ -872,11 +1198,17 @@ function BottomNav({ tab, setTab }) {
 
 // ── ROOT ──────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [tab, setTab] = useState("reflect");
+  const [tab, setTab] = useState("read");
   const [toast, setToast] = useState(null);
   const [journalKey, setJournalKey] = useState(0);
   const [firstVisit, setFirstVisit] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem("qr_theme") || "system");
+  const [readHandoff, setReadHandoff] = useState(null);
+
+  const handleReflect = (handoff) => {
+    setReadHandoff(handoff);
+    setTab("reflect");
+  };
 
   useEffect(() => {
     const seen = localStorage.getItem("qr_seen");
@@ -998,7 +1330,8 @@ export default function App() {
 
       {/* Page background = surface-low (reading area) */}
       <div style={{ minHeight: "100vh", background: "var(--surface-low)", maxWidth: 720, margin: "0 auto", position: "relative" }}>
-        {tab === "reflect"  && <ReflectTab onSaved={() => setJournalKey((k) => k + 1)} showToast={showToast} />}
+        {tab === "read"     && <ReadTab onReflect={handleReflect} />}
+        {tab === "reflect"  && <ReflectTab onSaved={() => setJournalKey((k) => k + 1)} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} />}
         {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast} />}
         {tab === "settings" && <SettingsTab showToast={showToast} theme={theme} setTheme={setTheme} />}
         <BottomNav tab={tab} setTab={setTab} />

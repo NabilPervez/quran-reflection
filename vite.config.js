@@ -35,6 +35,26 @@ export default defineConfig({
             handler: "CacheFirst",
             options: { cacheName: "gstatic-fonts-cache", expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } },
           },
+          {
+            // Quran.com by-page API — cache read pages aggressively
+            urlPattern: /^https:\/\/api\.quran\.com\/api\/v4\/verses\/by_page\/.*/i,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "quran-pages-cache",
+              expiration: { maxEntries: 620, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // AlQuran.cloud surah API (used by Reflect tab)
+            urlPattern: /^https:\/\/api\.alquran\.cloud\/.*/i,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "alquran-cloud-cache",
+              expiration: { maxEntries: 240, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
     }),
