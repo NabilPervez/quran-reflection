@@ -129,40 +129,46 @@ function Toast({ message, type = "success", onDone }) {
   return (
     <div style={{
       position: "fixed", bottom: 88, left: "50%", transform: "translateX(-50%)",
-      background: type === "success" ? "var(--green)" : "#c0392b",
-      color: "#FAF9F6", padding: "11px 24px", borderRadius: 40,
-      fontFamily: "'DM Serif Display', serif", fontSize: 14,
-      zIndex: 9999, boxShadow: "0 4px 28px rgba(0,0,0,0.22)",
-      animation: "fadeUp 0.3s ease", whiteSpace: "nowrap",
+      background: type === "success"
+        ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)"
+        : "#b91c1c",
+      color: "var(--on-primary)", padding: "12px 26px", borderRadius: 40,
+      fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 500,
+      zIndex: 9999,
+      boxShadow: "0 8px 48px rgba(26,77,46,0.22)",
+      animation: "fadeUp 0.35s cubic-bezier(0.34,1.56,0.64,1)",
+      whiteSpace: "nowrap",
     }}>
       {message}
     </div>
   );
 }
 
-// ── Confirm Modal ────────────────────────────────────────────────────────────
+// ── Confirm Modal ─────────────────────────────────────────────────────────────
 function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = "Confirm", danger = false }) {
   return (
     <div style={{
-      position:"fixed",inset:0,background:"rgba(10,20,10,0.6)",display:"flex",
-      alignItems:"center",justifyContent:"center",zIndex:9000,padding:20,
-      animation:"fadeIn 0.2s ease"
+      position: "fixed", inset: 0,
+      background: "rgba(26,28,26,0.48)",
+      backdropFilter: "blur(8px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      zIndex: 9000, padding: 20,
+      animation: "fadeIn 0.25s ease",
     }}>
       <div style={{
-        background:"var(--card)",borderRadius:16,padding:28,maxWidth:340,width:"100%",
-        boxShadow:"0 8px 40px rgba(0,0,0,0.28)",border:"1px solid var(--border)"
+        background: "var(--surface-lowest)",
+        borderRadius: 20, padding: 32, maxWidth: 360, width: "100%",
+        boxShadow: "0 40px 80px rgba(26,28,26,0.06)",
       }}>
-        <p style={{color:"var(--text)",fontFamily:"'Lora',serif",lineHeight:1.7,margin:"0 0 22px",fontSize:15}}>{message}</p>
-        <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-          <button id="modal-cancel" onClick={onCancel} style={{
-            padding:"9px 20px",borderRadius:8,border:"1px solid var(--border)",
-            background:"transparent",color:"var(--muted)",cursor:"pointer",
-            fontFamily:"'DM Serif Display',serif",fontSize:13
-          }}>Cancel</button>
+        <p style={{
+          color: "var(--on-surface)", fontFamily: "'Inter', sans-serif",
+          lineHeight: 1.7, margin: "0 0 24px", fontSize: 15, fontWeight: 400,
+        }}>{message}</p>
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <button id="modal-cancel" onClick={onCancel} style={ghostBtnStyle}>Cancel</button>
           <button id="modal-confirm" onClick={onConfirm} style={{
-            padding:"9px 20px",borderRadius:8,border:"none",
-            background: danger ? "#c0392b" : "var(--green)",
-            color:"#fff",cursor:"pointer",fontFamily:"'DM Serif Display',serif",fontSize:13
+            ...primaryBtnStyle,
+            background: danger ? "linear-gradient(135deg,#991b1b,#b91c1c)" : primaryBtnStyle.background,
           }}>{confirmLabel}</button>
         </div>
       </div>
@@ -170,7 +176,7 @@ function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = "Confirm", 
   );
 }
 
-// ── REFLECT TAB ──────────────────────────────────────────────────────────────
+// ── REFLECT TAB ───────────────────────────────────────────────────────────────
 function ReflectTab({ onSaved, showToast }) {
   const [surahIdx, setSurahIdx] = useState("");
   const [startAyah, setStartAyah] = useState("");
@@ -205,7 +211,7 @@ function ReflectTab({ onSaved, showToast }) {
     setVerses(null); setFetchError(""); setLoading(true);
     fetchVerses(selectedSurah[0], Number(startAyah), Number(endAyah))
       .then((v) => { setVerses(v); setLoading(false); })
-      .catch(() => { setFetchError("Failed to fetch verses. Please check your internet connection."); setLoading(false); });
+      .catch(() => { setFetchError("Failed to fetch verses. Check your internet connection."); setLoading(false); });
   }, [surahIdx, startAyah, endAyah]);
 
   useEffect(() => {
@@ -216,8 +222,7 @@ function ReflectTab({ onSaved, showToast }) {
   }, [reflection]);
 
   const handleEndAyahChange = (val) => {
-    const n = Number(val);
-    if (startAyah && n < Number(startAyah)) return;
+    if (startAyah && Number(val) < Number(startAyah)) return;
     setEndAyah(val);
   };
 
@@ -225,17 +230,13 @@ function ReflectTab({ onSaved, showToast }) {
     if (!reflection.trim() || !verses || fetchError) return;
     setSaving(true);
     try {
-      const record = {
+      await dbAdd({
         createdAt: new Date().toISOString(),
-        surahNumber: selectedSurah[0],
-        surahName: selectedSurah[1],
-        startAyah: Number(startAyah),
-        endAyah: Number(endAyah),
-        arabic: verses.arabic,
-        english: verses.english,
+        surahNumber: selectedSurah[0], surahName: selectedSurah[1],
+        startAyah: Number(startAyah), endAyah: Number(endAyah),
+        arabic: verses.arabic, english: verses.english,
         reflection: reflection.trim(),
-      };
-      await dbAdd(record);
+      });
       onSaved();
       showToast("Reflection saved ✦");
       setSurahIdx(""); setSurahSearch(""); setStartAyah(""); setEndAyah("");
@@ -252,71 +253,71 @@ function ReflectTab({ onSaved, showToast }) {
       verses.arabic.map((a) => a.text).join(" ") + "\n\n" +
       verses.english.map((a) => `[${a.number}] ${a.text}`).join("\n");
     navigator.clipboard.writeText(text);
-    showToast("Copied to clipboard ✦");
+    showToast("Copied ✦");
   };
 
   const canSave = reflection.trim().length > 0 && verses && !fetchError && !loading;
 
   return (
-    <div style={{ padding: "28px 20px 110px", maxWidth: 680, margin: "0 auto" }}>
-      <h1 style={{ fontFamily: "'DM Serif Display', serif", color: "var(--green)", fontSize: 28, marginBottom: 4, marginTop: 0 }}>
-        New Reflection
-      </h1>
-      <p style={{ color: "var(--muted)", fontFamily: "'Lora', serif", fontSize: 13, marginBottom: 28, marginTop: 0 }}>
-        Select a passage and record your Tadabbur
-      </p>
+    <div style={{ padding: "36px 24px 110px", maxWidth: 720, margin: "0 auto" }}>
+      <h1 style={pageTitleStyle}>New Reflection</h1>
+      <p style={pageSubtitleStyle}>Select a passage and record your Tadabbur</p>
 
       {/* Surah Selector */}
-      <label style={labelStyle}>Surah</label>
-      <div ref={surahRef} style={{ position: "relative", marginBottom: 14 }}>
-        <input
-          id="surah-search"
-          value={surahSearch}
-          onChange={(e) => { setSurahSearch(e.target.value); setShowSurahDrop(true); }}
-          onFocus={() => setShowSurahDrop(true)}
-          placeholder={selectedSurah ? `${selectedSurah[0]}. ${selectedSurah[1]}` : "Search by name or number…"}
-          style={{ ...inputStyle, width: "100%", boxSizing: "border-box" }}
-          autoComplete="off"
-        />
-        {showSurahDrop && (
-          <div style={{
-            position: "absolute", top: "100%", left: 0, right: 0,
-            background: "var(--card)", border: "1px solid var(--border)",
-            borderRadius: 10, maxHeight: 230, overflowY: "auto",
-            zIndex: 100, boxShadow: "0 8px 28px rgba(0,0,0,0.14)", marginTop: 4
-          }}>
-            {filteredSurahs.length === 0 && (
-              <div style={{ padding: "12px 16px", color: "var(--muted)", fontFamily: "'Lora', serif", fontSize: 13 }}>No results</div>
-            )}
-            {filteredSurahs.map((s) => (
-              <div
-                key={s[0]}
-                onClick={() => {
-                  setSurahIdx(SURAHS.indexOf(s));
-                  setSurahSearch("");
-                  setShowSurahDrop(false);
-                  setStartAyah(""); setEndAyah(""); setVerses(null);
-                }}
-                style={{
-                  padding: "10px 16px", cursor: "pointer",
-                  fontFamily: "'Lora', serif", fontSize: 13,
-                  color: "var(--text)",
-                  background: surahIdx !== "" && SURAHS[surahIdx][0] === s[0] ? "var(--green-light)" : "transparent",
-                  borderBottom: "1px solid var(--border)",
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = "var(--green-light)"}
-                onMouseLeave={(e) => e.currentTarget.style.background = surahIdx !== "" && SURAHS[surahIdx][0] === s[0] ? "var(--green-light)" : "transparent"}
-              >
-                <span style={{ color: "var(--green)", fontWeight: 600, marginRight: 8 }}>{s[0]}.</span>
-                {s[1]} <span style={{ color: "var(--muted)", fontSize: 11 }}>({s[2]} āyāt)</span>
-              </div>
-            ))}
-          </div>
-        )}
+      <div style={{ marginBottom: 24 }}>
+        <label style={labelStyle}>Surah</label>
+        <div ref={surahRef} style={{ position: "relative" }}>
+          <input
+            id="surah-search"
+            value={surahSearch}
+            onChange={(e) => { setSurahSearch(e.target.value); setShowSurahDrop(true); }}
+            onFocus={() => setShowSurahDrop(true)}
+            placeholder={selectedSurah ? `${selectedSurah[0]}. ${selectedSurah[1]}` : "Search by name or number…"}
+            style={{ ...underlineInputStyle, width: "100%", boxSizing: "border-box" }}
+            autoComplete="off"
+          />
+          {showSurahDrop && (
+            <div style={{
+              position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0,
+              background: "var(--surface-lowest)",
+              borderRadius: 14, maxHeight: 240, overflowY: "auto",
+              zIndex: 100,
+              boxShadow: "0 40px 60px rgba(26,28,26,0.06)",
+              outline: "1px solid rgba(193,201,191,0.15)",
+            }}>
+              {filteredSurahs.length === 0 && (
+                <div style={{ padding: "14px 18px", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 13 }}>No results</div>
+              )}
+              {filteredSurahs.map((s) => (
+                <div
+                  key={s[0]}
+                  onClick={() => {
+                    setSurahIdx(SURAHS.indexOf(s));
+                    setSurahSearch(""); setShowSurahDrop(false);
+                    setStartAyah(""); setEndAyah(""); setVerses(null);
+                  }}
+                  style={{
+                    padding: "11px 18px", cursor: "pointer",
+                    fontFamily: "'Inter',sans-serif", fontSize: 13,
+                    color: "var(--on-surface)",
+                    background: surahIdx !== "" && SURAHS[surahIdx][0] === s[0] ? "var(--primary-light)" : "transparent",
+                    transition: "background 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-light)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = surahIdx !== "" && SURAHS[surahIdx][0] === s[0] ? "var(--primary-light)" : "transparent"}
+                >
+                  <span style={{ color: "var(--primary-container)", fontWeight: 600, marginRight: 8, fontSize: 12 }}>{s[0]}.</span>
+                  {s[1]}
+                  <span style={{ color: "var(--on-surface-variant)", fontSize: 11, marginLeft: 6 }}>({s[2]} āyāt)</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Ayah Selectors */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 22 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 32 }}>
         <div>
           <label style={labelStyle}>Start Āyah</label>
           <select
@@ -324,7 +325,7 @@ function ReflectTab({ onSaved, showToast }) {
             disabled={!selectedSurah}
             value={startAyah}
             onChange={(e) => { setStartAyah(e.target.value); setEndAyah(""); setVerses(null); }}
-            style={{ ...selectStyle, width: "100%", opacity: !selectedSurah ? 0.4 : 1 }}
+            style={{ ...underlineSelectStyle, width: "100%", opacity: !selectedSurah ? 0.35 : 1 }}
           >
             <option value="">—</option>
             {selectedSurah && Array.from({ length: ayahCount }, (_, i) => i + 1).map((n) => (
@@ -339,7 +340,7 @@ function ReflectTab({ onSaved, showToast }) {
             disabled={!startAyah}
             value={endAyah}
             onChange={(e) => handleEndAyahChange(e.target.value)}
-            style={{ ...selectStyle, width: "100%", opacity: !startAyah ? 0.4 : 1 }}
+            style={{ ...underlineSelectStyle, width: "100%", opacity: !startAyah ? 0.35 : 1 }}
           >
             <option value="">—</option>
             {startAyah && Array.from({ length: ayahCount - Number(startAyah) + 1 }, (_, i) => i + Number(startAyah)).map((n) => (
@@ -349,57 +350,69 @@ function ReflectTab({ onSaved, showToast }) {
         </div>
       </div>
 
-      {/* Verse Display */}
+      {/* Verse Display — surface-container-low tonal area */}
       {loading && (
-        <div style={verseBoxStyle}>
-          <div style={skeletonLine(75)} />
+        <div style={verseAreaStyle}>
+          <div style={skeletonLine(55)} />
+          <div style={skeletonLine(80)} />
+          <div style={skeletonLine(65)} />
+          <div style={{ height: 24 }} />
           <div style={skeletonLine(90)} />
+          <div style={skeletonLine(75)} />
           <div style={skeletonLine(60)} />
-          <div style={{ height: 1, background: "var(--border)", margin: "14px 0" }} />
-          <div style={skeletonLine(85)} />
-          <div style={skeletonLine(70)} />
         </div>
       )}
 
       {fetchError && (
-        <div style={{ ...verseBoxStyle, borderColor: "#c0392b33", background: "#c0392b08" }}>
-          <p style={{ color: "#c0392b", fontFamily: "'Lora', serif", fontSize: 13, margin: 0 }}>⚠ {fetchError}</p>
+        <div style={{ ...verseAreaStyle, background: "#fef2f2" }}>
+          <p style={{ color: "#b91c1c", fontFamily: "'Inter',sans-serif", fontSize: 13, margin: 0 }}>⚠ {fetchError}</p>
         </div>
       )}
 
       {verses && !loading && !fetchError && (
-        <div style={{ ...verseBoxStyle, position: "relative" }}>
-          <button id="copy-verses" onClick={handleCopy} title="Copy verses" style={{
-            position: "absolute", top: 14, right: 14,
-            background: "transparent", border: "1px solid var(--border)",
-            borderRadius: 8, padding: "4px 12px", cursor: "pointer",
-            color: "var(--muted)", fontSize: 11, fontFamily: "'DM Serif Display', serif",
-            transition: "all 0.2s"
-          }}>Copy</button>
+        <div style={{ ...verseAreaStyle, position: "relative" }}>
+          <button id="copy-verses" onClick={handleCopy} style={{
+            position: "absolute", top: 16, right: 16,
+            background: "transparent", border: "none",
+            color: "var(--on-surface-variant)", fontSize: 12,
+            fontFamily: "'Inter',sans-serif", fontWeight: 500,
+            cursor: "pointer", padding: "4px 8px", borderRadius: 6,
+            transition: "color 0.3s ease, background 0.3s ease",
+          }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--primary-container)"; e.currentTarget.style.background = "var(--primary-light)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--on-surface-variant)"; e.currentTarget.style.background = "transparent"; }}
+          >Copy</button>
 
-          {/* Arabic */}
-          <div style={{ textAlign: "right", direction: "rtl", marginBottom: 20, paddingRight: 8 }}>
+          {/* Arabic — centered as per DESIGN.md */}
+          <div style={{
+            textAlign: "center", direction: "rtl",
+            padding: "8px 32px 32px",
+            lineHeight: 2.6,
+          }}>
             {verses.arabic.map((a) => (
               <span key={a.number} style={{
                 fontFamily: "'Amiri', 'Scheherazade New', serif",
-                fontSize: 24, lineHeight: 2.2, color: "var(--text)", display: "inline"
+                fontSize: 26, color: "var(--on-surface)", display: "inline",
               }}>
                 {a.text}{" "}
-                <span style={{ fontSize: 13, color: "var(--green)", opacity: 0.8 }}>﴿{a.number}﴾</span>{" "}
+                <span style={{ fontSize: 14, color: "var(--primary-container)", opacity: 0.9 }}>﴿{a.number}﴾</span>{" "}
               </span>
             ))}
           </div>
 
-          <div style={{ borderTop: "1px solid var(--border)", margin: "0 0 16px" }} />
-
-          {/* English */}
-          <div>
+          {/* English — left-aligned, surface-lowest "lifted" card inside the area */}
+          <div style={{
+            background: "var(--surface-lowest)",
+            borderRadius: 12, padding: "18px 20px",
+            boxShadow: "0 2px 16px rgba(26,28,26,0.04)",
+          }}>
             {verses.english.map((a) => (
               <p key={a.number} style={{
-                fontFamily: "'Lora', serif", fontSize: 14.5, lineHeight: 1.85,
-                color: "var(--text-soft)", margin: "0 0 8px"
+                fontFamily: "'Inter', sans-serif", fontSize: 15, lineHeight: 1.85,
+                color: "var(--on-surface-variant)", margin: "0 0 10px",
+                fontWeight: 400,
               }}>
-                <span style={{ color: "var(--green)", fontWeight: 700, fontSize: 11 }}>[{a.number}]</span>{" "}
+                <span style={{ color: "var(--primary-container)", fontWeight: 600, fontSize: 11, marginRight: 4 }}>[{a.number}]</span>
                 {a.text}
               </p>
             ))}
@@ -407,35 +420,41 @@ function ReflectTab({ onSaved, showToast }) {
         </div>
       )}
 
-      {/* Reflection textarea */}
-      <label style={{ ...labelStyle, marginTop: 8 }}>Your Reflection</label>
-      <textarea
-        id="reflection-input"
-        ref={textRef}
-        value={reflection}
-        onChange={(e) => setReflection(e.target.value)}
-        placeholder="What are your thoughts on these verses?"
-        rows={4}
-        style={{
-          ...inputStyle, width: "100%", boxSizing: "border-box",
-          resize: "none", minHeight: 120, lineHeight: 1.75,
-          fontFamily: "'Lora', serif", fontSize: 14, overflow: "hidden"
-        }}
-      />
+      {/* Reflection input — underline style, floating label */}
+      <div style={{ marginTop: 40, marginBottom: 32 }}>
+        <label style={labelStyle}>Your Reflection</label>
+        <textarea
+          id="reflection-input"
+          ref={textRef}
+          value={reflection}
+          onChange={(e) => setReflection(e.target.value)}
+          placeholder="What are your thoughts on these verses?"
+          rows={4}
+          style={{
+            ...underlineInputStyle,
+            width: "100%", boxSizing: "border-box",
+            resize: "none", minHeight: 120, lineHeight: 1.8,
+            fontSize: 15, overflow: "hidden",
+          }}
+        />
+      </div>
 
-      {/* Save button */}
+      {/* Primary button with gradient */}
       <button
         id="save-reflection"
         onClick={handleSave}
         disabled={!canSave || saving}
         style={{
-          width: "100%", marginTop: 14, padding: "15px 0",
-          background: canSave && !saving ? "var(--green)" : "var(--border)",
-          color: canSave && !saving ? "#FAF9F6" : "var(--muted)",
-          border: "none", borderRadius: 12,
-          fontFamily: "'DM Serif Display', serif", fontSize: 16,
+          width: "100%", padding: "16px 0",
+          background: canSave && !saving
+            ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)"
+            : "var(--surface-low)",
+          color: canSave && !saving ? "var(--on-primary)" : "var(--on-surface-variant)",
+          border: "none", borderRadius: 6,
+          fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
           cursor: canSave && !saving ? "pointer" : "not-allowed",
-          transition: "all 0.2s", letterSpacing: "0.03em"
+          transition: "all 0.3s ease", letterSpacing: "0.02em",
+          boxShadow: canSave && !saving ? "0 8px 40px rgba(0,54,26,0.18)" : "none",
         }}
       >
         {saving ? "Saving…" : "Save Reflection ✦"}
@@ -444,7 +463,7 @@ function ReflectTab({ onSaved, showToast }) {
   );
 }
 
-// ── JOURNAL TAB ──────────────────────────────────────────────────────────────
+// ── JOURNAL TAB ───────────────────────────────────────────────────────────────
 function JournalTab({ refreshKey, showToast }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -464,7 +483,6 @@ function JournalTab({ refreshKey, showToast }) {
 
   useEffect(() => { load(); }, [load, refreshKey]);
 
-  // auto-resize edit textarea
   useEffect(() => {
     if (editRef.current) {
       editRef.current.style.height = "auto";
@@ -482,8 +500,7 @@ function JournalTab({ refreshKey, showToast }) {
   const handleEditSave = async () => {
     if (!editText.trim()) return;
     await dbUpdate({ ...editEntry, reflection: editText.trim() });
-    setEditEntry(null);
-    load();
+    setEditEntry(null); load();
     showToast("Reflection updated ✦");
   };
 
@@ -498,41 +515,43 @@ function JournalTab({ refreshKey, showToast }) {
   });
 
   if (loading) return (
-    <div style={{ padding: "60px 24px", textAlign: "center", color: "var(--muted)", fontFamily: "'Lora',serif" }}>
+    <div style={{ padding: "80px 24px", textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif" }}>
       Loading…
     </div>
   );
 
   return (
-    <div style={{ padding: "28px 20px 110px", maxWidth: 680, margin: "0 auto" }}>
-      <h1 style={{ fontFamily: "'DM Serif Display',serif", color: "var(--green)", fontSize: 28, marginBottom: 4, marginTop: 0 }}>
-        Journal
-      </h1>
-      <p style={{ color: "var(--muted)", fontFamily: "'Lora',serif", fontSize: 13, marginBottom: 20, marginTop: 0 }}>
+    <div style={{ padding: "36px 24px 110px", maxWidth: 720, margin: "0 auto" }}>
+      <h1 style={pageTitleStyle}>Journal</h1>
+      <p style={pageSubtitleStyle}>
         {entries.length} reflection{entries.length !== 1 ? "s" : ""} saved on this device
       </p>
 
       {/* Search */}
       {entries.length > 0 && (
-        <input
-          id="journal-search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search reflections…"
-          style={{ ...inputStyle, width: "100%", boxSizing: "border-box", marginBottom: 20 }}
-        />
+        <div style={{ marginBottom: 32 }}>
+          <input
+            id="journal-search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search reflections…"
+            style={{ ...underlineInputStyle, width: "100%", boxSizing: "border-box" }}
+          />
+        </div>
       )}
 
       {entries.length === 0 ? (
-        <div style={{ padding: "60px 0", textAlign: "center" }}>
-          <div style={{ fontSize: 56, marginBottom: 16, opacity: 0.4 }}>✦</div>
-          <h2 style={{ fontFamily: "'DM Serif Display',serif", color: "var(--green)", marginBottom: 10, fontSize: 22 }}>No reflections yet</h2>
-          <p style={{ color: "var(--muted)", fontFamily: "'Lora',serif", fontSize: 14, lineHeight: 1.7 }}>
+        <div style={{ padding: "80px 0", textAlign: "center" }}>
+          <div style={{ fontSize: 48, marginBottom: 20, opacity: 0.25 }}>✦</div>
+          <h2 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, color: "var(--on-surface)", marginBottom: 10, fontSize: 20 }}>
+            No reflections yet
+          </h2>
+          <p style={{ color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 14, lineHeight: 1.7 }}>
             Head over to the Reflect tab to begin your first Tadabbur.
           </p>
         </div>
       ) : filtered.length === 0 ? (
-        <p style={{ color: "var(--muted)", fontFamily: "'Lora',serif", fontSize: 14, textAlign: "center", padding: "40px 0" }}>
+        <p style={{ color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 14, textAlign: "center", padding: "48px 0" }}>
           No reflections match "{search}"
         </p>
       ) : (
@@ -544,65 +563,72 @@ function JournalTab({ refreshKey, showToast }) {
             : entry.reflection.slice(0, 300) + "…";
 
           return (
+            // card = surface-lowest lifted above surface-container-low page bg
             <div key={entry.id} style={cardStyle}>
-              {/* Header */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+              {/* Header row */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
                 <div>
-                  <span style={{ fontFamily: "'DM Serif Display',serif", color: "var(--green)", fontSize: 16, fontWeight: 600 }}>
+                  <div style={{ fontFamily: "'Inter',sans-serif", color: "var(--on-surface)", fontSize: 17, fontWeight: 600 }}>
                     {entry.surahName}
-                  </span>
-                  <span style={{ color: "var(--muted)", fontSize: 12, fontFamily: "'Lora',serif", marginLeft: 6 }}>
-                    {entry.surahNumber}:{entry.startAyah}{entry.startAyah !== entry.endAyah ? `–${entry.endAyah}` : ""}
-                  </span>
-                  <div style={{ color: "var(--muted)", fontSize: 11, fontFamily: "'Lora',serif", marginTop: 3 }}>
+                    <span style={{ color: "var(--on-surface-variant)", fontSize: 13, fontWeight: 400, marginLeft: 8 }}>
+                      {entry.surahNumber}:{entry.startAyah}{entry.startAyah !== entry.endAyah ? `–${entry.endAyah}` : ""}
+                    </span>
+                  </div>
+                  <div style={{ color: "var(--on-surface-variant)", fontSize: 11, fontFamily: "'Inter',sans-serif", marginTop: 3, fontWeight: 400 }}>
                     {new Date(entry.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
-                  <button onClick={() => { setEditEntry(entry); setEditText(entry.reflection); }} style={actionBtn}>Edit</button>
-                  <button onClick={() => setDeleteTarget(entry)} style={{ ...actionBtn, color: "#c0392b", borderColor: "#c0392b44" }}>Delete</button>
+                  <button onClick={() => { setEditEntry(entry); setEditText(entry.reflection); }} style={chipBtnStyle}>Edit</button>
+                  <button onClick={() => setDeleteTarget(entry)} style={{ ...chipBtnStyle, color: "#b91c1c" }}>Delete</button>
                 </div>
               </div>
 
-              {/* Arabic block */}
+              {/* Arabic — centered per DESIGN.md */}
               <div style={{
-                textAlign: "right", direction: "rtl", padding: "14px 16px",
-                background: "var(--green-light)", borderRadius: 10, marginBottom: 12
+                textAlign: "center", direction: "rtl",
+                background: "var(--surface-low)",
+                borderRadius: 12, padding: "20px 24px",
+                marginBottom: 20, lineHeight: 2.6,
               }}>
                 {entry.arabic.map((a) => (
                   <span key={a.number} style={{
                     fontFamily: "'Amiri','Scheherazade New',serif",
-                    fontSize: 20, lineHeight: 2.2, color: "var(--text)"
+                    fontSize: 22, color: "var(--on-surface)",
                   }}>
                     {a.text}{" "}
-                    <span style={{ fontSize: 11, color: "var(--green)", opacity: 0.75 }}>﴿{a.number}﴾</span>{" "}
+                    <span style={{ fontSize: 12, color: "var(--primary-container)", opacity: 0.85 }}>﴿{a.number}﴾</span>{" "}
                   </span>
                 ))}
               </div>
 
-              {/* English block */}
-              <div style={{ marginBottom: 12 }}>
+              {/* English — left-aligned */}
+              <div style={{ marginBottom: 24 }}>
                 {entry.english.map((a) => (
                   <p key={a.number} style={{
-                    fontFamily: "'Lora',serif", fontSize: 13, lineHeight: 1.8,
-                    color: "var(--text-soft)", margin: "0 0 6px"
+                    fontFamily: "'Inter',sans-serif", fontSize: 13.5, lineHeight: 1.8,
+                    color: "var(--on-surface-variant)", margin: "0 0 8px", fontWeight: 400,
                   }}>
-                    <span style={{ color: "var(--green)", fontSize: 10, fontWeight: 700 }}>[{a.number}]</span>{" "}{a.text}
+                    <span style={{ color: "var(--primary-container)", fontSize: 10, fontWeight: 600, marginRight: 4 }}>[{a.number}]</span>
+                    {a.text}
                   </p>
                 ))}
               </div>
 
-              <div style={{ borderTop: "1px solid var(--border)", margin: "10px 0 12px" }} />
-
-              {/* Reflection text */}
+              {/* Reflection — separated by spacing, not a divider line */}
               <p style={{
-                fontFamily: "'Lora',serif", fontSize: 14, lineHeight: 1.85,
-                color: "var(--text)", margin: 0, whiteSpace: "pre-wrap"
+                fontFamily: "'Inter',sans-serif", fontSize: 14.5, lineHeight: 1.9,
+                color: "var(--on-surface)", margin: 0, whiteSpace: "pre-wrap", fontWeight: 400,
               }}>{displayText}</p>
               {shouldTruncate && (
                 <button
                   onClick={() => setExpanded((p) => ({ ...p, [entry.id]: !isExpanded }))}
-                  style={{ background: "none", border: "none", color: "var(--green)", cursor: "pointer", fontFamily: "'Lora',serif", fontSize: 13, padding: "6px 0 0" }}
+                  style={{
+                    background: "none", border: "none",
+                    color: "var(--primary-container)", cursor: "pointer",
+                    fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 500,
+                    padding: "8px 0 0", transition: "opacity 0.3s ease",
+                  }}
                 >
                   {isExpanded ? "Show less ↑" : "Read more ↓"}
                 </button>
@@ -615,18 +641,20 @@ function JournalTab({ refreshKey, showToast }) {
       {/* Edit Modal */}
       {editEntry && (
         <div style={{
-          position:"fixed",inset:0,background:"rgba(10,20,10,0.6)",display:"flex",
-          alignItems:"center",justifyContent:"center",zIndex:9000,padding:20,
-          animation:"fadeIn 0.2s ease"
+          position: "fixed", inset: 0,
+          background: "rgba(26,28,26,0.48)", backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 9000, padding: 20, animation: "fadeIn 0.25s ease",
         }}>
           <div style={{
-            background:"var(--card)",borderRadius:18,padding:28,maxWidth:540,width:"100%",
-            border:"1px solid var(--border)",boxShadow:"0 12px 48px rgba(0,0,0,0.28)"
+            background: "var(--surface-lowest)", borderRadius: 20,
+            padding: 32, maxWidth: 560, width: "100%",
+            boxShadow: "0 40px 80px rgba(26,28,26,0.06)",
           }}>
-            <h3 style={{ fontFamily:"'DM Serif Display',serif",color:"var(--green)",margin:"0 0 4px",fontSize:20 }}>
+            <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, color: "var(--on-surface)", margin: "0 0 4px", fontSize: 18 }}>
               Edit Reflection
             </h3>
-            <p style={{ color:"var(--muted)",fontFamily:"'Lora',serif",fontSize:12,margin:"0 0 16px" }}>
+            <p style={{ color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 12, margin: "0 0 20px" }}>
               {editEntry.surahName} {editEntry.surahNumber}:{editEntry.startAyah}
               {editEntry.startAyah !== editEntry.endAyah ? `–${editEntry.endAyah}` : ""}
             </p>
@@ -637,28 +665,18 @@ function JournalTab({ refreshKey, showToast }) {
               onChange={(e) => setEditText(e.target.value)}
               rows={6}
               style={{
-                ...inputStyle, width:"100%", boxSizing:"border-box",
-                resize:"none", fontFamily:"'Lora',serif", fontSize:14,
-                lineHeight:1.75, overflow:"hidden"
+                ...underlineInputStyle, width: "100%", boxSizing: "border-box",
+                resize: "none", fontSize: 14, lineHeight: 1.8, overflow: "hidden",
               }}
             />
-            <div style={{ display:"flex",gap:10,justifyContent:"flex-end",marginTop:16 }}>
-              <button onClick={() => setEditEntry(null)} style={{
-                padding:"9px 20px",borderRadius:8,border:"1px solid var(--border)",
-                background:"transparent",color:"var(--muted)",cursor:"pointer",
-                fontFamily:"'DM Serif Display',serif",fontSize:13
-              }}>Cancel</button>
-              <button onClick={handleEditSave} style={{
-                padding:"9px 20px",borderRadius:8,border:"none",
-                background:"var(--green)",color:"#FAF9F6",cursor:"pointer",
-                fontFamily:"'DM Serif Display',serif",fontSize:13
-              }}>Save Changes</button>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
+              <button onClick={() => setEditEntry(null)} style={ghostBtnStyle}>Cancel</button>
+              <button onClick={handleEditSave} style={primaryBtnStyle}>Save Changes</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete Confirm */}
       {deleteTarget && (
         <ConfirmModal
           message={`Delete your reflection on ${deleteTarget.surahName} ${deleteTarget.surahNumber}:${deleteTarget.startAyah}? This cannot be undone.`}
@@ -672,7 +690,7 @@ function JournalTab({ refreshKey, showToast }) {
   );
 }
 
-// ── SETTINGS TAB ─────────────────────────────────────────────────────────────
+// ── SETTINGS TAB ──────────────────────────────────────────────────────────────
 function SettingsTab({ showToast, theme, setTheme }) {
   const [clearConfirm1, setClearConfirm1] = useState(false);
   const [clearConfirm2, setClearConfirm2] = useState(false);
@@ -720,16 +738,14 @@ function SettingsTab({ showToast, theme, setTheme }) {
   ];
 
   return (
-    <div style={{ padding: "28px 20px 110px", maxWidth: 680, margin: "0 auto" }}>
-      <h1 style={{ fontFamily: "'DM Serif Display',serif", color: "var(--green)", fontSize: 28, marginBottom: 4, marginTop: 0 }}>Settings</h1>
-      <p style={{ color: "var(--muted)", fontFamily: "'Lora',serif", fontSize: 13, marginBottom: 28, marginTop: 0 }}>
-        All data is stored locally on your device only.
-      </p>
+    <div style={{ padding: "36px 24px 110px", maxWidth: 720, margin: "0 auto" }}>
+      <h1 style={pageTitleStyle}>Settings</h1>
+      <p style={pageSubtitleStyle}>All data is stored locally on your device only.</p>
 
-      {/* Theme */}
-      <section style={sectionStyle}>
-        <h2 style={sectionTitle}>Appearance</h2>
-        <p style={sectionDesc}>Choose your preferred colour theme. System Default follows your OS setting.</p>
+      {/* Appearance */}
+      <div style={settingsSectionStyle}>
+        <h2 style={settingsTitleStyle}>Appearance</h2>
+        <p style={settingsDescStyle}>Choose your colour theme. System Default follows your OS setting.</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {themeOptions.map((opt) => (
             <button
@@ -737,51 +753,53 @@ function SettingsTab({ showToast, theme, setTheme }) {
               id={`theme-${opt.value}`}
               onClick={() => setTheme(opt.value)}
               style={{
-                ...settingsBtnStyle,
-                background: theme === opt.value ? "var(--green)" : "var(--green-light)",
-                color: theme === opt.value ? "#FAF9F6" : "var(--green)",
-                borderColor: theme === opt.value ? "var(--green)" : "var(--border)",
+                padding: "9px 20px", borderRadius: 40,
+                border: "none",
+                background: theme === opt.value
+                  ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)"
+                  : "var(--surface-low)",
+                color: theme === opt.value ? "var(--on-primary)" : "var(--on-surface-variant)",
+                cursor: "pointer", fontFamily: "'Inter',sans-serif",
+                fontSize: 13, fontWeight: 500, transition: "all 0.3s ease",
               }}
             >{opt.label}</button>
           ))}
         </div>
-      </section>
+      </div>
 
       {/* Export */}
-      <section style={sectionStyle}>
-        <h2 style={sectionTitle}>Export Data</h2>
-        <p style={sectionDesc}>
+      <div style={settingsSectionStyle}>
+        <h2 style={settingsTitleStyle}>Export Data</h2>
+        <p style={settingsDescStyle}>
           Download all {entryCount !== null ? entryCount : "your"} reflection{entryCount !== 1 ? "s" : ""} before clearing browser data or switching devices.
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button id="export-json" onClick={exportJSON} style={settingsBtnStyle}>Export as JSON</button>
-          <button id="export-csv" onClick={exportCSV} style={settingsBtnStyle}>Export as CSV</button>
+          <button id="export-json" onClick={exportJSON} style={secondaryBtnStyle}>Export as JSON</button>
+          <button id="export-csv" onClick={exportCSV} style={secondaryBtnStyle}>Export as CSV</button>
         </div>
-      </section>
+      </div>
 
       {/* About */}
-      <section style={sectionStyle}>
-        <h2 style={sectionTitle}>About</h2>
-        <p style={sectionDesc}>
+      <div style={settingsSectionStyle}>
+        <h2 style={settingsTitleStyle}>About</h2>
+        <p style={settingsDescStyle}>
           Quran Reflect is a privacy-first Tadabbur journal. No accounts, no servers, no tracking.
           Verse data is fetched from the AlQuran.cloud API using the Saheeh International English translation.
           All reflections live entirely on your device in IndexedDB.
         </p>
-        <p style={{ ...sectionDesc, marginBottom: 0, fontSize: 11, opacity: 0.7 }}>Version 1.0.0 · MVP</p>
-      </section>
+        <p style={{ ...settingsDescStyle, marginBottom: 0, fontSize: 11, opacity: 0.55 }}>Version 1.0.0 · MVP</p>
+      </div>
 
       {/* Danger Zone */}
-      <section style={{ ...sectionStyle, borderColor: "#c0392b44" }}>
-        <h2 style={{ ...sectionTitle, color: "#c0392b" }}>Danger Zone</h2>
-        <p style={sectionDesc}>Permanently delete all saved reflections from this device. This action cannot be undone.</p>
+      <div style={{ ...settingsSectionStyle, background: "#fef2f2" }}>
+        <h2 style={{ ...settingsTitleStyle, color: "#b91c1c" }}>Danger Zone</h2>
+        <p style={settingsDescStyle}>Permanently delete all saved reflections from this device. This action cannot be undone.</p>
         <button
           id="clear-all-data"
           onClick={() => setClearConfirm1(true)}
-          style={{ ...settingsBtnStyle, background: "#c0392b10", color: "#c0392b", borderColor: "#c0392b44" }}
-        >
-          Clear All Data
-        </button>
-      </section>
+          style={{ ...secondaryBtnStyle, background: "#fee2e2", color: "#b91c1c" }}
+        >Clear All Data</button>
+      </div>
 
       {clearConfirm1 && (
         <ConfirmModal
@@ -805,7 +823,7 @@ function SettingsTab({ showToast, theme, setTheme }) {
   );
 }
 
-// ── BOTTOM NAV ───────────────────────────────────────────────────────────────
+// ── BOTTOM NAV — Glassmorphism ────────────────────────────────────────────────
 function BottomNav({ tab, setTab }) {
   const tabs = [
     { id: "reflect", label: "Reflect", icon: "✦" },
@@ -815,10 +833,13 @@ function BottomNav({ tab, setTab }) {
   return (
     <nav style={{
       position: "fixed", bottom: 0, left: 0, right: 0,
-      background: "var(--card)", borderTop: "1px solid var(--border)",
+      background: "rgba(250,249,246,0.72)",
+      backdropFilter: "blur(16px)",
+      WebkitBackdropFilter: "blur(16px)",
       display: "flex", justifyContent: "space-around", alignItems: "center",
-      height: 66, zIndex: 100,
-      backdropFilter: "blur(12px)",
+      height: 68, zIndex: 100,
+      // Ghost border top only — 15% opacity per DESIGN.md
+      borderTop: "1px solid rgba(193,201,191,0.15)",
     }}>
       {tabs.map((t) => (
         <button
@@ -828,20 +849,20 @@ function BottomNav({ tab, setTab }) {
           style={{
             flex: 1, background: "none", border: "none", cursor: "pointer",
             display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-            padding: "10px 0", transition: "opacity 0.2s",
+            padding: "10px 0",
           }}
         >
           <span style={{
             fontSize: 20,
-            color: tab === t.id ? "var(--green)" : "var(--muted)",
-            transition: "color 0.2s, transform 0.2s",
+            color: tab === t.id ? "var(--primary-container)" : "var(--on-surface-variant)",
+            transition: "color 0.3s ease, transform 0.3s ease",
             transform: tab === t.id ? "scale(1.15)" : "scale(1)",
             display: "block",
           }}>{t.icon}</span>
           <span style={{
-            fontSize: 10, fontFamily: "'DM Serif Display',serif",
-            color: tab === t.id ? "var(--green)" : "var(--muted)",
-            transition: "color 0.2s", letterSpacing: "0.06em", textTransform: "uppercase"
+            fontSize: 10, fontFamily: "'Inter',sans-serif", fontWeight: 600,
+            color: tab === t.id ? "var(--primary-container)" : "var(--on-surface-variant)",
+            transition: "color 0.3s ease", letterSpacing: "0.06em", textTransform: "uppercase",
           }}>{t.label}</span>
         </button>
       ))}
@@ -849,7 +870,7 @@ function BottomNav({ tab, setTab }) {
   );
 }
 
-// ── ROOT ─────────────────────────────────────────────────────────────────────
+// ── ROOT ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const [tab, setTab] = useState("reflect");
   const [toast, setToast] = useState(null);
@@ -857,7 +878,6 @@ export default function App() {
   const [firstVisit, setFirstVisit] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem("qr_theme") || "system");
 
-  // First visit welcome
   useEffect(() => {
     const seen = localStorage.getItem("qr_seen");
     if (!seen) { setFirstVisit(true); localStorage.setItem("qr_seen", "1"); }
@@ -867,7 +887,6 @@ export default function App() {
     if (firstVisit) setTimeout(() => setFirstVisit(false), 4500);
   }, [firstVisit]);
 
-  // Theme management
   useEffect(() => {
     localStorage.setItem("qr_theme", theme);
     const root = document.documentElement;
@@ -881,97 +900,104 @@ export default function App() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
 
+        /* ── Design Token Surface Hierarchy ── */
         :root {
-          --green: #1A4D2E;
-          --green-hover: #154026;
-          --green-light: rgba(26,77,46,0.08);
-          --bg: #FAF9F6;
-          --card: #FFFFFF;
-          --border: #E8E4DC;
-          --text: #1C1C1A;
-          --text-soft: #3D3D38;
-          --muted: #8A8880;
+          /* Greens */
+          --primary:            #00361a;
+          --primary-container:  #1a4d2e;
+          --primary-light:      rgba(26,77,46,0.07);
+          --on-primary:         #ffffff;
+
+          /* Surfaces — "stacked paper" layers */
+          --surface:            #faf9f6;   /* the desk */
+          --surface-low:        #f4f3f1;   /* reading areas / content zones */
+          --surface-lowest:     #ffffff;   /* lifted cards */
+
+          /* Text */
+          --on-surface:         #1a1c1a;   /* ink-on-paper, never pure black */
+          --on-surface-variant: #4f5350;
+
+          /* Ghost border */
+          --outline-ghost:      rgba(193,201,191,0.15);
         }
 
         /* Manual dark override */
         [data-theme="dark"] {
-          --bg: #111410;
-          --card: #1A1D18;
-          --border: #2A2E26;
-          --text: #F0EDE6;
-          --text-soft: #C8C4BB;
-          --muted: #7A7870;
-          --green-light: rgba(26,77,46,0.18);
+          --primary:            #4caf7d;
+          --primary-container:  #2d6a4f;
+          --primary-light:      rgba(76,175,125,0.1);
+          --on-primary:         #001a0b;
+          --surface:            #131510;
+          --surface-low:        #1c1f1a;
+          --surface-lowest:     #242722;
+          --on-surface:         #e8e6e0;
+          --on-surface-variant: #9e9e96;
+          --outline-ghost:      rgba(100,110,100,0.18);
         }
-
-        /* Manual light override resets OS dark */
         [data-theme="light"] {
-          --bg: #FAF9F6;
-          --card: #FFFFFF;
-          --border: #E8E4DC;
-          --text: #1C1C1A;
-          --text-soft: #3D3D38;
-          --muted: #8A8880;
-          --green-light: rgba(26,77,46,0.08);
+          --primary:            #00361a;
+          --primary-container:  #1a4d2e;
+          --primary-light:      rgba(26,77,46,0.07);
+          --on-primary:         #ffffff;
+          --surface:            #faf9f6;
+          --surface-low:        #f4f3f1;
+          --surface-lowest:     #ffffff;
+          --on-surface:         #1a1c1a;
+          --on-surface-variant: #4f5350;
+          --outline-ghost:      rgba(193,201,191,0.15);
         }
-
-        /* System default (no data-theme) */
         @media (prefers-color-scheme: dark) {
           :root:not([data-theme]) {
-            --bg: #111410;
-            --card: #1A1D18;
-            --border: #2A2E26;
-            --text: #F0EDE6;
-            --text-soft: #C8C4BB;
-            --muted: #7A7870;
-            --green-light: rgba(26,77,46,0.18);
+            --primary:            #4caf7d;
+            --primary-container:  #2d6a4f;
+            --primary-light:      rgba(76,175,125,0.1);
+            --on-primary:         #001a0b;
+            --surface:            #131510;
+            --surface-low:        #1c1f1a;
+            --surface-lowest:     #242722;
+            --on-surface:         #e8e6e0;
+            --on-surface-variant: #9e9e96;
+            --outline-ghost:      rgba(100,110,100,0.18);
           }
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); }
-        select option { background: var(--card); color: var(--text); }
+        body { background: var(--surface-low); color: var(--on-surface); font-family: 'Inter', sans-serif; }
+        select option { background: var(--surface-lowest); color: var(--on-surface); }
+
+        /* Underline input focus */
+        .uline-input:focus {
+          outline: none;
+          border-bottom-color: var(--primary-container) !important;
+          box-shadow: 0 2px 0 0 var(--primary-container);
+        }
 
         @keyframes fadeUp {
-          from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+          from { opacity: 0; transform: translateX(-50%) translateY(14px); }
           to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
-        @keyframes fadeIn {
-          from { opacity: 0; } to { opacity: 1; }
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes shimmer {
-          0%   { background-position: -500px 0; }
-          100% { background-position: 500px 0; }
-        }
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-8px); }
-          to   { opacity: 1; transform: translateY(0); }
+          0%   { background-position: -600px 0; }
+          100% { background-position: 600px 0; }
         }
 
-        ::-webkit-scrollbar { width: 4px; }
+        /* Slow ease-in-out transitions per DESIGN.md — 300ms+ */
+        button { transition: all 0.3s ease; }
+
+        ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: var(--outline-ghost); border-radius: 2px; }
 
-        input:focus, textarea:focus, select:focus {
-          outline: none;
-          border-color: var(--green) !important;
-          box-shadow: 0 0 0 3px rgba(26,77,46,0.12);
-        }
-
-        button:active { opacity: 0.82; }
+        button:active { opacity: 0.75; }
       `}</style>
 
-      <div style={{
-        minHeight: "100vh",
-        background: "var(--bg)",
-        maxWidth: 700,
-        margin: "0 auto",
-        position: "relative",
-      }}>
+      {/* Page background = surface-low (reading area) */}
+      <div style={{ minHeight: "100vh", background: "var(--surface-low)", maxWidth: 720, margin: "0 auto", position: "relative" }}>
         {tab === "reflect"  && <ReflectTab onSaved={() => setJournalKey((k) => k + 1)} showToast={showToast} />}
         {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast} />}
         {tab === "settings" && <SettingsTab showToast={showToast} theme={theme} setTheme={setTheme} />}
@@ -982,11 +1008,12 @@ export default function App() {
       {firstVisit && (
         <div style={{
           position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)",
-          background: "var(--green)", color: "#FAF9F6",
-          padding: "12px 26px", borderRadius: 40,
-          fontFamily: "'Lora',serif", fontSize: 13,
-          zIndex: 9999, boxShadow: "0 4px 28px rgba(0,0,0,0.22)",
-          animation: "fadeIn 0.5s ease", whiteSpace: "nowrap", textAlign: "center"
+          background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)",
+          color: "var(--on-primary)",
+          padding: "12px 28px", borderRadius: 40,
+          fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 500,
+          zIndex: 9999, boxShadow: "0 8px 40px rgba(0,54,26,0.20)",
+          animation: "fadeIn 0.5s ease", whiteSpace: "nowrap",
         }}>
           Welcome ✦ All reflections are saved securely on your device.
         </div>
@@ -999,71 +1026,115 @@ export default function App() {
   );
 }
 
-// ── Shared styles ─────────────────────────────────────────────────────────────
+// ── Shared style objects ──────────────────────────────────────────────────────
+
+const pageTitleStyle = {
+  fontFamily: "'Inter', sans-serif", fontWeight: 700,
+  color: "var(--on-surface)", fontSize: 28,
+  marginBottom: 6, marginTop: 0, letterSpacing: "-0.02em",
+};
+
+const pageSubtitleStyle = {
+  color: "var(--on-surface-variant)", fontFamily: "'Inter', sans-serif",
+  fontSize: 14, marginBottom: 36, marginTop: 0, fontWeight: 400,
+};
+
 const labelStyle = {
-  display: "block", marginBottom: 7,
-  fontFamily: "'DM Serif Display',serif", fontSize: 11,
-  color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase"
+  display: "block", marginBottom: 10,
+  fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 600,
+  color: "var(--on-surface-variant)", letterSpacing: "0.08em", textTransform: "uppercase",
 };
 
-const inputStyle = {
-  background: "var(--card)", border: "1px solid var(--border)",
-  borderRadius: 10, padding: "12px 14px",
-  color: "var(--text)", fontSize: 14,
-  transition: "border-color 0.2s, box-shadow 0.2s",
-  fontFamily: "'Lora',serif",
+// Underline-style input — no enclosing box, bottom bar only per DESIGN.md
+const underlineInputStyle = {
+  background: "transparent",
+  border: "none",
+  borderBottom: "2px solid rgba(193,201,191,0.4)",
+  borderRadius: 0,
+  padding: "10px 2px",
+  color: "var(--on-surface)", fontSize: 15,
+  transition: "border-color 0.3s ease, box-shadow 0.3s ease",
+  fontFamily: "'Inter', sans-serif",
+  className: "uline-input",
 };
 
-const selectStyle = {
-  ...inputStyle, appearance: "none", cursor: "pointer",
+const underlineSelectStyle = {
+  ...underlineInputStyle,
+  appearance: "none", cursor: "pointer",
 };
 
-const verseBoxStyle = {
-  background: "var(--card)", border: "1px solid var(--border)",
-  borderRadius: 14, padding: "20px 18px", marginBottom: 20,
+// "surface-container-low" tonal area for verse display
+const verseAreaStyle = {
+  background: "var(--surface-low)",
+  borderRadius: 16, padding: "28px 24px",
+  marginBottom: 0,
 };
 
+// Cards = surface-lowest, lifted above surface-low page
 const cardStyle = {
-  background: "var(--card)", border: "1px solid var(--border)",
-  borderRadius: 16, padding: "18px 20px", marginBottom: 16,
-  boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
-  transition: "box-shadow 0.2s",
+  background: "var(--surface-lowest)",
+  borderRadius: 16, padding: "24px",
+  marginBottom: 16,
+  boxShadow: "0 2px 40px rgba(26,28,26,0.04)",
 };
 
-const actionBtn = {
-  background: "transparent", border: "1px solid var(--border)",
-  borderRadius: 7, padding: "5px 13px", cursor: "pointer",
-  color: "var(--muted)", fontSize: 12, fontFamily: "'DM Serif Display',serif",
-  transition: "all 0.15s",
+// Chip buttons (Edit / Delete on journal cards)
+const chipBtnStyle = {
+  background: "var(--surface-low)",
+  border: "none",
+  borderRadius: 40, padding: "5px 14px", cursor: "pointer",
+  color: "var(--on-surface-variant)", fontSize: 12,
+  fontFamily: "'Inter',sans-serif", fontWeight: 500,
 };
 
-const sectionStyle = {
-  background: "var(--card)", border: "1px solid var(--border)",
-  borderRadius: 14, padding: "20px 22px", marginBottom: 16,
+// Primary button (gradient)
+const primaryBtnStyle = {
+  padding: "10px 22px", borderRadius: 6, border: "none",
+  background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)",
+  color: "var(--on-primary)", cursor: "pointer",
+  fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 600,
+  boxShadow: "0 4px 20px rgba(0,54,26,0.16)",
 };
 
-const sectionTitle = {
-  fontFamily: "'DM Serif Display',serif", color: "var(--text)",
-  fontSize: 16, marginBottom: 6,
+// Ghost button (cancel actions)
+const ghostBtnStyle = {
+  padding: "10px 22px", borderRadius: 6,
+  border: "1px solid var(--outline-ghost)",
+  background: "transparent", color: "var(--on-surface-variant)",
+  cursor: "pointer", fontFamily: "'Inter',sans-serif",
+  fontSize: 13, fontWeight: 500,
 };
 
-const sectionDesc = {
-  fontFamily: "'Lora',serif", fontSize: 13, color: "var(--muted)",
-  lineHeight: 1.75, marginBottom: 14,
+// Secondary button (settings actions)
+const secondaryBtnStyle = {
+  padding: "9px 20px", borderRadius: 40,
+  border: "none", background: "var(--surface-low)",
+  color: "var(--on-surface-variant)", cursor: "pointer",
+  fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 500,
 };
 
-const settingsBtnStyle = {
-  padding: "9px 18px", borderRadius: 9,
-  border: "1px solid var(--border)", background: "var(--green-light)",
-  color: "var(--green)", cursor: "pointer", fontFamily: "'DM Serif Display',serif",
-  fontSize: 13, transition: "all 0.18s"
+// Settings section — tonal card (surface-lowest)
+const settingsSectionStyle = {
+  background: "var(--surface-lowest)",
+  borderRadius: 16, padding: "22px 24px", marginBottom: 14,
+  boxShadow: "0 2px 40px rgba(26,28,26,0.04)",
+};
+
+const settingsTitleStyle = {
+  fontFamily: "'Inter',sans-serif", fontWeight: 600,
+  color: "var(--on-surface)", fontSize: 15, marginBottom: 6,
+};
+
+const settingsDescStyle = {
+  fontFamily: "'Inter',sans-serif", fontSize: 13,
+  color: "var(--on-surface-variant)", lineHeight: 1.7, marginBottom: 16,
 };
 
 function skeletonLine(widthPct) {
   return {
-    height: 13, borderRadius: 7, marginBottom: 11, width: `${widthPct}%`,
-    background: "linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%)",
-    backgroundSize: "500px 100%",
-    animation: "shimmer 1.5s infinite linear",
+    height: 12, borderRadius: 6, marginBottom: 12, width: `${widthPct}%`,
+    background: "linear-gradient(90deg, var(--surface-low) 25%, var(--surface-lowest) 50%, var(--surface-low) 75%)",
+    backgroundSize: "600px 100%",
+    animation: "shimmer 1.6s infinite linear",
   };
 }
