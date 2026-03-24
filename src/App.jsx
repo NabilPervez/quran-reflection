@@ -212,8 +212,44 @@ function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = "Confirm", 
   );
 }
 
+// ── Page Header (shared across Read / Reflect / Journal) ─────────────────────
+function PageHeader({ title, subtitle, onSettings }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
+      <div>
+        <h1 style={pageTitleStyle}>{title}</h1>
+        {subtitle && <p style={pageSubtitleStyle}>{subtitle}</p>}
+      </div>
+      {onSettings && (
+        <button
+          id="settings-btn"
+          onClick={onSettings}
+          aria-label="Settings"
+          style={{
+            background: "var(--surface-low)",
+            border: "none",
+            borderRadius: "50%",
+            width: 38, height: 38,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+            color: "var(--on-surface-variant)",
+            fontSize: 17,
+            flexShrink: 0,
+            marginTop: 4,
+            transition: "background 0.3s ease, color 0.3s ease",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.color = "var(--primary-container)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-low)"; e.currentTarget.style.color = "var(--on-surface-variant)"; }}
+        >
+          ⚙️
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── REFLECT TAB ───────────────────────────────────────────────────────────────
-function ReflectTab({ onSaved, showToast, readHandoff, clearHandoff }) {
+function ReflectTab({ onSaved, showToast, readHandoff, clearHandoff, onSettings }) {
   const [surahIdx, setSurahIdx] = useState("");
   const [startAyah, setStartAyah] = useState("");
   const [endAyah, setEndAyah] = useState("");
@@ -311,8 +347,7 @@ function ReflectTab({ onSaved, showToast, readHandoff, clearHandoff }) {
 
   return (
     <div style={{ padding: "36px 24px 110px", maxWidth: 720, margin: "0 auto" }}>
-      <h1 style={pageTitleStyle}>New Reflection</h1>
-      <p style={pageSubtitleStyle}>Select a passage and record your Tadabbur</p>
+      <PageHeader title="New Reflection" subtitle="Select a passage and record your Tadabbur" onSettings={onSettings} />
 
       {/* Surah Selector */}
       <div style={{ marginBottom: 24 }}>
@@ -515,7 +550,7 @@ function ReflectTab({ onSaved, showToast, readHandoff, clearHandoff }) {
 }
 
 // ── JOURNAL TAB ───────────────────────────────────────────────────────────────
-function JournalTab({ refreshKey, showToast }) {
+function JournalTab({ refreshKey, showToast, onSettings }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editEntry, setEditEntry] = useState(null);
@@ -573,10 +608,11 @@ function JournalTab({ refreshKey, showToast }) {
 
   return (
     <div style={{ padding: "36px 24px 110px", maxWidth: 720, margin: "0 auto" }}>
-      <h1 style={pageTitleStyle}>Journal</h1>
-      <p style={pageSubtitleStyle}>
-        {entries.length} reflection{entries.length !== 1 ? "s" : ""} saved on this device
-      </p>
+      <PageHeader
+        title="Journal"
+        subtitle={`${entries.length} reflection${entries.length !== 1 ? "s" : ""} saved on this device`}
+        onSettings={onSettings}
+      />
 
       {/* Search */}
       {entries.length > 0 && (
@@ -875,7 +911,7 @@ function SettingsTab({ showToast, theme, setTheme }) {
 }
 
 // ── READ TAB ──────────────────────────────────────────────────────────────────────
-function ReadTab({ onReflect }) {
+function ReadTab({ onReflect, onSettings }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [ayahs, setAyahs] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -932,8 +968,7 @@ function ReadTab({ onReflect }) {
 
   return (
     <div style={{ padding: "36px 24px 140px", maxWidth: 720, margin: "0 auto" }} ref={topRef}>
-      <h1 style={pageTitleStyle}>Read</h1>
-      <p style={pageSubtitleStyle}>Read the Quran and capture reflections as you go</p>
+      <PageHeader title="Read" subtitle="Read the Quran and capture reflections as you go" onSettings={onSettings} />
 
       {/* Surah Selector */}
       <div style={{ marginBottom: 24 }} ref={surahRef}>
@@ -1156,8 +1191,7 @@ function BottomNav({ tab, setTab }) {
   const tabs = [
     { id: "read",     label: "Read",     icon: "📖" },
     { id: "reflect",  label: "Reflect",  icon: "✦" },
-    { id: "journal",  label: "Journal",  icon: "☰" },
-    { id: "settings", label: "Settings", icon: "⚙" },
+    { id: "journal",  label: "Journal",  icon: "📋" },
   ];
   return (
     <nav style={{
@@ -1333,9 +1367,9 @@ export default function App() {
 
       {/* Page background = surface-low (reading area) */}
       <div style={{ minHeight: "100vh", background: "var(--surface-low)", maxWidth: 720, margin: "0 auto", position: "relative" }}>
-        {tab === "read"     && <ReadTab onReflect={handleReflect} />}
-        {tab === "reflect"  && <ReflectTab onSaved={() => setJournalKey((k) => k + 1)} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} />}
-        {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast} />}
+        {tab === "read"     && <ReadTab onReflect={handleReflect} onSettings={() => setTab("settings")} />}
+        {tab === "reflect"  && <ReflectTab onSaved={() => setJournalKey((k) => k + 1)} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} onSettings={() => setTab("settings")} />}
+        {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast} onSettings={() => setTab("settings")} />}
         {tab === "settings" && <SettingsTab showToast={showToast} theme={theme} setTheme={setTheme} />}
         <BottomNav tab={tab} setTab={setTab} />
       </div>
