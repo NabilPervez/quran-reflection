@@ -866,6 +866,28 @@ function SettingsTab({ showToast, theme, setTheme }) {
         </div>
       </div>
 
+      {/* Import */}
+      <div style={settingsSectionStyle}>
+        <h2 style={settingsTitleStyle}>Import Data</h2>
+        <p style={settingsDescStyle}>
+          Restore reflections from a previously exported JSON or CSV file. Imported entries are merged with existing ones — no data is overwritten.
+        </p>
+        <label
+          id="import-file-label"
+          htmlFor="import-file-input"
+          style={{ ...secondaryBtnStyle, display: "inline-block", cursor: "pointer" }}
+        >
+          Import JSON or CSV
+        </label>
+        <input
+          id="import-file-input"
+          type="file"
+          accept=".json,.csv"
+          onChange={handleImportFile}
+          style={{ display: "none" }}
+        />
+      </div>
+
       {/* About */}
       <div style={settingsSectionStyle}>
         <h2 style={settingsTitleStyle}>About</h2>
@@ -912,15 +934,24 @@ function SettingsTab({ showToast, theme, setTheme }) {
 
 // ── READ TAB ──────────────────────────────────────────────────────────────────────
 function ReadTab({ onReflect, onSettings }) {
-  const [currentPage, setCurrentPage] = useState(1);
+  const BOOKMARK_KEY = "qr_bookmark_page";
+  const [currentPage, setCurrentPage] = useState(
+    () => Number(localStorage.getItem(BOOKMARK_KEY)) || 1
+  );
+  const [contentKey, setContentKey] = useState(0); // triggers fade on page change
   const [ayahs, setAyahs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState("");
   const [surahSearch, setSurahSearch] = useState("");
   const [showSurahDrop, setShowSurahDrop] = useState(false);
   const [selectedSurahNum, setSelectedSurahNum] = useState(null);
+  const [bookmarked, setBookmarked] = useState(
+    () => Number(localStorage.getItem(BOOKMARK_KEY)) === (Number(localStorage.getItem(BOOKMARK_KEY)) || 1)
+  );
   const surahRef = useRef(null);
   const topRef = useRef(null);
+
+  const savedBookmark = Number(localStorage.getItem(BOOKMARK_KEY)) || null;
 
   const filteredSurahs = SURAHS.filter(
     (s) => s[1].toLowerCase().includes(surahSearch.toLowerCase()) || String(s[0]).includes(surahSearch)
@@ -941,7 +972,7 @@ function ReadTab({ onReflect, onSettings }) {
     setFetchError("");
     setLoading(true);
     fetchByPage(currentPage)
-      .then((data) => { setAyahs(data); setLoading(false); })
+      .then((data) => { setAyahs(data); setLoading(false); setContentKey((k) => k + 1); })
       .catch(() => { setFetchError("Could not load this page. Please check your internet connection."); setLoading(false); });
   }, [currentPage]);
 
@@ -950,6 +981,21 @@ function ReadTab({ onReflect, onSettings }) {
     setCurrentPage(clamped);
     topRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const toggleBookmark = () => {
+    if (localStorage.getItem(BOOKMARK_KEY) === String(currentPage)) {
+      localStorage.removeItem(BOOKMARK_KEY);
+      setBookmarked(false);
+    } else {
+      localStorage.setItem(BOOKMARK_KEY, String(currentPage));
+      setBookmarked(true);
+    }
+  };
+
+  // Keep bookmarked state in sync with currentPage
+  useEffect(() => {
+    setBookmarked(localStorage.getItem("qr_bookmark_page") === String(currentPage));
+  }, [currentPage]);
 
   const handleSurahSelect = (surahNum) => {
     setSelectedSurahNum(surahNum);
@@ -968,7 +1014,31 @@ function ReadTab({ onReflect, onSettings }) {
 
   return (
     <div style={{ padding: "36px 24px 140px", maxWidth: 720, margin: "0 auto" }} ref={topRef}>
-      <PageHeader title="Read" subtitle="Read the Quran and capture reflections as you go" onSettings={onSettings} />
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
+        <div style={{ flex: 1 }}>
+          <PageHeader title="Read" subtitle="Read the Quran and capture reflections as you go" onSettings={onSettings} />
+        </div>
+      </div>
+
+      {/* Bookmark resume pill */}
+      {savedBookmark && savedBookmark !== currentPage && (
+        <button
+          onClick={() => goToPage(savedBookmark)}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            marginBottom: 20, padding: "7px 16px", borderRadius: 40,
+            background: "var(--primary-light)",
+            border: "1px solid var(--outline-ghost)",
+            color: "var(--primary-container)",
+            fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600,
+            cursor: "pointer", transition: "all 0.3s ease",
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = "rgba(26,77,46,0.14)"}
+          onMouseLeave={(e) => e.currentTarget.style.background = "var(--primary-light)"}
+        >
+          🔖 Resume at Page {savedBookmark}
+        </button>
+      )}
 
       {/* Surah Selector */}
       <div style={{ marginBottom: 24 }} ref={surahRef}>
@@ -1019,22 +1089,38 @@ function ReadTab({ onReflect, onSettings }) {
         </div>
       </div>
 
-      {/* Page indicator */}
+      {/* Page indicator + bookmark button */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "center",
-        marginBottom: 28,
-        padding: "8px 20px",
-        background: "var(--primary-light)",
-        borderRadius: 40,
-        width: "fit-content",
-        margin: "0 auto 28px",
+        gap: 10, margin: "0 auto 28px",
       }}>
-        <span style={{
-          fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600,
-          color: "var(--primary-container)", letterSpacing: "0.06em", textTransform: "uppercase",
+        <div style={{
+          padding: "8px 20px",
+          background: "var(--primary-light)",
+          borderRadius: 40,
         }}>
-          Page {currentPage} of 604
-        </span>
+          <span style={{
+            fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600,
+            color: "var(--primary-container)", letterSpacing: "0.06em", textTransform: "uppercase",
+          }}>
+            Page {currentPage} of 604
+          </span>
+        </div>
+        <button
+          id="bookmark-btn"
+          onClick={toggleBookmark}
+          title={bookmarked ? "Remove bookmark" : "Bookmark this page"}
+          style={{
+            background: bookmarked ? "var(--primary-light)" : "var(--surface-low)",
+            border: "none", borderRadius: "50%",
+            width: 34, height: 34,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", fontSize: 16,
+            transition: "all 0.3s ease",
+          }}
+        >
+          {bookmarked ? "🔖" : "🔖"}
+        </button>
       </div>
 
       {/* Loading skeletons */}
@@ -1062,9 +1148,12 @@ function ReadTab({ onReflect, onSettings }) {
         </div>
       )}
 
-      {/* Ayah list */}
+      {/* Ayah list — fades on page change */}
       {!loading && !fetchError && ayahs.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div
+          key={contentKey}
+          style={{ display: "flex", flexDirection: "column", gap: 20, animation: "pageFade 0.35s ease" }}
+        >
           {ayahs.map((ayah) => {
             const isNewSurah = ayah.surahNum !== lastSurah;
             if (isNewSurah) lastSurah = ayah.surahNum;
@@ -1350,6 +1439,7 @@ export default function App() {
           to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pageFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes shimmer {
           0%   { background-position: -600px 0; }
           100% { background-position: 600px 0; }
@@ -1367,10 +1457,12 @@ export default function App() {
 
       {/* Page background = surface-low (reading area) */}
       <div style={{ minHeight: "100vh", background: "var(--surface-low)", maxWidth: 720, margin: "0 auto", position: "relative" }}>
-        {tab === "read"     && <ReadTab onReflect={handleReflect} onSettings={() => setTab("settings")} />}
-        {tab === "reflect"  && <ReflectTab onSaved={() => setJournalKey((k) => k + 1)} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} onSettings={() => setTab("settings")} />}
-        {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast} onSettings={() => setTab("settings")} />}
-        {tab === "settings" && <SettingsTab showToast={showToast} theme={theme} setTheme={setTheme} />}
+        <div key={tab} style={{ animation: "pageFade 0.28s ease" }}>
+          {tab === "read"     && <ReadTab onReflect={handleReflect} onSettings={() => setTab("settings")} />}
+          {tab === "reflect"  && <ReflectTab onSaved={() => setJournalKey((k) => k + 1)} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} onSettings={() => setTab("settings")} />}
+          {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast} onSettings={() => setTab("settings")} />}
+          {tab === "settings" && <SettingsTab showToast={showToast} theme={theme} setTheme={setTheme} />}
+        </div>
         <BottomNav tab={tab} setTab={setTab} />
       </div>
 
