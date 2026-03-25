@@ -4,6 +4,30 @@ import { cardStyle, chipBtnStyle, primaryBtnStyle, ghostBtnStyle, underlineInput
 import PageHeader from "./PageHeader";
 import ConfirmModal from "./ConfirmModal";
 
+const PRESET_TAGS = ["Gratitude", "Dua", "Lesson", "Patience", "Tawakkul", "Tawbah", "Reflection", "Reminder"];
+
+/** H4 — Share a reflection as formatted text using Web Share API with clipboard fallback */
+async function shareEntry(entry, showToast) {
+  const verseRef = `${entry.surahName} ${entry.surahNumber}:${entry.startAyah}${entry.startAyah !== entry.endAyah ? `–${entry.endAyah}` : ""}`;
+  const arabicText = entry.arabic?.map((a) => a.text).join(" ") ?? "";
+  const englishText = entry.english?.map((a) => `[${a.number}] ${a.text}`).join("\n") ?? "";
+  const date = new Date(entry.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const text = `${verseRef}\n\n${arabicText}\n\n${englishText}\n\n— My Reflection (${date}):\n${entry.reflection}\n\n✦ Quran Reflect`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: `Reflection on ${verseRef}`, text });
+      return;
+    } catch {
+      // user cancelled — don't show error
+      return;
+    }
+  }
+  // Fallback: copy to clipboard
+  await navigator.clipboard.writeText(text);
+  showToast("Copied to clipboard ✦");
+}
+
 export default function JournalTab({ refreshKey, showToast, onSettings }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,6 +36,7 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [expanded, setExpanded] = useState({});
   const [search, setSearch] = useState("");
+  const [activeTag, setActiveTag] = useState(null); // M2 tag filter
   const editRef = useRef(null);
 
   const load = useCallback(async () => {
@@ -44,14 +69,29 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
     showToast("Reflection updated ✦");
   };
 
+  // M5 — Copy just the reflection text
+  const handleCopyReflection = (entry) => {
+    const verseRef = `${entry.surahName} ${entry.surahNumber}:${entry.startAyah}${entry.startAyah !== entry.endAyah ? `–${entry.endAyah}` : ""}`;
+    navigator.clipboard.writeText(`${verseRef}\n\n${entry.reflection}`);
+    showToast("Reflection copied ✦");
+  };
+
+  // M2 — Gather all unique tags that exist across entries
+  const allTags = [...new Set(entries.flatMap((e) => e.tags ?? []))].filter(Boolean);
+
+  // Combined filter: text search + tag filter
   const filtered = entries.filter((e) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return (
-      e.surahName.toLowerCase().includes(q) ||
-      e.reflection.toLowerCase().includes(q) ||
-      String(e.surahNumber).includes(q)
-    );
+    const matchesSearch = !search.trim() || (() => {
+      const q = search.toLowerCase();
+      return (
+        e.surahName.toLowerCase().includes(q) ||
+        e.reflection.toLowerCase().includes(q) ||
+        String(e.surahNumber).includes(q) ||
+        (e.tags ?? []).some((t) => t.toLowerCase().includes(q))
+      );
+    })();
+    const matchesTag = !activeTag || (e.tags ?? []).includes(activeTag);
+    return matchesSearch && matchesTag;
   });
 
   if (loading) return (
@@ -70,14 +110,44 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
 
       {/* Search */}
       {entries.length > 0 && (
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ marginBottom: 20 }}>
           <input
             id="journal-search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search reflections…"
+            placeholder="Search reflections, verses, or tags…"
             style={{ ...underlineInputStyle, width: "100%", boxSizing: "border-box" }}
           />
+        </div>
+      )}
+
+      {/* M2 — Tag filter chips */}
+      {allTags.length > 0 && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 28 }}>
+          {allTags.map((tag) => {
+            const active = activeTag === tag;
+            return (
+              <button
+                key={tag}
+                onClick={() => setActiveTag(active ? null : tag)}
+                style={{
+                  padding: "5px 14px", borderRadius: 40,
+                  border: "1px solid var(--outline-ghost)",
+                  background: active ? "var(--primary-light)" : "transparent",
+                  color: active ? "var(--primary-container)" : "var(--on-surface-variant)",
+                  fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: active ? 600 : 400,
+                  cursor: "pointer", transition: "all 0.2s ease",
+                }}
+              >
+                {active ? "✓ " : ""}{tag}
+              </button>
+            );
+          })}
+          {activeTag && (
+            <button onClick={() => setActiveTag(null)} style={{ padding: "5px 14px", borderRadius: 40, border: "1px solid var(--outline-ghost)", background: "transparent", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 12, cursor: "pointer" }}>
+              × Clear
+            </button>
+          )}
         </div>
       )}
 
@@ -93,7 +163,7 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
         </div>
       ) : filtered.length === 0 ? (
         <p style={{ color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 14, textAlign: "center", padding: "48px 0" }}>
-          No reflections match "{search}"
+          No reflections match {activeTag ? `"${activeTag}"` : `"${search}"`}.
         </p>
       ) : (
         filtered.map((entry) => {
@@ -106,7 +176,7 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
           return (
             <div key={entry.id} style={cardStyle}>
               {/* Header row */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                 <div>
                   <div style={{ fontFamily: "'Inter',sans-serif", color: "var(--on-surface)", fontSize: 17, fontWeight: 600 }}>
                     {entry.surahName}
@@ -119,18 +189,38 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
+                  {/* M5 — Copy reflection */}
+                  <button onClick={() => handleCopyReflection(entry)} style={chipBtnStyle} title="Copy reflection text">📋</button>
+                  {/* H4 — Share */}
+                  <button onClick={() => shareEntry(entry, showToast)} style={chipBtnStyle} title="Share reflection">↗</button>
                   <button onClick={() => { setEditEntry(entry); setEditText(entry.reflection); }} style={chipBtnStyle}>Edit</button>
                   <button onClick={() => setDeleteTarget(entry)} style={{ ...chipBtnStyle, color: "#b91c1c" }}>Delete</button>
                 </div>
               </div>
 
+              {/* M2 — Tags row */}
+              {(entry.tags ?? []).length > 0 && (
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+                  {(entry.tags ?? []).map((tag) => (
+                    <span
+                      key={tag}
+                      onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                      style={{
+                        padding: "3px 10px", borderRadius: 40,
+                        background: activeTag === tag ? "var(--primary-light)" : "var(--surface-low)",
+                        color: "var(--primary-container)",
+                        fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 600,
+                        cursor: "pointer", transition: "all 0.2s ease",
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               {/* Arabic */}
-              <div style={{
-                textAlign: "center", direction: "rtl",
-                background: "var(--surface-low)",
-                borderRadius: 12, padding: "20px 24px",
-                marginBottom: 20, lineHeight: 2.6,
-              }}>
+              <div style={{ textAlign: "center", direction: "rtl", background: "var(--surface-low)", borderRadius: 12, padding: "20px 24px", marginBottom: 20, lineHeight: 2.6 }}>
                 {entry.arabic.map((a) => (
                   <span key={a.number} style={{ fontFamily: "'Amiri','Scheherazade New',serif", fontSize: 22, color: "var(--on-surface)" }}>
                     {a.text}{" "}
@@ -168,12 +258,7 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
 
       {/* Edit Modal */}
       {editEntry && (
-        <div style={{
-          position: "fixed", inset: 0,
-          background: "rgba(26,28,26,0.48)", backdropFilter: "blur(8px)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 9000, padding: 20, animation: "fadeIn 0.25s ease",
-        }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(26,28,26,0.48)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 20, animation: "fadeIn 0.25s ease" }}>
           <div style={{ background: "var(--surface-lowest)", borderRadius: 20, padding: 32, maxWidth: 560, width: "100%", boxShadow: "0 40px 80px rgba(26,28,26,0.06)" }}>
             <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, color: "var(--on-surface)", margin: "0 0 4px", fontSize: 18 }}>Edit Reflection</h3>
             <p style={{ color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 12, margin: "0 0 20px" }}>

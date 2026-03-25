@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+
+const PRESET_TAGS = ["Gratitude", "Dua", "Lesson", "Patience", "Tawakkul", "Tawbah", "Reflection", "Reminder"];
 import { fetchVerses } from "../lib/api";
 import { dbAdd } from "../lib/db";
 import { SURAHS } from "../lib/data";
@@ -17,6 +19,7 @@ export default function ReflectTab({ onSaved, showToast, readHandoff, clearHando
   const [fetchError, setFetchError] = useState("");
   const [reflection, setReflection] = useState("");
   const [saving, setSaving] = useState(false);
+  const [tags, setTags] = useState([]);
   const [surahSearch, setSurahSearch] = useState("");
   const [showSurahDrop, setShowSurahDrop] = useState(false);
   const surahRef = useRef(null);
@@ -82,11 +85,12 @@ export default function ReflectTab({ onSaved, showToast, readHandoff, clearHando
         startAyah: Number(startAyah), endAyah: Number(endAyah),
         arabic: verses.arabic, english: verses.english,
         reflection: reflection.trim(),
+        tags,
       });
       onSaved();
       showToast("Reflection saved ✦");
       setSurahIdx(""); setSurahSearch(""); setStartAyah(""); setEndAyah("");
-      setVerses(null); setReflection("");
+      setVerses(null); setReflection(""); setTags([]);
     } catch {
       showToast("Failed to save. Please try again.", "error");
     }
@@ -255,7 +259,7 @@ export default function ReflectTab({ onSaved, showToast, readHandoff, clearHando
       )}
 
       {/* Reflection input */}
-      <div style={{ marginTop: 40, marginBottom: 32 }}>
+      <div style={{ marginTop: 40, marginBottom: 24 }}>
         <label style={labelStyle}>Your Reflection</label>
         <textarea
           id="reflection-input"
@@ -271,6 +275,32 @@ export default function ReflectTab({ onSaved, showToast, readHandoff, clearHando
             fontSize: 15, overflow: "hidden",
           }}
         />
+      </div>
+
+      {/* M2 — Tags */}
+      <div style={{ marginBottom: 32 }}>
+        <label style={labelStyle}>Tags <span style={{ opacity: 0.5, fontWeight: 400, textTransform: "none", fontSize: 10 }}>(optional)</span></label>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {PRESET_TAGS.map((tag) => {
+            const active = tags.includes(tag);
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setTags((prev) => active ? prev.filter((t) => t !== tag) : [...prev, tag])}
+                style={{
+                  padding: "6px 14px", borderRadius: 40, border: "1px solid var(--outline-ghost)",
+                  background: active ? "var(--primary-light)" : "transparent",
+                  color: active ? "var(--primary-container)" : "var(--on-surface-variant)",
+                  fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: active ? 600 : 400,
+                  cursor: "pointer", transition: "all 0.2s ease",
+                }}
+              >
+                {active ? "✓ " : ""}{tag}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <button
