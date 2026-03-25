@@ -42,56 +42,6 @@ function HighlightedText({ text, query, style }) {
   );
 }
 
-/** Audio player for a single Ayah */
-function AyahAudio({ verseKey }) {
-  const [playing, setPlaying] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const audioRef = useRef(null);
-
-  const src = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${verseKey.replace(":", "")}.mp3`;
-
-  const toggle = () => {
-    if (!audioRef.current) {
-      const audio = new Audio(src);
-      audioRef.current = audio;
-      audio.oncanplaythrough = () => { setLoading(false); audio.play(); setPlaying(true); };
-      audio.onended = () => setPlaying(false);
-      audio.onerror = () => { setLoading(false); setPlaying(false); };
-      setLoading(true);
-      audio.load();
-    } else if (playing) {
-      audioRef.current.pause();
-      setPlaying(false);
-    } else {
-      audioRef.current.play();
-      setPlaying(true);
-    }
-  };
-
-  // Cleanup on unmount
-  useEffect(() => () => { audioRef.current?.pause(); }, []);
-
-  return (
-    <button
-      id={`audio-${verseKey}`}
-      onClick={toggle}
-      title={playing ? "Pause recitation" : "Play recitation"}
-      style={{
-        display: "inline-flex", alignItems: "center", gap: 5,
-        padding: "7px 14px", borderRadius: 40,
-        border: "1px solid var(--outline-ghost)",
-        background: playing ? "var(--primary-light)" : "transparent",
-        color: "var(--primary-container)",
-        fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600,
-        cursor: "pointer", transition: "all 0.3s ease",
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.borderColor = "var(--primary-container)"; }}
-      onMouseLeave={(e) => { if (!playing) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "var(--outline-ghost)"; } }}
-    >
-      {loading ? "⏳" : playing ? "⏸" : "▶"} {loading ? "Loading…" : playing ? "Pause" : "Listen"}
-    </button>
-  );
-}
 
 export default function ReadTab({ onReflect, onSettings }) {
   const [currentPage, setCurrentPage] = useState(
@@ -378,8 +328,6 @@ export default function ReadTab({ onReflect, onSettings }) {
 
                   {/* Action buttons */}
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {/* M3 — Recitation audio */}
-                    <AyahAudio verseKey={ayah.verseKey} />
 
                     {/* Reflect button */}
                     <button
