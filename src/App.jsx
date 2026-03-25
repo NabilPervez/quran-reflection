@@ -811,6 +811,67 @@ function SettingsTab({ showToast, theme, setTheme }) {
     showToast("Exported as CSV ✦");
   };
 
+  const importJSON = async (file) => {
+    try {
+      const text = await file.text();
+      const records = JSON.parse(text);
+      if (!Array.isArray(records)) throw new Error("Invalid format");
+      let count = 0;
+      for (const r of records) {
+        if (!r.reflection || !r.surahName) continue;
+        const { id: _id, ...rest } = r;
+        await dbAdd({ ...rest, createdAt: r.createdAt ?? new Date().toISOString() });
+        count++;
+      }
+      setEntryCount((c) => (c ?? 0) + count);
+      showToast(`Imported ${count} reflection${count !== 1 ? "s" : ""} ✦`);
+    } catch {
+      showToast("Import failed — invalid JSON file.", "error");
+    }
+  };
+
+  const importCSV = async (file) => {
+    try {
+      const text = await file.text();
+      const [headerLine, ...rows] = text.trim().split("\n");
+      const headers = headerLine.split(",");
+      let count = 0;
+      for (const row of rows) {
+        const vals = [];
+        let cur = "", inQ = false;
+        for (const ch of row) {
+          if (ch === '"') { inQ = !inQ; }
+          else if (ch === ',' && !inQ) { vals.push(cur); cur = ""; }
+          else { cur += ch; }
+        }
+        vals.push(cur);
+        const obj = {};
+        headers.forEach((h, i) => { obj[h.trim()] = (vals[i] ?? "").replace(/^"|"$/g, ""); });
+        if (!obj.reflection || !obj.surahName) continue;
+        await dbAdd({
+          createdAt: obj.createdAt || new Date().toISOString(),
+          surahName: obj.surahName, surahNumber: Number(obj.surahNumber),
+          startAyah: Number(obj.startAyah), endAyah: Number(obj.endAyah),
+          reflection: obj.reflection, arabic: [], english: [],
+        });
+        count++;
+      }
+      setEntryCount((c) => (c ?? 0) + count);
+      showToast(`Imported ${count} reflection${count !== 1 ? "s" : ""} ✦`);
+    } catch {
+      showToast("Import failed — invalid CSV file.", "error");
+    }
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    if (file.name.endsWith(".json")) importJSON(file);
+    else if (file.name.endsWith(".csv")) importCSV(file);
+    else showToast("Please select a .json or .csv file.", "error");
+  };
+
   const handleClearFinal = async () => {
     await dbClear();
     setClearConfirm2(false);
