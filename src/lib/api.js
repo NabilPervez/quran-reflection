@@ -21,7 +21,7 @@ export async function fetchVerses(surahNum, startAyah, endAyah, signal) {
 export async function fetchByPage(pageNum, signal) {
   const [arRes, enRes] = await Promise.all([
     fetch(`https://api.alquran.cloud/v1/page/${pageNum}/quran-uthmani`, { signal }),
-    fetch(`https://api.alquran.cloud/v1/page/${pageNum}/en.itani`, { signal }),
+    fetch(`https://api.alquran.cloud/v1/page/${pageNum}/en.sahih`, { signal }),
   ]);
   if (!arRes.ok || !enRes.ok) throw new Error("Page fetch failed");
   const [arData, enData] = await Promise.all([arRes.json(), enRes.json()]);

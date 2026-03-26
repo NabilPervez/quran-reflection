@@ -289,26 +289,28 @@ export default function ReflectTab({ onSaved, showToast, readHandoff, clearHando
       {/* M2 — Tags */}
       <div style={{ marginBottom: 32 }}>
         <label style={labelStyle}>Tags <span style={{ opacity: 0.5, fontWeight: 400, textTransform: "none", fontSize: 10 }}>(optional)</span></label>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {PRESET_TAGS.map((tag) => {
-            const active = tags.includes(tag);
-            return (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => setTags((prev) => active ? prev.filter((t) => t !== tag) : [...prev, tag])}
-                style={{
-                  padding: "6px 14px", borderRadius: 40, border: "1px solid var(--outline-ghost)",
-                  background: active ? "var(--primary-light)" : "transparent",
-                  color: active ? "var(--primary-container)" : "var(--on-surface-variant)",
-                  fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: active ? 600 : 400,
-                  cursor: "pointer", transition: "all 0.2s ease",
-                }}
-              >
-                {active ? "✓ " : ""}{tag}
-              </button>
-            );
-          })}
+        <div style={{ display: "flex", gap: 10, alignItems: "center", overflowX: "auto", whiteSpace: "nowrap" }}>
+          <select
+            value=""
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val && !tags.includes(val)) setTags([...tags, val]);
+            }}
+            style={{ ...underlineSelectStyle, minWidth: 140, padding: "6px 2px", height: 32 }}
+          >
+            <option value="">+ Add Tag</option>
+            {PRESET_TAGS.filter(t => !tags.includes(t)).map(tag => (
+              <option key={tag} value={tag}>{tag}</option>
+            ))}
+          </select>
+          {tags.map((tag) => (
+            <button
+              key={tag} type="button" onClick={() => setTags(tags.filter(t => t !== tag))}
+              style={{ padding: "4px 12px", borderRadius: 40, border: "1px solid var(--primary-container)", background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}
+            >
+              {tag} <span>×</span>
+            </button>
+          ))}
         </div>
       </div>
 

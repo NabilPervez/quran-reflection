@@ -101,9 +101,10 @@ export default function ReadTab({ onReflect, onSettings }) {
     return () => controller.abort();
   }, [currentPage]);
 
-  // Sync bookmarked state when page changes
+  // Auto-bookmark when page changes
   useEffect(() => {
-    setBookmarked(localStorage.getItem(BOOKMARK_KEY) === String(currentPage));
+    localStorage.setItem(BOOKMARK_KEY, String(currentPage));
+    setBookmarked(true);
   }, [currentPage]);
 
   // L5 — Keyboard shortcuts

@@ -14,7 +14,7 @@ export default defineConfig({
         description: "A privacy-first Tadabbur journal — select verses, read Arabic & Clear Quran translation, and save your reflections locally.",
         theme_color: "#1A4D2E",
         background_color: "#FAF9F6",
-        display: "standalone",
+        display: "fullscreen",
         orientation: "portrait",
         start_url: "/",
         icons: [

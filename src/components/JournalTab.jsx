@@ -12,7 +12,7 @@ async function shareEntry(entry, showToast) {
   const arabicText = entry.arabic?.map((a) => a.text).join(" ") ?? "";
   const englishText = entry.english?.map((a) => `[${a.number}] ${a.text}`).join("\n") ?? "";
   const date = new Date(entry.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-  const text = `${verseRef}\n\n${arabicText}\n\n${englishText}\n\n— My Reflection (${date}):\n${entry.reflection}\n\n✦ Quran Reflect`;
+  const text = `${verseRef}\n\n${arabicText}\n\n${englishText}\n\n— My Reflection (${date}):\n${entry.reflection}\n\n✦ Quran Reflect\nhttps://quran-reflection.netlify.app/`;
 
   if (navigator.share) {
     try {
