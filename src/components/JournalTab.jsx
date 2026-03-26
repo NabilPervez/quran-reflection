@@ -31,6 +31,7 @@ async function shareEntry(entry, showToast) {
 export default function JournalTab({ refreshKey, showToast, onSettings }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, currentStreak: 0, longestStreak: 0 });
   const [editEntry, setEditEntry] = useState(null);
   const [editText, setEditText] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -41,8 +42,65 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setEntries(await dbGetAll()); }
-    catch { setEntries([]); }
+    try {
+      const data = await dbGetAll();
+      setEntries(data);
+
+      // Calculate stats
+      const total = data.length;
+      let currentStreak = 0;
+      let longestStreak = 0;
+
+      if (total > 0) {
+        // Extract unique dates as YYYY-MM-DD strings and sort descending
+        const uniqueDates = [...new Set(data.map(e => new Date(e.createdAt).toISOString().slice(0, 10)))]
+          .sort((a, b) => new Date(b) - new Date(a));
+
+        if (uniqueDates.length > 0) {
+          // Calculate longest streak
+          let currentRunningStreak = 1;
+          longestStreak = 1;
+
+          for (let i = 0; i < uniqueDates.length - 1; i++) {
+            const date1 = new Date(uniqueDates[i]);
+            const date2 = new Date(uniqueDates[i+1]);
+            const diffDays = Math.floor((date1 - date2) / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+              currentRunningStreak++;
+              longestStreak = Math.max(longestStreak, currentRunningStreak);
+            } else {
+              currentRunningStreak = 1;
+            }
+          }
+
+          // Calculate current streak
+          const today = new Date().toISOString().slice(0, 10);
+          const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+          if (uniqueDates[0] === today || uniqueDates[0] === yesterday) {
+            currentStreak = 1;
+            for (let i = 0; i < uniqueDates.length - 1; i++) {
+              const date1 = new Date(uniqueDates[i]);
+              const date2 = new Date(uniqueDates[i+1]);
+              const diffDays = Math.floor((date1 - date2) / (1000 * 60 * 60 * 24));
+
+              if (diffDays === 1) {
+                currentStreak++;
+              } else {
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      setStats({ total, currentStreak, longestStreak });
+    }
+    catch {
+      setEntries([]);
+      setStats({ total: 0, currentStreak: 0, longestStreak: 0 });
+    }
     setLoading(false);
   }, []);
 
@@ -104,9 +162,34 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
     <div style={{ padding: "36px 24px 110px", maxWidth: 720, margin: "0 auto" }}>
       <PageHeader
         title="Journal"
-        subtitle={`${entries.length} reflection${entries.length !== 1 ? "s" : ""} saved on this device`}
+        subtitle="Review and reflect on your past Tadabbur"
         onSettings={onSettings}
       />
+
+      {/* Stats Bar */}
+      {!loading && entries.length > 0 && (
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          background: "var(--surface-lowest)", borderRadius: 12, padding: "16px 20px",
+          marginBottom: 24, boxShadow: "0 2px 20px rgba(26,28,26,0.03)",
+          border: "1px solid var(--outline-ghost)"
+        }}>
+          <div style={{ textAlign: "center", flex: 1 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "var(--primary-container)", fontFamily: "'Inter',sans-serif", marginBottom: 2 }}>{stats.total}</div>
+            <div style={{ fontSize: 11, color: "var(--on-surface-variant)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>Total</div>
+          </div>
+          <div style={{ width: 1, height: 32, background: "var(--outline-ghost)" }} />
+          <div style={{ textAlign: "center", flex: 1 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "var(--primary-container)", fontFamily: "'Inter',sans-serif", marginBottom: 2 }}>{stats.currentStreak} <span style={{fontSize: 14}}>🔥</span></div>
+            <div style={{ fontSize: 11, color: "var(--on-surface-variant)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>Current Streak</div>
+          </div>
+          <div style={{ width: 1, height: 32, background: "var(--outline-ghost)" }} />
+          <div style={{ textAlign: "center", flex: 1 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "var(--primary-container)", fontFamily: "'Inter',sans-serif", marginBottom: 2 }}>{stats.longestStreak}</div>
+            <div style={{ fontSize: 11, color: "var(--on-surface-variant)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>Best Streak</div>
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       {entries.length > 0 && (

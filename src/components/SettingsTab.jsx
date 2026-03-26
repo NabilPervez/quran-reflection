@@ -3,7 +3,7 @@ import { dbGetAll, dbAdd, dbClear } from "../lib/db";
 import { secondaryBtnStyle, settingsSectionStyle, settingsTitleStyle, settingsDescStyle, pageTitleStyle, pageSubtitleStyle } from "../lib/styles";
 import ConfirmModal from "./ConfirmModal";
 
-export default function SettingsTab({ showToast, theme, setTheme }) {
+export default function SettingsTab({ showToast, theme, setTheme, onBack }) {
   const [clearConfirm1, setClearConfirm1] = useState(false);
   const [clearConfirm2, setClearConfirm2] = useState(false);
   const [entryCount, setEntryCount] = useState(null);
@@ -112,7 +112,25 @@ export default function SettingsTab({ showToast, theme, setTheme }) {
 
   return (
     <div style={{ padding: "36px 24px 110px", maxWidth: 720, margin: "0 auto" }}>
-      <h1 style={pageTitleStyle}>Settings</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+        {onBack && (
+          <button
+            onClick={onBack}
+            style={{
+              background: "transparent", border: "none", cursor: "pointer",
+              fontSize: 20, color: "var(--on-surface)", display: "flex",
+              alignItems: "center", justifyContent: "center",
+              width: 38, height: 38, borderRadius: "50%",
+              transition: "background 0.3s ease",
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = "var(--surface-low)"}
+            onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+          >
+            ←
+          </button>
+        )}
+        <h1 style={{ ...pageTitleStyle, marginBottom: 0 }}>Settings</h1>
+      </div>
       <p style={pageSubtitleStyle}>All data is stored locally on your device only.</p>
 
       {/* Appearance */}

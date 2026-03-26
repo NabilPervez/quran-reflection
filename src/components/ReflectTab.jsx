@@ -58,9 +58,18 @@ export default function ReflectTab({ onSaved, showToast, readHandoff, clearHando
   useEffect(() => {
     if (!selectedSurah || !startAyah || !endAyah) return;
     setVerses(null); setFetchError(""); setLoading(true);
-    fetchVerses(selectedSurah[0], Number(startAyah), Number(endAyah))
+
+    const controller = new AbortController();
+    fetchVerses(selectedSurah[0], Number(startAyah), Number(endAyah), controller.signal)
       .then((v) => { setVerses(v); setLoading(false); })
-      .catch(() => { setFetchError("Failed to fetch verses. Check your internet connection."); setLoading(false); });
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          setFetchError("Failed to fetch verses. Check your internet connection.");
+          setLoading(false);
+        }
+      });
+
+    return () => controller.abort();
   }, [surahIdx, startAyah, endAyah]);
 
   useEffect(() => {
