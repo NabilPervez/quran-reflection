@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { fetchByPage } from "../lib/api";
-import { SURAHS, SURAH_START_PAGE } from "../lib/data";
-import { cardStyle, labelStyle, underlineInputStyle, verseAreaStyle, secondaryBtnStyle, primaryBtnStyle } from "../lib/styles";
+import { SURAHS, SURAH_START_PAGE, JUZ_START_PAGE } from "../lib/data";
+import { cardStyle, labelStyle, underlineInputStyle, verseAreaStyle, secondaryBtnStyle, primaryBtnStyle, underlineSelectStyle } from "../lib/styles";
 import PageHeader from "./PageHeader";
 
 const BOOKMARK_KEY = "qr_bookmark_page";
@@ -54,6 +54,7 @@ export default function ReadTab({ onReflect, onSettings }) {
   const [surahSearch, setSurahSearch] = useState("");
   const [showSurahDrop, setShowSurahDrop] = useState(false);
   const [selectedSurahNum, setSelectedSurahNum] = useState(null);
+  const [selectedJuzNum, setSelectedJuzNum] = useState("");
   const [bookmarked, setBookmarked] = useState(false);
   const [pageSearch, setPageSearch] = useState("");   // H5 in-page search
 
@@ -86,9 +87,18 @@ export default function ReadTab({ onReflect, onSettings }) {
     setFetchError("");
     setLoading(true);
     setPageSearch(""); // clear search on page change
-    fetchByPage(currentPage)
+
+    const controller = new AbortController();
+    fetchByPage(currentPage, controller.signal)
       .then((data) => { setAyahs(data); setLoading(false); setContentKey((k) => k + 1); })
-      .catch(() => { setFetchError("Could not load this page. Please check your internet connection."); setLoading(false); });
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          setFetchError("Could not load this page. Please check your internet connection.");
+          setLoading(false);
+        }
+      });
+
+    return () => controller.abort();
   }, [currentPage]);
 
   // Sync bookmarked state when page changes
@@ -127,9 +137,18 @@ export default function ReadTab({ onReflect, onSettings }) {
 
   const handleSurahSelect = (surahNum) => {
     setSelectedSurahNum(surahNum);
+    setSelectedJuzNum(""); // Clear juz selection when surah is selected
     setSurahSearch("");
     setShowSurahDrop(false);
     goToPage(SURAH_START_PAGE[surahNum] ?? 1);
+  };
+
+  const handleJuzSelect = (juzNum) => {
+    setSelectedJuzNum(juzNum);
+    setSelectedSurahNum(null); // Clear surah selection when juz is selected
+    if (juzNum) {
+      goToPage(JUZ_START_PAGE[juzNum] ?? 1);
+    }
   };
 
   const selectedSurahLabel = selectedSurahNum
@@ -182,10 +201,12 @@ export default function ReadTab({ onReflect, onSettings }) {
         </button>
       )}
 
-      {/* Surah Selector */}
-      <div style={{ marginBottom: 24 }} ref={surahRef}>
-        <label style={labelStyle}>Jump to Surah</label>
-        <div style={{ position: "relative" }}>
+      {/* Navigation Selectors */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
+        {/* Surah Selector */}
+        <div ref={surahRef}>
+          <label style={labelStyle}>Jump to Surah</label>
+          <div style={{ position: "relative" }}>
           <input
             id="read-surah-search"
             value={surahSearch}
@@ -195,30 +216,47 @@ export default function ReadTab({ onReflect, onSettings }) {
             style={{ ...underlineInputStyle, width: "100%", boxSizing: "border-box" }}
             autoComplete="off"
           />
-          {showSurahDrop && (
-            <div style={{
-              position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0,
-              background: "var(--surface-lowest)", borderRadius: 14,
-              maxHeight: 240, overflowY: "auto", zIndex: 200,
-              boxShadow: "0 40px 60px rgba(26,28,26,0.06)",
-              outline: "1px solid rgba(193,201,191,0.15)",
-            }}>
-              {filteredSurahs.length === 0 && (
-                <div style={{ padding: "14px 18px", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 13 }}>No results</div>
-              )}
-              {filteredSurahs.map((s) => (
-                <div key={s[0]} onClick={() => handleSurahSelect(s[0])}
-                  style={{ padding: "11px 18px", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "var(--on-surface)", background: selectedSurahNum === s[0] ? "var(--primary-light)" : "transparent", transition: "background 0.2s ease" }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-light)"}
-                  onMouseLeave={(e) => e.currentTarget.style.background = selectedSurahNum === s[0] ? "var(--primary-light)" : "transparent"}
-                >
-                  <span style={{ color: "var(--primary-container)", fontWeight: 600, marginRight: 8, fontSize: 12 }}>{s[0]}.</span>
-                  {s[1]}
-                  <span style={{ color: "var(--on-surface-variant)", fontSize: 11, marginLeft: 6 }}>({s[2]} āyāt)</span>
-                </div>
-              ))}
-            </div>
-          )}
+            {showSurahDrop && (
+              <div style={{
+                position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0,
+                background: "var(--surface-lowest)", borderRadius: 14,
+                maxHeight: 240, overflowY: "auto", zIndex: 200,
+                boxShadow: "0 40px 60px rgba(26,28,26,0.06)",
+                outline: "1px solid rgba(193,201,191,0.15)",
+              }}>
+                {filteredSurahs.length === 0 && (
+                  <div style={{ padding: "14px 18px", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 13 }}>No results</div>
+                )}
+                {filteredSurahs.map((s) => (
+                  <div key={s[0]} onClick={() => handleSurahSelect(s[0])}
+                    style={{ padding: "11px 18px", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "var(--on-surface)", background: selectedSurahNum === s[0] ? "var(--primary-light)" : "transparent", transition: "background 0.2s ease" }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-light)"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = selectedSurahNum === s[0] ? "var(--primary-light)" : "transparent"}
+                  >
+                    <span style={{ color: "var(--primary-container)", fontWeight: 600, marginRight: 8, fontSize: 12 }}>{s[0]}.</span>
+                    {s[1]}
+                    <span style={{ color: "var(--on-surface-variant)", fontSize: 11, marginLeft: 6 }}>({s[2]} āyāt)</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Juz Selector */}
+        <div>
+          <label style={labelStyle}>Jump to Juz</label>
+          <select
+            id="read-juz-select"
+            value={selectedJuzNum}
+            onChange={(e) => handleJuzSelect(e.target.value)}
+            style={{ ...underlineSelectStyle, width: "100%", boxSizing: "border-box", padding: "10px 2px" }}
+          >
+            <option value="">Select Juz…</option>
+            {Array.from({ length: 30 }, (_, i) => i + 1).map((n) => (
+              <option key={n} value={n}>Juz {n}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -348,15 +386,15 @@ export default function ReadTab({ onReflect, onSettings }) {
       )}
 
       {/* Pagination controls */}
-      {!loading && !fetchError && (
+      {!fetchError && (
         <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 40 }}>
-          <button id="prev-page" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1}
-            style={{ ...secondaryBtnStyle, padding: "12px 24px", borderRadius: 6, opacity: currentPage <= 1 ? 0.35 : 1, cursor: currentPage <= 1 ? "not-allowed" : "pointer" }}
+          <button id="prev-page" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1 || loading}
+            style={{ ...secondaryBtnStyle, padding: "12px 24px", borderRadius: 6, opacity: (currentPage <= 1 || loading) ? 0.35 : 1, cursor: (currentPage <= 1 || loading) ? "not-allowed" : "pointer" }}
           >
             ← Previous
           </button>
-          <button id="next-page" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= 604}
-            style={{ ...primaryBtnStyle, padding: "12px 24px", opacity: currentPage >= 604 ? 0.35 : 1, cursor: currentPage >= 604 ? "not-allowed" : "pointer" }}
+          <button id="next-page" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= 604 || loading}
+            style={{ ...primaryBtnStyle, padding: "12px 24px", opacity: (currentPage >= 604 || loading) ? 0.35 : 1, cursor: (currentPage >= 604 || loading) ? "not-allowed" : "pointer" }}
           >
             Next →
           </button>
@@ -364,7 +402,7 @@ export default function ReadTab({ onReflect, onSettings }) {
       )}
 
       {/* Keyboard shortcut hint */}
-      {!loading && !fetchError && ayahs.length > 0 && (
+      {!fetchError && ayahs.length > 0 && (
         <p style={{ textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 11, opacity: 0.5, marginTop: 16 }}>
           ← → to navigate pages · / to search
         </p>
