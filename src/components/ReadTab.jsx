@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { fetchAyah } from "../lib/api";
+import { dbGetAll, dbAdd, dbDelete, dbUpdate } from "../lib/db";
 import { SURAHS, SURAH_START_PAGE, JUZ_START_PAGE } from "../lib/data";
 import { cardStyle, labelStyle, underlineInputStyle, verseAreaStyle, secondaryBtnStyle, primaryBtnStyle, underlineSelectStyle } from "../lib/styles";
 import PageHeader from "./PageHeader";
@@ -43,7 +44,7 @@ function HighlightedText({ text, query, style }) {
 }
 
 
-export default function ReadTab({ onReflect, onSettings }) {
+export default function ReadTab({ onReflect, onSettings, showToast }) {
   const [currentPos, setCurrentPos] = useState(() => {
     const saved = localStorage.getItem(BOOKMARK_KEY);
     if (saved) {
@@ -63,6 +64,60 @@ export default function ReadTab({ onReflect, onSettings }) {
   const [selectedJuzNum, setSelectedJuzNum] = useState("");
   const [bookmarked, setBookmarked] = useState(false);
   const [pageSearch, setPageSearch] = useState("");   // H5 in-page search
+
+  const [favorites, setFavorites] = useState({}); // map of verseKey -> entryId
+
+  // Load favorites
+  useEffect(() => {
+    dbGetAll().then(entries => {
+      const favs = {};
+      entries.forEach(e => {
+        if (e.tags && e.tags.includes("Favorite")) {
+          favs[`${e.surahNumber}:${e.startAyah}`] = e.id;
+        }
+      });
+      setFavorites(favs);
+    });
+  }, [currentPos]);
+
+  const handleFavorite = async (ayahObj) => {
+    const surahName = SURAHS.find((s) => s[0] === ayahObj.surahNum)?.[1] ?? "";
+    const ayahKey = `${ayahObj.surahNum}:${ayahObj.ayahNum}`;
+    
+    if (favorites[ayahKey]) {
+      // Un-favorite
+      const entryId = favorites[ayahKey];
+      const entries = await dbGetAll();
+      const entry = entries.find(e => e.id === entryId);
+      if (entry) {
+        const newTags = (entry.tags || []).filter(t => t !== "Favorite");
+        if (newTags.length === 0 && entry.reflection === "Favorited Ayah") {
+          await dbDelete(entryId);
+        } else {
+          await dbUpdate({ ...entry, tags: newTags });
+        }
+      }
+      setFavorites(prev => { const n = {...prev}; delete n[ayahKey]; return n; });
+      if (showToast) showToast("Removed from favorites");
+    } else {
+      // Favorite
+      const record = {
+        surahNumber: ayahObj.surahNum,
+        surahName: surahName,
+        startAyah: ayahObj.ayahNum,
+        endAyah: ayahObj.ayahNum,
+        arabic: [{ number: ayahObj.ayahNum, text: ayahObj.arabic }],
+        english: [{ number: ayahObj.ayahNum, text: ayahObj.english }],
+        reflection: "Favorited Ayah",
+        tags: ["Favorite"],
+        createdAt: Date.now()
+      };
+      const newId = await dbAdd(record);
+      setFavorites(prev => ({ ...prev, [ayahKey]: newId }));
+      if (showToast) showToast("Added to favorites ♥");
+    }
+  };
+
 
   const surahRef = useRef(null);
   const topRef = useRef(null);
@@ -356,11 +411,7 @@ export default function ReadTab({ onReflect, onSettings }) {
             const surahName = SURAHS.find((s) => s[0] === ayah.surahNum)?.[1] ?? "";
             return (
               <div key={ayah.verseKey}>
-                  <div style={{ textAlign: "center", marginBottom: 16, padding: "10px 0", borderBottom: "1px solid var(--outline-ghost)" }}>
-                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 600, color: "var(--on-surface-variant)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                      Surah {ayah.surahNum} — {surahName}
-                    </span>
-                  </div>
+
 
                 <div style={{ ...cardStyle, padding: "24px" }}>
                   {/* Ayah badge */}
@@ -404,6 +455,15 @@ export default function ReadTab({ onReflect, onSettings }) {
 
                   {/* Action buttons */}
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                    {/* Favorite button */}
+                    <button
+                      onClick={() => handleFavorite(ayah)}
+                      style={{ ...chipBtn(favorites[`${ayah.surahNum}:${ayah.ayahNum}`]), color: favorites[`${ayah.surahNum}:${ayah.ayahNum}`] ? 'inherit' : 'var(--on-surface-variant)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.borderColor = "var(--primary-container)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = favorites[`${ayah.surahNum}:${ayah.ayahNum}`] ? "var(--primary-light)" : "transparent"; e.currentTarget.style.borderColor = "var(--outline-ghost)"; }}
+                    >
+                      <span style={{ fontSize: 14, color: favorites[`${ayah.surahNum}:${ayah.ayahNum}`] ? '#e11d48' : 'inherit' }}>♥</span> Favorite
+                    </button>
                     {/* Reflect button */}
                     <button
                       id={`reflect-${ayah.verseKey}`}
