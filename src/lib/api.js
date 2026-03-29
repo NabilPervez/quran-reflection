@@ -17,21 +17,28 @@ export async function fetchVerses(surahNum, startAyah, endAyah, signal) {
   };
 }
 
-/** Fetch all verses on one Mus'haf page (used by Read tab) */
-export async function fetchByPage(pageNum, signal) {
-  const [arRes, enRes] = await Promise.all([
-    fetch(`https://api.alquran.cloud/v1/page/${pageNum}/quran-uthmani`, { signal }),
-    fetch(`https://api.alquran.cloud/v1/page/${pageNum}/en.sahih`, { signal }),
+/** Fetch a specific Ayah with Tafsir (used by Read tab) */
+export async function fetchAyah(surahNum, ayahNum, signal) {
+  const [arRes, enRes, tafsirRes] = await Promise.all([
+    fetch(`https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/quran-uthmani`, { signal }),
+    fetch(`https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/en.sahih`, { signal }),
+    fetch(`https://api.quran.com/api/v4/tafsirs/169/by_ayah/${surahNum}:${ayahNum}`, { signal })
   ]);
-  if (!arRes.ok || !enRes.ok) throw new Error("Page fetch failed");
-  const [arData, enData] = await Promise.all([arRes.json(), enRes.json()]);
-  const arAyahs = arData.data.ayahs;
-  const enAyahs = enData.data.ayahs;
-  return arAyahs.map((a, i) => ({
-    verseKey: `${a.surah.number}:${a.numberInSurah}`,
-    surahNum: a.surah.number,
-    ayahNum:  a.numberInSurah,
-    arabic:   a.text,
-    english:  enAyahs[i]?.text ?? "",
-  }));
+  
+  if (!arRes.ok || !enRes.ok) throw new Error("Ayah fetch failed");
+  
+  const [arData, enData, tafsirData] = await Promise.all([
+    arRes.json(), 
+    enRes.json(), 
+    tafsirRes.ok ? tafsirRes.json() : Promise.resolve(null)
+  ]);
+  
+  return {
+    verseKey: `${surahNum}:${ayahNum}`,
+    surahNum,
+    ayahNum,
+    arabic: arData.data.text,
+    english: enData.data.text,
+    tafsir: tafsirData?.tafsir?.text || "Tafsir currently unavailable for this ayah.",
+  };
 }

@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { fetchByPage } from "../lib/api";
+import { fetchAyah } from "../lib/api";
 import { SURAHS, SURAH_START_PAGE, JUZ_START_PAGE } from "../lib/data";
 import { cardStyle, labelStyle, underlineInputStyle, verseAreaStyle, secondaryBtnStyle, primaryBtnStyle, underlineSelectStyle } from "../lib/styles";
 import PageHeader from "./PageHeader";
 
-const BOOKMARK_KEY = "qr_bookmark_page";
+const BOOKMARK_KEY = "qr_bookmark_ayah";
 
 const PRESET_TAGS = ["Gratitude", "Dua", "Lesson", "Patience", "Tawakkul", "Tawbah", "Reflection", "Reminder"];
 
@@ -44,11 +44,17 @@ function HighlightedText({ text, query, style }) {
 
 
 export default function ReadTab({ onReflect, onSettings }) {
-  const [currentPage, setCurrentPage] = useState(
-    () => Number(localStorage.getItem(BOOKMARK_KEY)) || 1
-  );
+  const [currentPos, setCurrentPos] = useState(() => {
+    const saved = localStorage.getItem(BOOKMARK_KEY);
+    if (saved) {
+      const [s, a] = saved.split(":");
+      return { surah: Number(s), ayah: Number(a) };
+    }
+    return { surah: 1, ayah: 1 };
+  });
   const [contentKey, setContentKey] = useState(0);
-  const [ayahs, setAyahs] = useState([]);
+  const [ayah, setAyah] = useState(null);
+  const [showTafsir, setShowTafsir] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState("");
   const [surahSearch, setSurahSearch] = useState("");
@@ -63,9 +69,9 @@ export default function ReadTab({ onReflect, onSettings }) {
   const searchRef = useRef(null);
 
   const savedBookmark = useMemo(
-    () => Number(localStorage.getItem(BOOKMARK_KEY)) || null,
+    () => localStorage.getItem(BOOKMARK_KEY) || null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentPage]
+    [currentPos]
   );
 
   const filteredSurahs = SURAHS.filter(
@@ -81,57 +87,80 @@ export default function ReadTab({ onReflect, onSettings }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Fetch page whenever currentPage changes
+  // Fetch ayah whenever currentPos changes
   useEffect(() => {
-    setAyahs([]);
+    setAyah(null);
     setFetchError("");
     setLoading(true);
-    setPageSearch(""); // clear search on page change
+    setPageSearch(""); // clear search
+    setShowTafsir(false); // hide tafsir initially
 
     const controller = new AbortController();
-    fetchByPage(currentPage, controller.signal)
-      .then((data) => { setAyahs(data); setLoading(false); setContentKey((k) => k + 1); })
+    fetchAyah(currentPos.surah, currentPos.ayah, controller.signal)
+      .then((data) => { setAyah(data); setLoading(false); setContentKey((k) => k + 1); })
       .catch((err) => {
         if (err.name !== "AbortError") {
-          setFetchError("Could not load this page. Please check your internet connection.");
+          setFetchError("Could not load this Ayah. Please check your internet connection.");
           setLoading(false);
         }
       });
 
     return () => controller.abort();
-  }, [currentPage]);
+  }, [currentPos]);
 
-  // Auto-bookmark when page changes
+  // Auto-bookmark when ayah changes
   useEffect(() => {
-    localStorage.setItem(BOOKMARK_KEY, String(currentPage));
+    localStorage.setItem(BOOKMARK_KEY, `${currentPos.surah}:${currentPos.ayah}`);
     setBookmarked(true);
-  }, [currentPage]);
+  }, [currentPos]);
 
-  // L5 — Keyboard shortcuts
+  const goToAyah = useCallback((surah, ayah) => {
+    const sData = SURAHS.find((s) => s[0] === surah);
+    if (!sData) return;
+    setCurrentPos({ surah, ayah });
+    topRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  const nextAyah = useCallback(() => {
+    const sData = SURAHS.find((s) => s[0] === currentPos.surah);
+    if (!sData) return;
+    const maxAyahs = sData[2];
+    if (currentPos.ayah < maxAyahs) {
+      goToAyah(currentPos.surah, currentPos.ayah + 1);
+    } else if (currentPos.surah < 114) {
+      goToAyah(currentPos.surah + 1, 1);
+    }
+  }, [currentPos, goToAyah]);
+
+  const prevAyah = useCallback(() => {
+    if (currentPos.ayah > 1) {
+      goToAyah(currentPos.surah, currentPos.ayah - 1);
+    } else if (currentPos.surah > 1) {
+      const prevSurah = SURAHS.find((s) => s[0] === currentPos.surah - 1);
+      goToAyah(currentPos.surah - 1, prevSurah[2]);
+    }
+  }, [currentPos, goToAyah]);
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e) => {
       const tag = document.activeElement?.tagName;
       const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
-      if (e.key === "ArrowLeft"  && !isTyping) { e.preventDefault(); goToPage(currentPage - 1); }
-      if (e.key === "ArrowRight" && !isTyping) { e.preventDefault(); goToPage(currentPage + 1); }
+      if (e.key === "ArrowLeft"  && !isTyping) { e.preventDefault(); prevAyah(); }
+      if (e.key === "ArrowRight" && !isTyping) { e.preventDefault(); nextAyah(); }
       if (e.key === "/" && !isTyping) { e.preventDefault(); searchRef.current?.focus(); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [currentPage]);
-
-  const goToPage = useCallback((p) => {
-    const clamped = Math.max(1, Math.min(604, p));
-    setCurrentPage(clamped);
-    topRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+  }, [nextAyah, prevAyah]);
 
   const toggleBookmark = () => {
-    if (localStorage.getItem(BOOKMARK_KEY) === String(currentPage)) {
+    const currentStr = `${currentPos.surah}:${currentPos.ayah}`;
+    if (localStorage.getItem(BOOKMARK_KEY) === currentStr) {
       localStorage.removeItem(BOOKMARK_KEY);
       setBookmarked(false);
     } else {
-      localStorage.setItem(BOOKMARK_KEY, String(currentPage));
+      localStorage.setItem(BOOKMARK_KEY, currentStr);
       setBookmarked(true);
     }
   };
@@ -141,14 +170,21 @@ export default function ReadTab({ onReflect, onSettings }) {
     setSelectedJuzNum(""); // Clear juz selection when surah is selected
     setSurahSearch("");
     setShowSurahDrop(false);
-    goToPage(SURAH_START_PAGE[surahNum] ?? 1);
+    goToAyah(surahNum, 1);
   };
 
   const handleJuzSelect = (juzNum) => {
     setSelectedJuzNum(juzNum);
     setSelectedSurahNum(null); // Clear surah selection when juz is selected
     if (juzNum) {
-      goToPage(JUZ_START_PAGE[juzNum] ?? 1);
+      // Find surah that starts exactly at this Juz page, fallback to Surah 1
+      const startPage = JUZ_START_PAGE[juzNum] ?? 1;
+      let targetSurah = 1;
+      for (const [surah, pg] of Object.entries(SURAH_START_PAGE)) {
+        if (pg <= startPage) targetSurah = Number(surah);
+        else break;
+      }
+      goToAyah(targetSurah, 1);
     }
   };
 
@@ -156,18 +192,7 @@ export default function ReadTab({ onReflect, onSettings }) {
     ? `${selectedSurahNum}. ${SURAHS.find((s) => s[0] === selectedSurahNum)?.[1] ?? ""}`
     : null;
 
-  // H5 — filter ayahs by search query
   const searchQuery = pageSearch.trim().toLowerCase();
-  const visibleAyahs = searchQuery
-    ? ayahs.filter((a) =>
-        a.arabic.toLowerCase().includes(searchQuery) ||
-        a.english.toLowerCase().includes(searchQuery)
-      )
-    : ayahs;
-
-  const matchCount = searchQuery ? visibleAyahs.length : 0;
-
-  let lastSurah = null;
 
   const chipBtn = (active) => ({
     display: "inline-flex", alignItems: "center", gap: 5,
@@ -181,12 +206,15 @@ export default function ReadTab({ onReflect, onSettings }) {
 
   return (
     <div style={{ padding: "36px 24px 140px", maxWidth: 720, margin: "0 auto" }} ref={topRef}>
-      <PageHeader title="Read" subtitle="Read the Quran and capture reflections as you go" onSettings={onSettings} />
+      <PageHeader title="Read & Reflect" onSettings={onSettings} />
 
       {/* Bookmark resume pill */}
-      {savedBookmark && savedBookmark !== currentPage && (
+      {savedBookmark && savedBookmark !== `${currentPos.surah}:${currentPos.ayah}` && (
         <button
-          onClick={() => goToPage(savedBookmark)}
+          onClick={() => {
+            const [s, a] = savedBookmark.split(":");
+            goToAyah(Number(s), Number(a));
+          }}
           style={{
             display: "inline-flex", alignItems: "center", gap: 6,
             marginBottom: 20, padding: "7px 16px", borderRadius: 40,
@@ -198,10 +226,15 @@ export default function ReadTab({ onReflect, onSettings }) {
           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(26,77,46,0.14)"}
           onMouseLeave={(e) => e.currentTarget.style.background = "var(--primary-light)"}
         >
-          🔖 Resume at Page {savedBookmark}
+          🔖 Resume at Surah {savedBookmark.replace(':', ' Ayah ')}
         </button>
       )}
 
+      <details style={{ marginBottom: 24, cursor: 'pointer', outline: 'none' }}>
+        <summary style={{ padding: 12, background: 'var(--surface-lowest)', borderRadius: 12, border: '1px solid var(--outline-ghost)', fontWeight: 600, color: 'var(--on-surface-variant)' }}>
+          Navigation & Search
+        </summary>
+        <div style={{ padding: '16px 0' }}>
       {/* Navigation Selectors */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
         {/* Surah Selector */}
@@ -274,20 +307,15 @@ export default function ReadTab({ onReflect, onSettings }) {
             style={{ ...underlineInputStyle, width: "100%", boxSizing: "border-box", paddingLeft: 24, fontSize: 14 }}
           />
         </div>
-        {searchQuery && (
-          <div style={{ marginTop: 6, fontFamily: "'Inter',sans-serif", fontSize: 12, color: "var(--on-surface-variant)" }}>
-            {matchCount === 0 ? "No matches on this page" : `${matchCount} verse${matchCount !== 1 ? "s" : ""} match`}
-            {" · "}
-            <button onClick={() => setPageSearch("")} style={{ background: "none", border: "none", color: "var(--primary-container)", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600, padding: 0 }}>Clear</button>
-          </div>
-        )}
       </div>
+      </div>
+      </details>
 
       {/* Page indicator + bookmark button */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, margin: "0 auto 28px" }}>
         <div style={{ padding: "8px 20px", background: "var(--primary-light)", borderRadius: 40 }}>
           <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600, color: "var(--primary-container)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-            Page {currentPage} of 604
+            Surah {currentPos.surah} : Ayah {currentPos.ayah}
           </span>
         </div>
         <button id="bookmark-btn" onClick={toggleBookmark}
@@ -301,8 +329,7 @@ export default function ReadTab({ onReflect, onSettings }) {
       {/* Loading skeletons */}
       {loading && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} style={{ ...verseAreaStyle, padding: "28px 24px" }}>
+            <div style={{ ...verseAreaStyle, padding: "28px 24px" }}>
               <div style={{ textAlign: "right", marginBottom: 16 }}>
                 <div style={{ ...skeletonLine(70), marginLeft: "auto", marginBottom: 10 }} />
                 <div style={{ ...skeletonLine(85), marginLeft: "auto", marginBottom: 10 }} />
@@ -312,7 +339,6 @@ export default function ReadTab({ onReflect, onSettings }) {
               <div style={skeletonLine(75)} />
               <div style={skeletonLine(60)} />
             </div>
-          ))}
         </div>
       )}
 
@@ -324,30 +350,34 @@ export default function ReadTab({ onReflect, onSettings }) {
       )}
 
       {/* Ayah list — fades on page change */}
-      {!loading && !fetchError && ayahs.length > 0 && (
+      {!loading && !fetchError && ayah && (
         <div key={contentKey} style={{ display: "flex", flexDirection: "column", gap: 20, animation: "pageFade 0.35s ease" }}>
-          {visibleAyahs.length === 0 && searchQuery && (
-            <p style={{ textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 14, padding: "40px 0" }}>
-              No verses match "{pageSearch}" on this page.
-            </p>
-          )}
-          {visibleAyahs.map((ayah) => {
-            const isNewSurah = ayah.surahNum !== lastSurah;
-            if (isNewSurah) lastSurah = ayah.surahNum;
+          {(() => {
             const surahName = SURAHS.find((s) => s[0] === ayah.surahNum)?.[1] ?? "";
             return (
               <div key={ayah.verseKey}>
-                {isNewSurah && (
                   <div style={{ textAlign: "center", marginBottom: 16, padding: "10px 0", borderBottom: "1px solid var(--outline-ghost)" }}>
                     <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 600, color: "var(--on-surface-variant)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                       Surah {ayah.surahNum} — {surahName}
                     </span>
                   </div>
-                )}
 
                 <div style={{ ...cardStyle, padding: "24px" }}>
                   {/* Ayah badge */}
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                    <button
+                      onClick={() => setShowTafsir(!showTafsir)}
+                      style={{
+                        background: showTafsir ? "var(--primary-light)" : "transparent",
+                        border: "1px solid var(--primary-container)", borderRadius: 20,
+                        padding: "3px 10px", fontSize: 10, fontWeight: 700,
+                        color: "var(--primary-container)", cursor: "pointer",
+                        fontFamily: "'Inter',sans-serif", letterSpacing: "0.06em",
+                        transition: "all 0.2sease"
+                      }}
+                    >
+                      {showTafsir ? "Hide Tafsir" : "Tafsir"}
+                    </button>
                     <span style={{ background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>
                       {ayah.surahNum}:{ayah.ayahNum}
                     </span>
@@ -365,9 +395,15 @@ export default function ReadTab({ onReflect, onSettings }) {
                     style={{ fontFamily: "'Inter',sans-serif", fontSize: 14.5, lineHeight: 1.85, color: "var(--on-surface-variant)", display: "block", marginBottom: 20, fontWeight: 400 }}
                   />
 
-                  {/* Action buttons */}
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {showTafsir && (
+                    <div style={{ padding: "16px", marginBottom: "20px", background: "var(--surface-lowest)", borderRadius: 8, border: "1px solid var(--outline-ghost)" }}>
+                      <h4 style={{ margin: "0 0 8px 0", fontFamily: "'Inter',sans-serif", fontSize: 12, color: "var(--primary-container)", textTransform: "uppercase" }}>Tafsir (Ibn Kathir)</h4>
+                      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, color: "var(--on-surface-variant)", lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: ayah.tafsir }} />
+                    </div>
+                  )}
 
+                  {/* Action buttons */}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
                     {/* Reflect button */}
                     <button
                       id={`reflect-${ayah.verseKey}`}
@@ -376,34 +412,34 @@ export default function ReadTab({ onReflect, onSettings }) {
                       onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.borderColor = "var(--primary-container)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "var(--outline-ghost)"; }}
                     >
-                      <span style={{ fontSize: 14 }}>✎</span> Reflect
+                      <span style={{ fontSize: 14 }}>✦</span> Reflect
                     </button>
                   </div>
                 </div>
               </div>
             );
-          })}
+          })()}
         </div>
       )}
 
       {/* Pagination controls */}
       {!fetchError && (
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 40 }}>
-          <button id="prev-page" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1 || loading}
-            style={{ ...secondaryBtnStyle, padding: "12px 24px", borderRadius: 6, opacity: (currentPage <= 1 || loading) ? 0.35 : 1, cursor: (currentPage <= 1 || loading) ? "not-allowed" : "pointer" }}
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 40 }}>
+          <button id="prev-ayah" onClick={prevAyah} disabled={currentPos.surah === 1 && currentPos.ayah === 1 || loading}
+            style={{ ...secondaryBtnStyle, padding: "12px 24px", borderRadius: 40, opacity: (currentPos.surah === 1 && currentPos.ayah === 1 || loading) ? 0.35 : 1, cursor: (currentPos.surah === 1 && currentPos.ayah === 1 || loading) ? "not-allowed" : "pointer", flex: 1 }}
           >
-            ← Previous
+            ← Prev Ayah
           </button>
-          <button id="next-page" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= 604 || loading}
-            style={{ ...primaryBtnStyle, padding: "12px 24px", opacity: (currentPage >= 604 || loading) ? 0.35 : 1, cursor: (currentPage >= 604 || loading) ? "not-allowed" : "pointer" }}
+          <button id="next-ayah" onClick={nextAyah} disabled={currentPos.surah === 114 && currentPos.ayah === 6 || loading}
+            style={{ ...primaryBtnStyle, padding: "12px 24px", borderRadius: 40, opacity: (currentPos.surah === 114 && currentPos.ayah === 6 || loading) ? 0.35 : 1, cursor: (currentPos.surah === 114 && currentPos.ayah === 6 || loading) ? "not-allowed" : "pointer", flex: 1 }}
           >
-            Next →
+            Next Ayah →
           </button>
         </div>
       )}
 
       {/* Keyboard shortcut hint */}
-      {!fetchError && ayahs.length > 0 && (
+      {!fetchError && ayah && (
         <p style={{ textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 11, opacity: 0.5, marginTop: 16 }}>
           ← → to navigate pages · / to search
         </p>
