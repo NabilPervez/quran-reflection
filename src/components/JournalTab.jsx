@@ -323,9 +323,11 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
               </div>
 
               {/* Reflection */}
-              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 14.5, lineHeight: 1.9, color: "var(--on-surface)", margin: 0, whiteSpace: "pre-wrap", fontWeight: 400 }}>
-                {displayText}
-              </p>
+              {displayText !== "Favorited Ayah" && (
+                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 14.5, lineHeight: 1.9, color: "var(--on-surface)", margin: 0, whiteSpace: "pre-wrap", fontWeight: 400 }}>
+                  {displayText}
+                </p>
+              )}
               {shouldTruncate && (
                 <button
                   onClick={() => setExpanded((p) => ({ ...p, [entry.id]: !isExpanded }))}
