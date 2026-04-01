@@ -5,6 +5,19 @@ import { SURAHS, SURAH_START_PAGE, JUZ_START_PAGE } from "../lib/data";
 import { cardStyle, labelStyle, underlineInputStyle, verseAreaStyle, secondaryBtnStyle, primaryBtnStyle, underlineSelectStyle } from "../lib/styles";
 import PageHeader from "./PageHeader";
 
+// ── Pre-compute cumulative ayah ordinals for the progress bar ─────────────────
+// AYAH_ORDINALS[surahNum] = ordinal (1-based) of the first ayah in that surah
+const AYAH_ORDINALS = (() => {
+  const map = {};
+  let running = 0;
+  for (const [num, , count] of SURAHS) {
+    map[num] = running + 1;
+    running += count;
+  }
+  return map;
+})();
+const TOTAL_AYAHS = 6236;
+
 const BOOKMARK_KEY = "qr_bookmark_ayah";
 
 const PRESET_TAGS = ["Gratitude", "Dua", "Lesson", "Patience", "Tawakkul", "Tawbah", "Reflection", "Reminder"];
@@ -65,6 +78,11 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
   const [bookmarked, setBookmarked] = useState(false);
   const [pageSearch, setPageSearch] = useState("");   // H5 in-page search
 
+  // H4 — Transliteration tri-state: "arabic" | "translit" | "english"
+  const [verseMode, setVerseMode] = useState(
+    () => localStorage.getItem("qr_verse_mode") || "arabic"
+  );
+
   const [favorites, setFavorites] = useState({}); // map of verseKey -> entryId
 
   // Load favorites
@@ -119,9 +137,15 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
   };
 
 
+  // H4 — Persist verseMode in localStorage
+  useEffect(() => {
+    localStorage.setItem("qr_verse_mode", verseMode);
+  }, [verseMode]);
+
   const surahRef = useRef(null);
   const topRef = useRef(null);
   const searchRef = useRef(null);
+  const touchStartRef = useRef(null); // L5 swipe
 
   const savedBookmark = useMemo(
     () => localStorage.getItem(BOOKMARK_KEY) || null,
@@ -209,6 +233,27 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
     return () => window.removeEventListener("keydown", handler);
   }, [nextAyah, prevAyah]);
 
+  // L5 — Swipe navigation
+  useEffect(() => {
+    const onTouchStart = (e) => {
+      touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    };
+    const onTouchEnd = (e) => {
+      if (!touchStartRef.current) return;
+      const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+      const dy = Math.abs(e.changedTouches[0].clientY - touchStartRef.current.y);
+      touchStartRef.current = null;
+      if (Math.abs(dx) < 60 || dy > 40) return; // not a clean horizontal swipe
+      if (dx < 0) nextAyah(); else prevAyah();
+    };
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [nextAyah, prevAyah]);
+
   const toggleBookmark = () => {
     const currentStr = `${currentPos.surah}:${currentPos.ayah}`;
     if (localStorage.getItem(BOOKMARK_KEY) === currentStr) {
@@ -259,8 +304,29 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
     cursor: "pointer", transition: "all 0.3s ease",
   });
 
+  // H3 — Reading progress percentage
+  const readingProgress = useMemo(() => {
+    const ordinal = (AYAH_ORDINALS[currentPos.surah] ?? 1) + currentPos.ayah - 1;
+    return Math.min(100, (ordinal / TOTAL_AYAHS) * 100);
+  }, [currentPos]);
+
   return (
     <div style={{ padding: "36px 24px 140px", maxWidth: 720, margin: "0 auto" }} ref={topRef}>
+      {/* H3 — Reading Progress Bar */}
+      <div style={{
+        position: "sticky", top: 0, left: 0, right: 0, zIndex: 50,
+        height: 3, background: "var(--outline-ghost)",
+        marginBottom: 0,
+      }}>
+        <div style={{
+          height: "100%",
+          width: `${readingProgress}%`,
+          background: "linear-gradient(90deg, var(--primary) 0%, var(--primary-container) 100%)",
+          transition: "width 0.4s ease",
+          borderRadius: "0 2px 2px 0",
+        }} />
+      </div>
+
       <PageHeader title="Read & Reflect" onSettings={onSettings} />
 
       {/* Bookmark resume pill */}
@@ -434,17 +500,52 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
                     </span>
                   </div>
 
-                  {/* Arabic */}
+                  {/* H4 — Verse mode toggle */}
+                  <div style={{ display: "flex", gap: 6, marginBottom: 18, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                    {[
+                      { key: "arabic", label: "Arabic" },
+                      { key: "translit", label: "Transliteration", disabled: !ayah.transliteration },
+                      { key: "english", label: "English" },
+                    ].map(({ key, label, disabled }) => (
+                      <button
+                        key={key}
+                        onClick={() => !disabled && setVerseMode(key)}
+                        disabled={disabled}
+                        style={{
+                          padding: "4px 12px", borderRadius: 40, fontSize: 11, fontWeight: 600,
+                          fontFamily: "'Inter',sans-serif", cursor: disabled ? "not-allowed" : "pointer",
+                          border: "1px solid var(--outline-ghost)",
+                          background: verseMode === key ? "var(--primary-light)" : "transparent",
+                          color: verseMode === key ? "var(--primary-container)" : "var(--on-surface-variant)",
+                          opacity: disabled ? 0.35 : 1,
+                          transition: "all 0.2s ease",
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Arabic — always shown */}
                   <p style={{ fontFamily: "'Amiri','Scheherazade New',serif", fontSize: 26, lineHeight: 2.4, color: "var(--on-surface)", direction: "rtl", textAlign: "right", margin: "0 0 20px" }}>
                     {ayah.arabic}
                   </p>
 
+                  {/* Transliteration */}
+                  {(verseMode === "translit" || verseMode === "english") && ayah.transliteration && (
+                    <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13.5, lineHeight: 1.85, color: "var(--primary-container)", fontStyle: "italic", margin: "0 0 14px", opacity: 0.8 }}>
+                      {ayah.transliteration}
+                    </p>
+                  )}
+
                   {/* English — with highlight */}
+                  {verseMode === "english" && (
                   <HighlightedText
                     text={ayah.english}
                     query={searchQuery}
                     style={{ fontFamily: "'Inter',sans-serif", fontSize: 14.5, lineHeight: 1.85, color: "var(--on-surface-variant)", display: "block", marginBottom: 20, fontWeight: 400 }}
                   />
+                  )}
 
                   {showTafsir && (
                     <div style={{ padding: "16px", marginBottom: "20px", background: "var(--surface-lowest)", borderRadius: 8, border: "1px solid var(--outline-ghost)" }}>

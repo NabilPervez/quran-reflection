@@ -17,28 +17,31 @@ export async function fetchVerses(surahNum, startAyah, endAyah, signal) {
   };
 }
 
-/** Fetch a specific Ayah with Tafsir (used by Read tab) */
+/** Fetch a specific Ayah with Tafsir and Transliteration (used by Read tab) */
 export async function fetchAyah(surahNum, ayahNum, signal) {
-  const [arRes, enRes, tafsirRes] = await Promise.all([
+  const [arRes, enRes, tafsirRes, translitRes] = await Promise.all([
     fetch(`https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/quran-uthmani`, { signal }),
     fetch(`https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/en.sahih`, { signal }),
-    fetch(`https://api.quran.com/api/v4/tafsirs/169/by_ayah/${surahNum}:${ayahNum}`, { signal })
+    fetch(`https://api.quran.com/api/v4/tafsirs/169/by_ayah/${surahNum}:${ayahNum}`, { signal }),
+    fetch(`https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/en.transliteration`, { signal }),
   ]);
-  
+
   if (!arRes.ok || !enRes.ok) throw new Error("Ayah fetch failed");
-  
-  const [arData, enData, tafsirData] = await Promise.all([
-    arRes.json(), 
-    enRes.json(), 
-    tafsirRes.ok ? tafsirRes.json() : Promise.resolve(null)
+
+  const [arData, enData, tafsirData, translitData] = await Promise.all([
+    arRes.json(),
+    enRes.json(),
+    tafsirRes.ok ? tafsirRes.json() : Promise.resolve(null),
+    translitRes.ok ? translitRes.json() : Promise.resolve(null),
   ]);
-  
+
   return {
     verseKey: `${surahNum}:${ayahNum}`,
     surahNum,
     ayahNum,
     arabic: arData.data.text,
     english: enData.data.text,
+    transliteration: translitData?.data?.text ?? null,
     tafsir: tafsirData?.tafsir?.text || "Tafsir currently unavailable for this ayah.",
   };
 }

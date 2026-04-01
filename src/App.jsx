@@ -56,6 +56,7 @@ export default function App() {
   const [firstVisit, setFirstVisit] = useState(false);
   const [theme, setTheme]           = useState(() => localStorage.getItem("qr_theme") || "system");
   const [readHandoff, setReadHandoff] = useState(null);
+  const [returnToRead, setReturnToRead] = useState(false);
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
@@ -64,11 +65,15 @@ export default function App() {
     if (tab !== "settings" && newTab === "settings") {
       setPrevTab(tab);
     }
+    if (newTab !== "reflect" && newTab !== "settings") {
+      setReturnToRead(false);
+    }
     setTab(newTab);
   };
 
   const handleReflect = (handoff) => {
     setReadHandoff(handoff);
+    setReturnToRead(true);
     switchTab("reflect");
   };
 
@@ -127,7 +132,13 @@ export default function App() {
         <div key={tab} style={{ animation: "pageFade 0.28s ease" }}>
           <ErrorBoundary key={`eb-${tab}`}>
             {tab === "read"     && <ReadTab    onReflect={handleReflect} showToast={showToast}                                                                 onSettings={() => switchTab("settings")} />}
-            {tab === "reflect"  && <ReflectTab onSaved={() => setJournalKey((k) => k + 1)} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} onSettings={() => switchTab("settings")} />}
+            {tab === "reflect"  && <ReflectTab onSaved={() => {
+              setJournalKey((k) => k + 1);
+              if (returnToRead) {
+                switchTab("read");
+                setReturnToRead(false);
+              }
+            }} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} onSettings={() => switchTab("settings")} />}
             {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast}                                                                       onSettings={() => switchTab("settings")} />}
             {tab === "settings" && <SettingsTab showToast={showToast} theme={theme} setTheme={setTheme} onBack={() => setTab(prevTab)} />}
           </ErrorBoundary>

@@ -1,37 +1,46 @@
 # Quran Reflect — Codebase Analysis & Feature Roadmap
 
-> Generated: 2026-03-24
+> Updated: 2026-04-01
 
 ---
 
 ## 1. Codebase Overview
 
 ### Architecture
-- **Single-file SPA**: All ~1,550 lines live in `src/App.jsx`. It is readable now but is approaching the point where splitting into component files becomes necessary.
+- **Component-based SPA**: Properly split across `src/components/` (ReadTab, ReflectTab, JournalTab, SettingsTab, BottomNav, PageHeader, Toast, ConfirmModal) and `src/lib/` (api.js, db.js, data.js, styles.js). `App.jsx` is now ~220 lines.
 - **State management**: Pure React `useState`/`useEffect`. No external library — appropriate for current scale.
-- **Persistence**: IndexedDB via hand-rolled helpers (`openDB`, `dbAdd`, `dbGetAll`, etc.). No third-party abstraction (e.g. Dexie.js).
-- **API layer**: Two API sources:
-  - `alquran.cloud` — used by Reflect tab (Surah-level fetches) and Read tab (page-level fetches, Arabic + `en.itani`).
-  - Both sources are cached by the PWA service worker (`StaleWhileRevalidate`, 30-day TTL, up to 620 pages).
-- **PWA**: `vite-plugin-pwa` with Workbox `generateSW`. Manifest and service worker are auto-generated. Install prompt is not surfaced to the user.
+- **Persistence**: IndexedDB via hand-rolled helpers (`openDB`, `dbAdd`, `dbGetAll`, `dbDelete`, `dbUpdate`, `dbClear`).
+- **API layer**: `alquran.cloud` — Surah-level fetches for Reflect tab, individual Ayah fetches (`fetchAyah`) for Read tab, with tafsir (Ibn Kathir) included. All fetches use `AbortController` for cleanup.
+- **PWA**: `vite-plugin-pwa` with Workbox `generateSW`. Manifest and service worker auto-generated.
 - **Theming**: CSS custom properties, three modes (system / light / dark), persisted to `localStorage`.
-- **Fonts**: Google Fonts (`Inter`, `Amiri`) loaded via `@import` — could block first paint.
+- **Fonts**: Google Fonts (`Inter`, `Amiri`) loaded at runtime.
 
 ### What is Working Well
 | Area | Status |
 |---|---|
-| Core reflect + save flow | ✅ Solid |
-| IndexedDB read/write/delete/update | ✅ |
+| Core reflect + save flow | ✅ |
+| IndexedDB read/write/delete/update/clear | ✅ |
 | Dark mode + system default | ✅ |
 | Journal search + expand/collapse | ✅ |
 | Export JSON / CSV | ✅ |
-| Import JSON / CSV | ✅ (just added) |
-| Read tab page-by-page | ✅ |
-| Bookmark + resume | ✅ (just added) |
-| Read → Reflect handoff | ✅ |
-| Page + content fade animations | ✅ (just added) |
-| PWA installability + offline fonts | ✅ |
-| Aggressive API caching in SW | ✅ |
+| Import JSON / CSV | ✅ |
+| Read tab ayah-by-ayah navigation | ✅ |
+| Surah + Juz selectors on Read tab (H2) | ✅ |
+| In-page text search + highlight (H5) | ✅ |
+| Keyboard shortcuts (← →, /) | ✅ (L5) |
+| Bookmark + auto-resume | ✅ |
+| Reflection streaks + stats bar (H3) | ✅ |
+| Tags on reflections + filter chips (M2) | ✅ |
+| Share Reflection via Web Share API (H4) | ✅ |
+| Copy reflection text (M5) | ✅ |
+| Favorites (♥ Ayah) from Read tab | ✅ |
+| Back button in Settings (M6) | ✅ |
+| Tafsir toggle per ayah | ✅ |
+| AbortController on all fetches | ✅ |
+| Page fade animation on ayah change | ✅ |
+| PWA installability + service worker | ✅ |
+| Shimmer skeletons on load | ✅ |
+| Error state per tab | ✅ |
 
 ---
 
@@ -39,35 +48,34 @@
 
 ### 2.1 High Priority (Core UX Gaps)
 
-| # | Feature | Why it Matters |
-|---|---|---|
-| **H1** | **PWA Install Prompt** | Users don't know they can install the app. A subtle "Add to Home Screen" banner would convert casual visitors into habitual users. |
-| **H2** | **Juz selector on Read tab** | The Quran has 30 Juz (parts). Many users navigate by Juz, not Surah. A Juz dropdown alongside the Surah one is a standard expectation. |
-| **H3** | **Reflection streaks / stats** | A simple "You've reflected X days in a row" or total reflection count on the Journal tab creates accountability. |
-| **H4** | **Share a Reflection** | Users should be able to share a reflection card as an image or plain text (Web Share API). High emotional value for social sharing. |
-| **H5** | **Search in Read tab** | No way to search for a specific word or phrase across the current page. At minimum, browser Ctrl+F works, but an in-app highlight search would be premium. |
+| # | Feature | Why it Matters | Implementation Notes |
+|---|---|---|---|
+| **H1** | **PWA Install Prompt** | Users don't know they can install the app. Currently the `beforeinstallprompt` event is never surfaced. A subtle banner converts casual visitors into habitual users. | Listen for `beforeinstallprompt` in `App.jsx`, store the event in a `ref`. Show a dismissible glassmorphism pill below the header (persist dismissal in `localStorage`). |
+| **H2** | **SW Update Toast** | When a new service worker is available, users silently get stale content until the next restart. | In `App.jsx`, register a `controllerchange` listener on the navigator service worker. When it fires, call `showToast("New version ready — tap to refresh", "update")` with a reload button. |
+| **H3** | **Reading Progress Bar** | No visual indicator of how far the user is through the 6,236-ayah Quran. Creates a sense of progress and completion. | Compute `progress = ((surah - 1) * avgAyahs + ayah) / 6236`. Render a thin gradient bar (3–4 px) pinned to the top of ReadTab. |
+| **H4** | **Transliteration Toggle** | Non-Arabic speakers benefit from seeing the Roman transliteration. The `en.transliteration` edition is available on alquran.cloud but is not fetched. | In `fetchAyah` (`lib/api.js`), add a parallel fetch for `edition=en.transliteration`. Add a tri-state toggle in ReadTab: Arabic only / + Transliteration / + English. Persist preference in `localStorage`. |
 
 ### 2.2 Medium Priority
 
-| # | Feature | Why it Matters |
-|---|---|---|
-| **M1** | **Multiple bookmarks** | Currently only one bookmark is supported. Power users will want to save multiple positions (e.g. one per Juz they're studying). |
-| **M2** | **Tagging / categories on reflections** | No way to tag reflections (e.g. "gratitude", "dua", "lesson"). Makes journal hard to browse thematically. |
-| **M3** | **Recitation audio** | Linking Ayahs to recitation audio (via the `api.alquran.cloud/v1/ayah/{ref}/ar.alafasy` endpoint) would add an immersive layer. |
-| **M4** | **Transliteration** | Non-Arabic speakers benefit from seeing the transliteration alongside Arabic text. `en.transliteration` edition is available on alquran.cloud. |
-| **M5** | **Copy Reflection card** | The journal card has no share/copy button for the reflection text itself (only verse text in Reflect tab). |
-| **M6** | **Settings back-button / close** | Settings has no way to go back other than tapping the bottom nav. A back arrow makes the navigation feel more native. |
+| # | Feature | Why it Matters | Implementation Notes |
+|---|---|---|---|
+| **M1** | **Multiple Bookmarks** | Only a single `BOOKMARK_KEY` is supported. Power users studying multiple Juz at once have no way to save multiple positions. | Replace the single key with an array of `{ label, surah, ayah, createdAt }` objects in `localStorage`. Render a "Saved Positions" sheet (bottom drawer) in ReadTab with add/delete controls. Keep the single auto-bookmark behavior as the default slot. |
+| **M2** | **Recitation Audio (per Ayah)** | The Read tab is text-only. Audio brings an entirely new dimension — it's how most Muslims recite. | Use `https://cdn.islamic.network/quran/audio/128/ar.alafasy/{ayahGlobalNumber}.mp3` (free CDN, no API key). Compute global ayah number from the `SURAHS` data. Add a play/pause button per card. Preload next ayah's audio in the background. |
+| **M3** | **Offline Fallback Page** | If the user is offline on first visit (before SW caches anything), they see a browser error page — not an app shell. | Add an `offline.html` to the Workbox config as a `navigationFallback`. Display a branded "You're offline — please reconnect to load new verses" screen. |
+| **M4** | **Dua / Supplication Log** | Users often want to capture personal duas alongside their reflections, but the reflection field conflates them. A separate "Dua" log with its own section in Journal adds spiritual depth. | Add a new `type: "dua" | "reflection"` field to the IndexedDB schema (increment `DB_VERSION`). Add a "Log a Dua" tab or section in the Reflect tab. Filter Journal by type. |
+| **M5** | **Font Size Control in Settings** | Users have different visual needs, especially for the Arabic text. Currently font size is hardcoded. | Expose two CSS variables: `--arabic-size` (default `26px`) and `--english-size` (default `14.5px`). Add a small/medium/large pill selector in SettingsTab. Persist to `localStorage` and apply via `document.documentElement.style.setProperty`. |
+| **M6** | **Journal Sort Order** | Reflections always appear newest-first. Some users want to browse chronologically (oldest first) or by Surah number. | Add a `<select>` sort control above the Journal list with options: Newest first / Oldest first / Surah order. Apply a stable sort on `filtered` before `.map()`. |
 
 ### 2.3 Low Priority / Polish
 
-| # | Feature | Why it Matters |
-|---|---|---|
-| **L1** | **Haptic feedback on mobile** | `navigator.vibrate()` on save/bookmark. Subtle but very "native" feeling. |
-| **L2** | **Mus'haf page number input** | A direct "Go to page" number input next to the pagination buttons. |
-| **L3** | **Last-read indicator on Surah dropdown** | Show which Surah was last read so users can resume context-aware navigation. |
-| **L4** | **Reading progress bar** | A thin bar at the top of the Read tab showing progress through the 604 pages. |
-| **L5** | **Keyboard shortcuts** | Arrow keys for pagination, `/` for Surah search focus. |
-| **L6** | **Font size control** | Users have different visual needs. A simple small/medium/large toggle for Arabic and English text. |
+| # | Feature | Why it Matters | Implementation Notes |
+|---|---|---|---|
+| **L1** | **Haptic Feedback** | `navigator.vibrate()` on save, bookmark, and delete feels native and satisfying on mobile. | Wrap in a small `haptic(pattern)` helper in `lib/utils.js`. Call with `haptic(10)` on save, `haptic([5, 50, 5])` on delete. Guard with `if ('vibrate' in navigator)`. |
+| **L2** | **Reflection Word Count** | Writers like to see how much they've written. A live "X words" counter below the reflection textarea gives a pulse of progress. | Compute `text.trim().split(/\s+/).filter(Boolean).length` and display as a muted caption below the textarea in ReflectTab. |
+| **L3** | **Last-read Indicator on Surah Dropdown** | Users often want to resume reading context-aware, but the Surah list gives no visual cue. | Decorate the active `savedBookmark`'s Surah in the dropdown with a small 🔖 icon and a distinct style. |
+| **L4** | **Empty Favorites View** | Filtering by the "Favorite" tag in Journal shows nothing special — it renders like any other filter. Users expect a dedicated "Your Favorites" feel. | When `activeTag === "Favorite"`, render a subtle hero section with ♥ icon and the count before the card list. |
+| **L5** | **Swipe Navigation on Mobile** | Power mobile users expect swipe-left/right to navigate ayahs. Currently only arrow-key shortcuts exist. | Use `touchstart` / `touchend` listeners in ReadTab. Call `nextAyah()` or `prevAyah()` when horizontal swipe delta > 60px and vertical delta < 40px. |
+| **L6** | **CSV Export Includes Tags** | The CSV export (`SettingsTab.jsx`) includes only 7 fields and excludes `tags`. Round-tripping a CSV drops all tag data. | Add `"tags"` to the `headers` array in `exportCSV`. Serialize as a pipe-delimited string (e.g. `Gratitude|Lesson`). Update `importCSV` to split and re-attach. |
 
 ---
 
@@ -77,103 +85,108 @@
 
 | Issue | Impact | Fix |
 |---|---|---|
-| **Single 1,550-line file** | Hard to maintain, long scroll to find things | Split into `components/` (ReadTab, ReflectTab, JournalTab, SettingsTab, BottomNav, etc.) |
-| **Style objects defined at module scope, after use** | `PageHeader` references `pageTitleStyle` which is defined ~800 lines later — works but fragile | Move shared style objects to a `styles.js` file |
-| **`BOOKMARK_KEY` constant inside component** | Re-defined on every render | Hoist it to module scope |
-| **`savedBookmark` computed inside render without `useMemo`** | Reads `localStorage` on every render (minor perf hit) | Use `useState` or `useMemo` |
+| **`PRESET_TAGS` defined in both `ReadTab.jsx` and `ReflectTab.jsx`** | DRY violation — if the list changes, both files need updating | Hoist `PRESET_TAGS` to `lib/data.js` and import from there |
+| **`skeletonLine` helper duplicated in ReadTab and ReflectTab** | Minor duplication | Extract to `lib/styles.js` or a shared `Skeleton.jsx` component |
+| **No `ErrorBoundary`** | An uncaught render error in any tab crashes the whole app with a blank screen | Wrap each tab in a `<ErrorBoundary>` component using `componentDidCatch` |
+| **Inline style objects defined ad-hoc inside render** | New style objects created on every render, minor GC pressure | For static styles (not dependent on state), move to `styles.js` or define outside the component |
 
 ### 3.2 Data / API
 
 | Issue | Impact | Fix |
 |---|---|---|
-| **No loading state between tab switches** | If Reflect tab has a pending fetch and you switch back, the request is not cancelled | `useEffect` cleanup with `AbortController` |
-| **alquran.cloud rate limiting** | Heavy navigation through pages in quick succession could trigger rate limiting | Debounce the `goToPage` call |
-| **CSV import loses Arabic/English verse data** | CSV schema doesn't include `arabic`/`english` arrays, so imported CSV entries show empty verse displays in Journal | Either exclude verse display for CSV imports, or warn the user |
-| **No error boundary** | An uncaught render error crashes the whole app | Wrap tabs in `<ErrorBoundary>` |
+| **CSV import loses `arabic`/`english` verse data** | Imported CSV entries show empty verse blocks in Journal | Either warn the user ("Verse text won't be available for CSV imports"), or enrich CSV with verse columns |
+| **CSV import/export drops `tags`** | Tags are silently lost on CSV round-trip | Add `tags` column (pipe-delimited) to CSV schema in both export and import |
+| **No debounce on Surah dropdown filter** | Typing quickly in the Surah search input triggers a re-render on every keystroke | Debounce `setSurahSearch` by 150ms |
+| **`dbUpdate` overwrites the entire record** | If a field is missing in the patch object, it gets deleted from IDB | Ensure `dbUpdate` always merges: `store.put({ ...existingRecord, ...patch })` |
 
 ### 3.3 PWA / Performance
 
 | Issue | Impact | Fix |
 |---|---|---|
-| **Google Fonts `@import` in JSX** | Render-blocking; causes FOUT | Move to `<link rel="preconnect">` + `<link rel="stylesheet">` in `index.html` or use `font-display: swap` |
-| **No offline fallback page** | If the user is offline on first visit, they see nothing | Add an offline fallback HTML to the Workbox config |
-| **No install prompt UI** | PWA install is invisible to users | Add a `beforeinstallprompt` listener and show a subtle banner |
-| **Service worker update notification** | Users silently get stale content until next reload | Show a "New version available — tap to refresh" toast when SW updates |
+| **Google Fonts loaded via JS `@import`** | Render-blocking or FOUT on cold start | Move to `<link rel="preconnect">` + `<link rel="stylesheet">` in `index.html` |
+| **No offline fallback page** | First visit offline = browser error page | Add `navigationFallback` to Workbox config pointing to `offline.html` |
+| **No install prompt UI** | PWA install is invisible to users | Implement H1 above |
+| **Service worker update notification missing** | Users run stale code after deploys | Implement H2 above |
+| **Audio assets not precached** | Recitation audio (M2) would always require network | Add a Workbox `NetworkFirst` route for the `cdn.islamic.network` CDN matching audio files |
 
 ---
 
 ## 4. Implementation Gameplan
 
-### Phase 1 — Architecture (Do First, Unblocks Everything Else)
-**Time estimate: ~2–3 hours**
+### Phase 1 — High-Impact, Low-Effort Quick Wins
+**Time estimate: ~1–2 hours**
 
-1. Split `App.jsx` into separate files:
-   ```
-   src/
-     components/
-       ReadTab.jsx
-       ReflectTab.jsx
-       JournalTab.jsx
-       SettingsTab.jsx
-       BottomNav.jsx
-       PageHeader.jsx
-       Toast.jsx
-       ConfirmModal.jsx
-     lib/
-       db.js          ← IndexedDB helpers
-       api.js         ← fetchVerses, fetchByPage
-       data.js        ← SURAHS, SURAH_START_PAGE
-       styles.js      ← shared style objects
-     App.jsx          ← root only (~80 lines)
-   ```
-2. Fix `BOOKMARK_KEY` hoisting and `savedBookmark` `useMemo`.
-3. Add `ErrorBoundary` component wrapping each tab.
-4. Move Google Fonts to `index.html`.
+1. **L6 — Fix CSV tags export/import** — Add `tags` column to `exportCSV` and parse it in `importCSV`.
+2. **L1 — Haptic feedback** — Add a `haptic()` helper and wire to save/delete/bookmark.
+3. **L2 — Reflection word count** — 3-line addition below the textarea in ReflectTab.
+4. **Move `PRESET_TAGS` to `lib/data.js`** — Remove duplication from ReadTab and ReflectTab.
+5. **Move Google Fonts to `index.html`** — Improve first-paint time.
 
-### Phase 2 — High Priority Features
-**Time estimate: ~3–4 hours**
+### Phase 2 — Core Missing Features
+**Time estimate: ~3–5 hours**
 
 1. **H1 — PWA Install Prompt**
-   - Listen for `beforeinstallprompt`, store the event
-   - Show a subtle glassmorphism banner at top when available
-   - Dismiss button stores flag in `localStorage`
+   - Listen for `beforeinstallprompt` in `App.jsx`, store event in `ref`
+   - Render a dismissible pill below the BottomNav (or as a top banner)
+   - Store `"pwa_install_dismissed"` key in `localStorage`
 
-2. **H2 — Juz Selector on Read tab**
-   - Add `JUZ_START_PAGE` map (30 entries, publicly documented)
-   - Add a second dropdown next to the Surah one or a horizontal pill selector
+2. **H2 — SW Update Toast**
+   - In `main.jsx` or `App.jsx`, listen for `navigator.serviceWorker.addEventListener('controllerchange', ...)`
+   - `showToast("New version available — tap to refresh")` with a reload CTA
 
-3. **H3 — Stats / Streaks on Journal**
-   - Compute streak from `createdAt` dates
-   - Show a small stats bar: total reflections · current streak · longest streak
+3. **H3 — Reading Progress Bar**
+   - Map `currentPos` to a `0–100` percentage based on ayah ordinal
+   - Render a `position: sticky; top: 0` bar in ReadTab with a gradient fill
 
-4. **H4 — Share Reflection (Web Share API)**
-   - Add a share button on each Journal card
-   - `navigator.share({ title, text })` → graceful fallback to clipboard
+4. **M5 — Font Size Control in Settings**
+   - Add two CSS vars `--arabic-size` and `--english-size` to `index.css`
+   - Add a pill toggle in SettingsTab: Small / Medium / Large
+   - Persist to `localStorage` and apply via `document.documentElement.style.setProperty`
 
-### Phase 3 — Medium Priority
-**Time estimate: ~4–5 hours**
+5. **M6 — Journal Sort Order**
+   - Add sort `<select>` above entries: Newest / Oldest / Surah order
+   - Sort `filtered` before rendering
 
-1. **M1 — Multiple bookmarks** — Store as a `Map<label, pageNum>` in localStorage; show a bookmark manager sheet.
-2. **M2 — Reflection tags** — Add a `tags: string[]` field to the IndexedDB schema (DB_VERSION 2 migration), tag chips on the Reflect form, filter in Journal.
-3. **M4 — Transliteration toggle** — Fetch `en.transliteration` in parallel in ReadTab; toggle button between Arabic-only / Arabic+Transliteration / Arabic+English.
-4. **M6 — Settings back button** — Add a `← Back` header button that calls `onBack` prop (set from App to navigate to the previous tab).
+### Phase 3 — Richer Features
+**Time estimate: ~4–6 hours**
 
-### Phase 4 — Polish
+1. **H4 — Transliteration Toggle**
+   - Extend `fetchAyah` to also fetch `en.transliteration` in parallel (`Promise.all`)
+   - Store in ayah state as `ayah.transliteration`
+   - Add a tri-state button in ReadTab: Arabic / + Transliteration / + English
+
+2. **M2 — Recitation Audio**
+   - Compute global ayah number: sum of ayah counts for all preceding surahs + current ayah
+   - Render `<audio>` element per card with controls, or a custom play/pause button
+   - Preload next ayah audio on idle
+
+3. **M1 — Multiple Bookmarks**
+   - Store `qr_bookmarks` as a JSON array in `localStorage`
+   - Add a "Save Position" button in ReadTab that opens a name-input popover
+   - Show saved positions as chips in ReadTab navigation
+
+4. **M3 — Offline Fallback**
+   - Create `public/offline.html`
+   - Update `vite.config.js` Workbox config with `navigationFallback: '/offline.html'`
+
+### Phase 4 — Nice to Have
 **Time estimate: ~2 hours**
 
-1. Font size control (CSS variable `--arabic-size`, `--english-size` toggled by Settings).
-2. Reading progress bar (thin gradient bar top-of-page in ReadTab).
-3. Offline fallback page.
-4. SW update toast notification.
+1. **M4 — Dua Log** — IndexedDB schema v2, new `type` field, separate Dua section in Journal.
+2. **L5 — Swipe Navigation** — Touch event listeners in ReadTab.
+3. **L3 — Last-read indicator in Surah dropdown** — Decorate the bookmarked surah with 🔖.
+4. **L4 — Favorites hero section** — Special header when filtering by Favorite tag.
 
 ---
 
 ## 5. Quick Wins (Can Ship Today)
 
-| Fix | Effort |
-|---|---|
-| Move `BOOKMARK_KEY` to module scope | 1 line |
-| Add `AbortController` to page fetches | 10 lines |
-| Add `<link rel="preconnect">` for fonts in `index.html` | 3 lines |
-| Debounce `goToPage` | 5 lines |
-| Add copy button to Journal cards | 10 lines |
+| Fix | File | Effort |
+|---|---|---|
+| Move `PRESET_TAGS` to `lib/data.js` | `ReadTab.jsx`, `ReflectTab.jsx`, `lib/data.js` | 5 min |
+| Add `tags` column to CSV export/import | `SettingsTab.jsx` | 15 min |
+| Add `haptic()` helper + wire to 3 actions | `lib/utils.js`, `ReadTab.jsx`, `JournalTab.jsx` | 20 min |
+| Word count below reflection textarea | `ReflectTab.jsx` | 5 min |
+| Move Google Fonts to `<link>` in `index.html` | `index.html` | 5 min |
+| Add swipe navigation | `ReadTab.jsx` | 30 min |
+| Journal sort order dropdown | `JournalTab.jsx` | 20 min |

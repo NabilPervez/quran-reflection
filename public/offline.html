@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quran Reflect — Offline</title>
+    <style>
+      :root {
+        --primary:           #00361a;
+        --primary-container: #1a4d2e;
+        --primary-light:     rgba(26,77,46,0.07);
+        --surface:           #faf9f6;
+        --surface-low:       #f4f3f1;
+        --on-surface:        #1a1c1a;
+        --on-surface-variant:#4f5350;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --primary:           #4caf7d;
+          --primary-container: #2d6a4f;
+          --primary-light:     rgba(76,175,125,0.1);
+          --surface:           #131510;
+          --surface-low:       #1c1f1a;
+          --on-surface:        #e8e6e0;
+          --on-surface-variant:#9e9e96;
+        }
+      }
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body {
+        min-height: 100vh;
+        background: var(--surface-low);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: system-ui, -apple-system, sans-serif;
+        color: var(--on-surface);
+        padding: 24px;
+        text-align: center;
+      }
+      .card {
+        background: var(--surface);
+        border-radius: 24px;
+        padding: 56px 40px;
+        max-width: 440px;
+        width: 100%;
+        box-shadow: 0 4px 40px rgba(0,0,0,0.06);
+      }
+      .icon { font-size: 56px; margin-bottom: 24px; opacity: 0.6; }
+      h1 {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--on-surface);
+      }
+      p {
+        font-size: 14px;
+        line-height: 1.8;
+        color: var(--on-surface-variant);
+        margin-bottom: 32px;
+      }
+      .tip {
+        font-size: 12px;
+        color: var(--primary-container);
+        background: var(--primary-light);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 28px;
+        line-height: 1.7;
+      }
+      button {
+        padding: 13px 32px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+      button:hover { opacity: 0.85; }
+      .brand {
+        margin-top: 36px;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--on-surface-variant);
+        opacity: 0.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="icon">🌙</div>
+      <h1>You're offline</h1>
+      <p>
+        Quran Reflect needs an internet connection to load new verses from the AlQuran.cloud API.
+        Please reconnect and try again.
+      </p>
+      <div class="tip">
+        💡 <strong>Tip:</strong> Install the app on your home screen — once the verses you've read are cached, you can access them offline anytime.
+      </div>
+      <button onclick="location.reload()">Try again</button>
+      <div class="brand">Quran Reflect ✦</div>
+    </div>
+  </body>
+</html>
