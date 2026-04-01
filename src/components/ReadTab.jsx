@@ -78,9 +78,15 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
   const [bookmarked, setBookmarked] = useState(false);
   const [pageSearch, setPageSearch] = useState("");   // H5 in-page search
 
-  // H4 — Transliteration tri-state: "arabic" | "translit" | "english"
-  const [verseMode, setVerseMode] = useState(
-    () => localStorage.getItem("qr_verse_mode") || "arabic"
+  // H4 — Independent verse layer toggles: each can be on/off independently
+  const [showArabic, setShowArabic] = useState(
+    () => localStorage.getItem("qr_show_arabic") !== "0"
+  );
+  const [showTranslit, setShowTranslit] = useState(
+    () => localStorage.getItem("qr_show_translit") === "1"
+  );
+  const [showEnglish, setShowEnglish] = useState(
+    () => localStorage.getItem("qr_show_english") === "1"
   );
 
   const [favorites, setFavorites] = useState({}); // map of verseKey -> entryId
@@ -137,10 +143,10 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
   };
 
 
-  // H4 — Persist verseMode in localStorage
-  useEffect(() => {
-    localStorage.setItem("qr_verse_mode", verseMode);
-  }, [verseMode]);
+  // H4 — Persist each toggle independently
+  useEffect(() => { localStorage.setItem("qr_show_arabic",  showArabic  ? "1" : "0"); }, [showArabic]);
+  useEffect(() => { localStorage.setItem("qr_show_translit", showTranslit ? "1" : "0"); }, [showTranslit]);
+  useEffect(() => { localStorage.setItem("qr_show_english",  showEnglish  ? "1" : "0"); }, [showEnglish]);
 
   const surahRef = useRef(null);
   const topRef = useRef(null);
@@ -316,7 +322,7 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
       <div style={{
         position: "sticky", top: 0, left: 0, right: 0, zIndex: 50,
         height: 3, background: "var(--outline-ghost)",
-        marginBottom: 0,
+        marginBottom: 20,
       }}>
         <div style={{
           height: "100%",
@@ -500,23 +506,23 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
                     </span>
                   </div>
 
-                  {/* H4 — Verse mode toggle */}
+                  {/* H4 — Independent verse layer toggles */}
                   <div style={{ display: "flex", gap: 6, marginBottom: 18, justifyContent: "flex-end", flexWrap: "wrap" }}>
                     {[
-                      { key: "arabic", label: "Arabic" },
-                      { key: "translit", label: "Transliteration", disabled: !ayah.transliteration },
-                      { key: "english", label: "English" },
-                    ].map(({ key, label, disabled }) => (
+                      { label: "Arabic",           active: showArabic,   toggle: () => setShowArabic(v => !v),   disabled: false },
+                      { label: "Transliteration",  active: showTranslit,  toggle: () => setShowTranslit(v => !v), disabled: !ayah.transliteration },
+                      { label: "English",          active: showEnglish,   toggle: () => setShowEnglish(v => !v),  disabled: false },
+                    ].map(({ label, active, toggle, disabled }) => (
                       <button
-                        key={key}
-                        onClick={() => !disabled && setVerseMode(key)}
+                        key={label}
+                        onClick={() => !disabled && toggle()}
                         disabled={disabled}
                         style={{
                           padding: "4px 12px", borderRadius: 40, fontSize: 11, fontWeight: 600,
                           fontFamily: "'Inter',sans-serif", cursor: disabled ? "not-allowed" : "pointer",
-                          border: "1px solid var(--outline-ghost)",
-                          background: verseMode === key ? "var(--primary-light)" : "transparent",
-                          color: verseMode === key ? "var(--primary-container)" : "var(--on-surface-variant)",
+                          border: `1px solid ${active && !disabled ? "var(--primary-container)" : "var(--outline-ghost)"}`,
+                          background: active && !disabled ? "var(--primary-light)" : "transparent",
+                          color: active && !disabled ? "var(--primary-container)" : "var(--on-surface-variant)",
                           opacity: disabled ? 0.35 : 1,
                           transition: "all 0.2s ease",
                         }}
@@ -526,20 +532,22 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
                     ))}
                   </div>
 
-                  {/* Arabic — always shown */}
+                  {/* Arabic */}
+                  {showArabic && (
                   <p style={{ fontFamily: "'Amiri','Scheherazade New',serif", fontSize: 26, lineHeight: 2.4, color: "var(--on-surface)", direction: "rtl", textAlign: "right", margin: "0 0 20px" }}>
                     {ayah.arabic}
                   </p>
+                  )}
 
                   {/* Transliteration */}
-                  {(verseMode === "translit" || verseMode === "english") && ayah.transliteration && (
+                  {showTranslit && ayah.transliteration && (
                     <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13.5, lineHeight: 1.85, color: "var(--primary-container)", fontStyle: "italic", margin: "0 0 14px", opacity: 0.8 }}>
                       {ayah.transliteration}
                     </p>
                   )}
 
                   {/* English — with highlight */}
-                  {verseMode === "english" && (
+                  {showEnglish && (
                   <HighlightedText
                     text={ayah.english}
                     query={searchQuery}
