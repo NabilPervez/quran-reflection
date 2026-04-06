@@ -139,7 +139,7 @@ export default function App() {
                 setReturnToRead(false);
               }
             }} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} onSettings={() => switchTab("settings")} />}
-            {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast}                                                                       onSettings={() => switchTab("settings")} />}
+            {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast}                                                                       onSettings={() => switchTab("settings")} setTab={switchTab} />}
             {tab === "settings" && <SettingsTab showToast={showToast} theme={theme} setTheme={setTheme} onBack={() => setTab(prevTab)} />}
           </ErrorBoundary>
         </div>

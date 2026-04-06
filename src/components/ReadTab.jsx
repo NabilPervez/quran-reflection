@@ -335,27 +335,35 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
 
       <PageHeader title="Read & Reflect" onSettings={onSettings} />
 
-      {/* Bookmark resume pill */}
-      {savedBookmark && savedBookmark !== `${currentPos.surah}:${currentPos.ayah}` && (
-        <button
-          onClick={() => {
-            const [s, a] = savedBookmark.split(":");
-            goToAyah(Number(s), Number(a));
-          }}
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            marginBottom: 20, padding: "7px 16px", borderRadius: 40,
-            background: "var(--primary-light)", border: "1px solid var(--outline-ghost)",
-            color: "var(--primary-container)",
-            fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600,
-            cursor: "pointer", transition: "all 0.3s ease",
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = "rgba(26,77,46,0.14)"}
-          onMouseLeave={(e) => e.currentTarget.style.background = "var(--primary-light)"}
+      {/* Bookmark actions */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+        <button id="bookmark-btn" onClick={toggleBookmark}
+          title={bookmarked ? "Remove bookmark" : "Bookmark this page"}
+          style={{ background: bookmarked ? "var(--primary-light)" : "var(--surface-low)", color: bookmarked ? "var(--primary-container)" : "var(--on-surface-variant)", border: bookmarked ? "1px solid var(--primary-container)" : "1px solid var(--outline-ghost)", borderRadius: 40, padding: "7px 16px", display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "'Inter',sans-serif", transition: "all 0.3s ease" }}
         >
-          🔖 Resume at Surah {savedBookmark.replace(':', ' Ayah ')}
+          🔖 {bookmarked ? "Saved" : "Save Bookmark"}
         </button>
-      )}
+        {savedBookmark && savedBookmark !== `${currentPos.surah}:${currentPos.ayah}` && (
+          <button
+            onClick={() => {
+              const [s, a] = savedBookmark.split(":");
+              goToAyah(Number(s), Number(a));
+            }}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "7px 16px", borderRadius: 40,
+              background: "var(--surface-lowest)", border: "1px solid var(--outline-ghost)",
+              color: "var(--primary-container)",
+              fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600,
+              cursor: "pointer", transition: "all 0.3s ease",
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-light)"}
+            onMouseLeave={(e) => e.currentTarget.style.background = "var(--surface-lowest)"}
+          >
+            Resume at Surah {savedBookmark.replace(':', ' Ayah ')}
+          </button>
+        )}
+      </div>
 
       <details style={{ marginBottom: 24, cursor: 'pointer', outline: 'none' }}>
         <summary style={{ padding: 12, background: 'var(--surface-lowest)', borderRadius: 12, border: '1px solid var(--outline-ghost)', fontWeight: 600, color: 'var(--on-surface-variant)' }}>
@@ -438,21 +446,7 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
       </div>
       </details>
 
-      {/* Page indicator + bookmark button */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, margin: "0 auto 28px" }}>
-        <div style={{ padding: "8px 20px", background: "var(--primary-light)", borderRadius: 40 }}>
-          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600, color: "var(--primary-container)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-            Surah {currentPos.surah} : Ayah {currentPos.ayah}
-          </span>
-        </div>
-        <button id="bookmark-btn" onClick={toggleBookmark}
-          title={bookmarked ? "Remove bookmark" : "Bookmark this page"}
-          style={{ background: bookmarked ? "var(--primary-light)" : "var(--surface-low)", border: "none", borderRadius: "50%", width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 16, transition: "all 0.3s ease" }}
-        >
-          🔖
-        </button>
-      </div>
-
+      {/* (Page indicator removed as requested) */}
       {/* Loading skeletons */}
       {loading && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>

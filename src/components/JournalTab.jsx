@@ -28,7 +28,7 @@ async function shareEntry(entry, showToast) {
   showToast("Copied to clipboard ✦");
 }
 
-export default function JournalTab({ refreshKey, showToast, onSettings }) {
+export default function JournalTab({ refreshKey, showToast, onSettings, setTab }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, currentStreak: 0, longestStreak: 0 });
@@ -135,10 +135,10 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
   };
 
   // M2 — Gather all unique tags that exist across entries
-  const allTags = [...new Set(entries.flatMap((e) => e.tags ?? []))].filter(Boolean);
+  const allTags = [...new Set(entries.flatMap((e) => e.tags ?? []))].filter(t => Boolean(t) && t !== "Favorite");
 
   // Combined filter: text search + tag filter
-  const filtered = entries.filter((e) => {
+  const regularEntries = entries.filter((e) => !(e.tags ?? []).includes("Favorite")).filter((e) => {
     const matchesSearch = !search.trim() || (() => {
       const q = search.toLowerCase();
       return (
@@ -151,6 +151,22 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
     const matchesTag = !activeTag || (e.tags ?? []).includes(activeTag);
     return matchesSearch && matchesTag;
   });
+
+  const favoriteEntries = entries.filter((e) => (e.tags ?? []).includes("Favorite")).filter((e) => {
+    const matchesSearch = !search.trim() || (() => {
+      const q = search.toLowerCase();
+      return (
+        e.surahName.toLowerCase().includes(q) ||
+        String(e.surahNumber).includes(q)
+      );
+    })();
+    return matchesSearch;
+  });
+
+  const jumpToFavorite = (entry) => {
+    localStorage.setItem("qr_bookmark_ayah", `${entry.surahNumber}:${entry.startAyah}`);
+    if (setTab) setTab("read");
+  };
 
   if (loading) return (
     <div style={{ padding: "80px 24px", textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif" }}>
@@ -244,12 +260,13 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
             Head over to the Reflect tab to begin your first Tadabbur.
           </p>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : regularEntries.length === 0 && favoriteEntries.length === 0 ? (
         <p style={{ color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 14, textAlign: "center", padding: "48px 0" }}>
           No reflections match {activeTag ? `"${activeTag}"` : `"${search}"`}.
         </p>
       ) : (
-        filtered.map((entry) => {
+        <>
+        {regularEntries.map((entry) => {
           const isExpanded = expanded[entry.id];
           const shouldTruncate = entry.reflection.split("\n").length > 4 || entry.reflection.length > 300;
           const displayText = !shouldTruncate || isExpanded
@@ -338,7 +355,25 @@ export default function JournalTab({ refreshKey, showToast, onSettings }) {
               )}
             </div>
           );
-        })
+        })}
+        {favoriteEntries.length > 0 && (
+          <div style={{ marginTop: 40, paddingTop: 24, borderTop: "1px dashed var(--outline-ghost)" }}>
+            <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, color: "var(--on-surface)", fontSize: 18, marginBottom: 20 }}>Favorites</h3>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              {favoriteEntries.map((entry) => (
+                <div key={entry.id} style={{ ...cardStyle, padding: "16px", flex: "1 1 200px", maxWidth: 280, display: "flex", flexDirection: "column", gap: 12 }}>
+                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span onClick={() => jumpToFavorite(entry)} style={{ display: "inline-block", background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 700, padding: "6px 14px", borderRadius: 20, letterSpacing: "0.04em", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(26,77,46,0.18)"} onMouseLeave={(e) => e.currentTarget.style.background = "var(--primary-light)"}>
+                        Surah {entry.surahNumber} : {entry.startAyah}
+                    </span>
+                    <button onClick={() => setDeleteTarget(entry)} style={{ background: "transparent", border: "none", color: "#b91c1c", fontSize: 16, cursor: "pointer", opacity: 0.6 }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}>×</button>
+                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        </>
       )}
 
       {/* Edit Modal */}
