@@ -97,6 +97,166 @@
         }
       }
 
+      /* ── Sacred Marble ── */
+      [data-color-scheme="sacred-marble"] {
+        --primary:            #D4AF37;
+        --primary-container:  #C5A028;
+        --primary-light:      rgba(212, 175, 55, 0.1);
+        --on-primary:         #FFFFFF;
+        --surface:            #FFFFFF;
+        --surface-low:        #FDFBF7;
+        --surface-lowest:     #FFFFFF;
+        --on-surface:         #2C3E50;
+        --on-surface-variant: #7F8C8D;
+        --outline-ghost:      rgba(44, 62, 80, 0.15);
+      }
+      [data-color-scheme="sacred-marble"][data-theme="dark"] {
+        --primary:            #E5C05C;
+        --primary-container:  #D4AF37;
+        --primary-light:      rgba(229, 192, 92, 0.1);
+        --on-primary:         #121212;
+        --surface:            #1E1E1E;
+        --surface-low:        #121212;
+        --surface-lowest:     #242424;
+        --on-surface:         #F5F5F5;
+        --on-surface-variant: #A6ACAF;
+        --outline-ghost:      rgba(245, 245, 245, 0.15);
+      }
+      @media (prefers-color-scheme: dark) {
+        [data-color-scheme="sacred-marble"]:not([data-theme="light"]) {
+          --primary:            #E5C05C;
+          --primary-container:  #D4AF37;
+          --primary-light:      rgba(229, 192, 92, 0.1);
+          --on-primary:         #121212;
+          --surface:            #1E1E1E;
+          --surface-low:        #121212;
+          --surface-lowest:     #242424;
+          --on-surface:         #F5F5F5;
+          --on-surface-variant: #A6ACAF;
+          --outline-ghost:      rgba(245, 245, 245, 0.15);
+        }
+      }
+
+      /* ── Andalusian Courtyard ── */
+      [data-color-scheme="andalusian"] {
+        --primary:            #008080;
+        --primary-container:  #006666;
+        --primary-light:      rgba(0, 128, 128, 0.1);
+        --on-primary:         #FFFFFF;
+        --surface:            #FFFFFF;
+        --surface-low:        #F0F8FF;
+        --surface-lowest:     #FFFFFF;
+        --on-surface:         #0D2B2B;
+        --on-surface-variant: #4A6B6B;
+        --outline-ghost:      rgba(13, 43, 43, 0.15);
+      }
+      [data-color-scheme="andalusian"][data-theme="dark"] {
+        --primary:            #64FFDA;
+        --primary-container:  #4CD9B8;
+        --primary-light:      rgba(100, 255, 218, 0.1);
+        --on-primary:         #0A192F;
+        --surface:            #112240;
+        --surface-low:        #0A192F;
+        --surface-lowest:     #1E2E4E;
+        --on-surface:         #E6F1FF;
+        --on-surface-variant: #8892B0;
+        --outline-ghost:      rgba(230, 241, 255, 0.15);
+      }
+      @media (prefers-color-scheme: dark) {
+        [data-color-scheme="andalusian"]:not([data-theme="light"]) {
+          --primary:            #64FFDA;
+          --primary-container:  #4CD9B8;
+          --primary-light:      rgba(100, 255, 218, 0.1);
+          --on-primary:         #0A192F;
+          --surface:            #112240;
+          --surface-low:        #0A192F;
+          --surface-lowest:     #1E2E4E;
+          --on-surface:         #E6F1FF;
+          --on-surface-variant: #8892B0;
+          --outline-ghost:      rgba(230, 241, 255, 0.15);
+        }
+      }
+
+      /* ── Fajr Glow ── */
+      [data-color-scheme="fajr"] {
+        --primary:            #E67E22;
+        --primary-container:  #D35400;
+        --primary-light:      rgba(230, 126, 34, 0.1);
+        --on-primary:         #FFFFFF;
+        --surface:            #FFFFFF;
+        --surface-low:        #FFFCF5;
+        --surface-lowest:     #FFFFFF;
+        --on-surface:         #4A2311;
+        --on-surface-variant: #8D6E63;
+        --outline-ghost:      rgba(74, 35, 17, 0.15);
+      }
+      [data-color-scheme="fajr"][data-theme="dark"] {
+        --primary:            #F5B041;
+        --primary-container:  #F39C12;
+        --primary-light:      rgba(245, 176, 65, 0.1);
+        --on-primary:         #2C1E16;
+        --surface:            #3E2723;
+        --surface-low:        #2C1E16;
+        --surface-lowest:     #4E342E;
+        --on-surface:         #FFF3E0;
+        --on-surface-variant: #D7CCC8;
+        --outline-ghost:      rgba(255, 243, 224, 0.15);
+      }
+      @media (prefers-color-scheme: dark) {
+        [data-color-scheme="fajr"]:not([data-theme="light"]) {
+          --primary:            #F5B041;
+          --primary-container:  #F39C12;
+          --primary-light:      rgba(245, 176, 65, 0.1);
+          --on-primary:         #2C1E16;
+          --surface:            #3E2723;
+          --surface-low:        #2C1E16;
+          --surface-lowest:     #4E342E;
+          --on-surface:         #FFF3E0;
+          --on-surface-variant: #D7CCC8;
+          --outline-ghost:      rgba(255, 243, 224, 0.15);
+        }
+      }
+
+      /* ── Vibrant Medina ── */
+      [data-color-scheme="medina"] {
+        --primary:            #10B981;
+        --primary-container:  #059669;
+        --primary-light:      rgba(16, 185, 129, 0.1);
+        --on-primary:         #FFFFFF;
+        --surface:            #FFFFFF;
+        --surface-low:        #F0FDF4;
+        --surface-lowest:     #FFFFFF;
+        --on-surface:         #064E3B;
+        --on-surface-variant: #4B5563;
+        --outline-ghost:      rgba(6, 78, 59, 0.15);
+      }
+      [data-color-scheme="medina"][data-theme="dark"] {
+        --primary:            #34D399;
+        --primary-container:  #10B981;
+        --primary-light:      rgba(52, 211, 153, 0.1);
+        --on-primary:         #022C22;
+        --surface:            #064E3B;
+        --surface-low:        #022C22;
+        --surface-lowest:     #0F5A47;
+        --on-surface:         #ECFDF5;
+        --on-surface-variant: #A7F3D0;
+        --outline-ghost:      rgba(236, 253, 245, 0.15);
+      }
+      @media (prefers-color-scheme: dark) {
+        [data-color-scheme="medina"]:not([data-theme="light"]) {
+          --primary:            #34D399;
+          --primary-container:  #10B981;
+          --primary-light:      rgba(52, 211, 153, 0.1);
+          --on-primary:         #022C22;
+          --surface:            #064E3B;
+          --surface-low:        #022C22;
+          --surface-lowest:     #0F5A47;
+          --on-surface:         #ECFDF5;
+          --on-surface-variant: #A7F3D0;
+          --outline-ghost:      rgba(236, 253, 245, 0.15);
+        }
+      }
+
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html { -webkit-tap-highlight-color: transparent; }
       body {

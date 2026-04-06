@@ -3,7 +3,7 @@ import { dbGetAll, dbAdd, dbClear } from "../lib/db";
 import { secondaryBtnStyle, settingsSectionStyle, settingsTitleStyle, settingsDescStyle, pageTitleStyle, pageSubtitleStyle } from "../lib/styles";
 import ConfirmModal from "./ConfirmModal";
 
-export default function SettingsTab({ showToast, theme, setTheme, onBack }) {
+export default function SettingsTab({ showToast, theme, setTheme, colorScheme, setColorScheme, onBack }) {
   const [clearConfirm1, setClearConfirm1] = useState(false);
   const [clearConfirm2, setClearConfirm2] = useState(false);
   const [entryCount, setEntryCount] = useState(null);
@@ -106,8 +106,16 @@ export default function SettingsTab({ showToast, theme, setTheme, onBack }) {
 
   const themeOptions = [
     { value: "system", label: "System Default" },
-    { value: "light", label: "Light" },
-    { value: "dark", label: "Dark" },
+    { value: "light", label: "Light Mode" },
+    { value: "dark", label: "Dark Mode" },
+  ];
+
+  const schemeOptions = [
+    { value: "default", label: "Default" },
+    { value: "sacred-marble", label: "Sacred Marble" },
+    { value: "andalusian", label: "Andalusian Courtyard" },
+    { value: "fajr", label: "Fajr Glow" },
+    { value: "medina", label: "Vibrant Medina" },
   ];
 
   return (
@@ -135,9 +143,8 @@ export default function SettingsTab({ showToast, theme, setTheme, onBack }) {
 
       {/* Appearance */}
       <div style={settingsSectionStyle}>
-        <h2 style={settingsTitleStyle}>Appearance</h2>
-        <p style={settingsDescStyle}>Choose your colour theme. System Default follows your OS setting.</p>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <h2 style={settingsTitleStyle}>Appearance Mode</h2>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
           {themeOptions.map((opt) => (
             <button
               key={opt.value}
@@ -150,6 +157,27 @@ export default function SettingsTab({ showToast, theme, setTheme, onBack }) {
                   ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)"
                   : "var(--surface-low)",
                 color: theme === opt.value ? "var(--on-primary)" : "var(--on-surface-variant)",
+                cursor: "pointer", fontFamily: "'Inter',sans-serif",
+                fontSize: 13, fontWeight: 500, transition: "all 0.3s ease",
+              }}
+            >{opt.label}</button>
+          ))}
+        </div>
+
+        <h2 style={settingsTitleStyle}>Color Scheme</h2>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {schemeOptions.map((opt) => (
+            <button
+              key={opt.value}
+              id={`scheme-${opt.value}`}
+              onClick={() => setColorScheme(opt.value)}
+              style={{
+                padding: "9px 20px", borderRadius: 40,
+                border: "none",
+                background: colorScheme === opt.value
+                  ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)"
+                  : "var(--surface-low)",
+                color: colorScheme === opt.value ? "var(--on-primary)" : "var(--on-surface-variant)",
                 cursor: "pointer", fontFamily: "'Inter',sans-serif",
                 fontSize: 13, fontWeight: 500, transition: "all 0.3s ease",
               }}

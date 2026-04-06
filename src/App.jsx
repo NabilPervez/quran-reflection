@@ -55,6 +55,7 @@ export default function App() {
   const [journalKey, setJournalKey] = useState(0);
   const [firstVisit, setFirstVisit] = useState(false);
   const [theme, setTheme]           = useState(() => localStorage.getItem("qr_theme") || "system");
+  const [colorScheme, setColorScheme] = useState(() => localStorage.getItem("qr_color_scheme") || "default");
   const [readHandoff, setReadHandoff] = useState(null);
   const [returnToRead, setReturnToRead] = useState(false);
 
@@ -88,11 +89,15 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem("qr_theme", theme);
+    localStorage.setItem("qr_color_scheme", colorScheme);
     const root = document.documentElement;
     root.removeAttribute("data-theme");
+    root.removeAttribute("data-color-scheme");
+    
     if (theme === "dark")  root.setAttribute("data-theme", "dark");
     if (theme === "light") root.setAttribute("data-theme", "light");
-  }, [theme]);
+    if (colorScheme !== "default") root.setAttribute("data-color-scheme", colorScheme);
+  }, [theme, colorScheme]);
 
   // Listen for PWA install prompt event
   useEffect(() => {
@@ -140,7 +145,7 @@ export default function App() {
               }
             }} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} onSettings={() => switchTab("settings")} />}
             {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast}                                                                       onSettings={() => switchTab("settings")} setTab={switchTab} />}
-            {tab === "settings" && <SettingsTab showToast={showToast} theme={theme} setTheme={setTheme} onBack={() => setTab(prevTab)} />}
+            {tab === "settings" && <SettingsTab showToast={showToast} theme={theme} setTheme={setTheme} colorScheme={colorScheme} setColorScheme={setColorScheme} onBack={() => setTab(prevTab)} />}
           </ErrorBoundary>
         </div>
         <BottomNav tab={tab} setTab={switchTab} />
