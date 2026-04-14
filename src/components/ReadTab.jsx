@@ -30,33 +30,6 @@ function skeletonLine(widthPct) {
   };
 }
 
-/** Highlight matching text in a string — returns array of [text, isMatch] tuples */
-function highlight(text, query) {
-  if (!query) return [[text, false]];
-  const idx = text.toLowerCase().indexOf(query.toLowerCase());
-  if (idx === -1) return [[text, false]];
-  return [
-    [text.slice(0, idx), false],
-    [text.slice(idx, idx + query.length), true],
-    ...highlight(text.slice(idx + query.length), query),
-  ];
-}
-
-function HighlightedText({ text, query, style }) {
-  if (!query) return <span style={style}>{text}</span>;
-  const parts = highlight(text, query);
-  return (
-    <span style={style}>
-      {parts.map(([part, isMatch], i) =>
-        isMatch
-          ? <mark key={i} style={{ background: "rgba(26,77,46,0.18)", color: "var(--primary-container)", borderRadius: 3, padding: "0 2px" }}>{part}</mark>
-          : <span key={i}>{part}</span>
-      )}
-    </span>
-  );
-}
-
-
 export default function ReadTab({ onReflect, onSettings, showToast }) {
   const [currentPos, setCurrentPos] = useState(() => {
     const saved = localStorage.getItem(BOOKMARK_KEY);
@@ -76,7 +49,6 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
   const [selectedSurahNum, setSelectedSurahNum] = useState(null);
   const [selectedJuzNum, setSelectedJuzNum] = useState("");
   const [bookmarked, setBookmarked] = useState(false);
-  const [pageSearch, setPageSearch] = useState("");   // H5 in-page search
 
   // H4 — Independent verse layer toggles: each can be on/off independently
   const [showArabic, setShowArabic] = useState(
@@ -150,7 +122,6 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
 
   const surahRef = useRef(null);
   const topRef = useRef(null);
-  const searchRef = useRef(null);
   const touchStartRef = useRef(null); // L5 swipe
 
   const savedBookmark = useMemo(
@@ -177,7 +148,6 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
     setAyah(null);
     setFetchError("");
     setLoading(true);
-    setPageSearch(""); // clear search
     setShowTafsir(false); // hide tafsir initially
 
     const controller = new AbortController();
@@ -233,7 +203,6 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
       const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
       if (e.key === "ArrowLeft"  && !isTyping) { e.preventDefault(); prevAyah(); }
       if (e.key === "ArrowRight" && !isTyping) { e.preventDefault(); nextAyah(); }
-      if (e.key === "/" && !isTyping) { e.preventDefault(); searchRef.current?.focus(); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -297,8 +266,6 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
   const selectedSurahLabel = selectedSurahNum
     ? `${selectedSurahNum}. ${SURAHS.find((s) => s[0] === selectedSurahNum)?.[1] ?? ""}`
     : null;
-
-  const searchQuery = pageSearch.trim().toLowerCase();
 
   const chipBtn = (active) => ({
     display: "inline-flex", alignItems: "center", gap: 5,
@@ -367,11 +334,11 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
 
       <details style={{ marginBottom: 24, cursor: 'pointer', outline: 'none' }}>
         <summary style={{ padding: 12, background: 'var(--surface-lowest)', borderRadius: 12, border: '1px solid var(--outline-ghost)', fontWeight: 600, color: 'var(--on-surface-variant)' }}>
-          Navigation & Search
+          Navigation
         </summary>
         <div style={{ padding: '16px 0' }}>
       {/* Navigation Selectors */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 20, marginBottom: 24 }}>
         {/* Surah Selector */}
         <div ref={surahRef}>
           <label style={labelStyle}>Jump to Surah</label>
@@ -427,20 +394,30 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
             ))}
           </select>
         </div>
-      </div>
 
-      {/* H5 — In-page search */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ position: "relative" }}>
-          <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", color: "var(--on-surface-variant)", fontSize: 14, pointerEvents: "none" }}>🔍</span>
-          <input
-            id="page-search"
-            ref={searchRef}
-            value={pageSearch}
-            onChange={(e) => setPageSearch(e.target.value)}
-            placeholder={`Search this page… (press / to focus)`}
-            style={{ ...underlineInputStyle, width: "100%", boxSizing: "border-box", paddingLeft: 24, fontSize: 14 }}
-          />
+        {/* Ayah Selector */}
+        <div>
+          <label style={labelStyle}>Jump to Ayah</label>
+          <div style={{ position: "relative" }}>
+            <input
+              id="read-ayah-select"
+              type="number"
+              min="1"
+              max={SURAHS.find(s => s[0] === currentPos.surah)?.[2] || 1}
+              value={currentPos.ayah || ""}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                if (!isNaN(val)) {
+                  const maxAyah = SURAHS.find(s => s[0] === currentPos.surah)?.[2] || 1;
+                  if (val >= 1 && val <= maxAyah) {
+                    goToAyah(currentPos.surah, val);
+                  }
+                }
+              }}
+              placeholder={`1 - ${SURAHS.find(s => s[0] === currentPos.surah)?.[2] || 1}`}
+              style={{ ...underlineInputStyle, width: "100%", boxSizing: "border-box" }}
+            />
+          </div>
         </div>
       </div>
       </div>
@@ -540,13 +517,11 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
                     </p>
                   )}
 
-                  {/* English — with highlight */}
+                  {/* English — text */}
                   {showEnglish && (
-                  <HighlightedText
-                    text={ayah.english}
-                    query={searchQuery}
-                    style={{ fontFamily: "'Inter',sans-serif", fontSize: 14.5, lineHeight: 1.85, color: "var(--on-surface-variant)", display: "block", marginBottom: 20, fontWeight: 400 }}
-                  />
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 14.5, lineHeight: 1.85, color: "var(--on-surface-variant)", display: "block", marginBottom: 20, fontWeight: 400 }}>
+                    {ayah.english}
+                  </span>
                   )}
 
                   {showTafsir && (
@@ -604,7 +579,7 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
       {/* Keyboard shortcut hint */}
       {!fetchError && ayah && (
         <p style={{ textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 11, opacity: 0.5, marginTop: 16 }}>
-          ← → to navigate pages · / to search
+          ← → to navigate pages
         </p>
       )}
     </div>
