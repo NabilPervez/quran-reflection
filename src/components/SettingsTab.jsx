@@ -3,7 +3,7 @@ import { dbGetAll, dbAdd, dbClear } from "../lib/db";
 import { secondaryBtnStyle, settingsSectionStyle, settingsTitleStyle, settingsDescStyle, pageTitleStyle, pageSubtitleStyle } from "../lib/styles";
 import ConfirmModal from "./ConfirmModal";
 
-export default function SettingsTab({ showToast, theme, setTheme, colorScheme, setColorScheme, onBack }) {
+export default function SettingsTab({ translation, setTranslation, showToast, theme, setTheme, colorScheme, setColorScheme, onBack }) {
   const [clearConfirm1, setClearConfirm1] = useState(false);
   const [clearConfirm2, setClearConfirm2] = useState(false);
   const [entryCount, setEntryCount] = useState(null);
@@ -118,6 +118,15 @@ export default function SettingsTab({ showToast, theme, setTheme, colorScheme, s
     { value: "medina", label: "Vibrant Medina" },
   ];
 
+  const translationOptions = [
+    { value: "en.sahih", label: "Saheeh International" },
+    { value: "en.ahmedali", label: "Ahmed Ali" },
+    { value: "en.ahmedraza", label: "Ahmed Raza Khan" },
+    { value: "en.arberry", label: "A. J. Arberry" },
+    { value: "en.asad", label: "Muhammad Asad" },
+    { value: "en.daryabadi", label: "Abdul Majid Daryabadi" },
+  ];
+
   return (
     <div style={{ padding: "36px 24px 110px", maxWidth: 720, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
@@ -140,6 +149,26 @@ export default function SettingsTab({ showToast, theme, setTheme, colorScheme, s
         <h1 style={{ ...pageTitleStyle, marginBottom: 0 }}>Settings</h1>
       </div>
       <p style={pageSubtitleStyle}>All data is stored locally on your device only.</p>
+
+      {/* Translation */}
+      <div style={settingsSectionStyle}>
+        <h2 style={settingsTitleStyle}>English Translation</h2>
+        <div style={{ marginBottom: 20 }}>
+          <select
+            value={translation}
+            onChange={(e) => setTranslation(e.target.value)}
+            style={{
+              width: "100%", padding: "10px 14px", borderRadius: 8,
+              border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)",
+              color: "var(--on-surface)", fontFamily: "'Inter',sans-serif", fontSize: 14,
+            }}
+          >
+            {translationOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {/* Appearance */}
       <div style={settingsSectionStyle}>
@@ -215,7 +244,7 @@ export default function SettingsTab({ showToast, theme, setTheme, colorScheme, s
         <h2 style={settingsTitleStyle}>About</h2>
         <p style={settingsDescStyle}>
           Quran Reflect is a privacy-first Tadabbur journal. No accounts, no servers, no tracking.
-          Verse data is fetched from the AlQuran.cloud API using the Saheeh International English translation.
+          Verse data is fetched from the AlQuran.cloud API using your selected English translation.
           All reflections live entirely on your device in IndexedDB.
         </p>
         <p style={{ ...settingsDescStyle, marginBottom: 0, fontSize: 11, opacity: 0.55 }}>Version 1.0.0 · MVP</p>

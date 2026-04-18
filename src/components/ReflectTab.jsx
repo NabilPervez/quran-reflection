@@ -10,7 +10,7 @@ import {
 } from "../lib/styles";
 import PageHeader from "./PageHeader";
 
-export default function ReflectTab({ onSaved, showToast, readHandoff, clearHandoff, onSettings }) {
+export default function ReflectTab({ translation, onSaved, showToast, readHandoff, clearHandoff, onSettings }) {
   const [surahIdx, setSurahIdx] = useState("");
   const [startAyah, setStartAyah] = useState("");
   const [endAyah, setEndAyah] = useState("");
@@ -60,7 +60,7 @@ export default function ReflectTab({ onSaved, showToast, readHandoff, clearHando
     setVerses(null); setFetchError(""); setLoading(true);
 
     const controller = new AbortController();
-    fetchVerses(selectedSurah[0], Number(startAyah), Number(endAyah), controller.signal)
+    fetchVerses(selectedSurah[0], Number(startAyah), Number(endAyah), controller.signal, translation)
       .then((v) => { setVerses(v); setLoading(false); })
       .catch((err) => {
         if (err.name !== "AbortError") {
