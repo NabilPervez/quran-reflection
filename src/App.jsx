@@ -56,6 +56,7 @@ export default function App() {
   const [firstVisit, setFirstVisit] = useState(false);
   const [theme, setTheme]           = useState(() => localStorage.getItem("qr_theme") || "system");
   const [colorScheme, setColorScheme] = useState(() => localStorage.getItem("qr_color_scheme") || "default");
+  const [translation, setTranslation] = useState(() => localStorage.getItem("qr_translation") || "en.sahih");
   const [readHandoff, setReadHandoff] = useState(null);
   const [returnToRead, setReturnToRead] = useState(false);
 
@@ -90,6 +91,7 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("qr_theme", theme);
     localStorage.setItem("qr_color_scheme", colorScheme);
+    localStorage.setItem("qr_translation", translation);
     const root = document.documentElement;
     root.removeAttribute("data-theme");
     root.removeAttribute("data-color-scheme");
@@ -97,7 +99,7 @@ export default function App() {
     if (theme === "dark")  root.setAttribute("data-theme", "dark");
     if (theme === "light") root.setAttribute("data-theme", "light");
     if (colorScheme !== "default") root.setAttribute("data-color-scheme", colorScheme);
-  }, [theme, colorScheme]);
+  }, [theme, colorScheme, translation]);
 
   // Listen for PWA install prompt event
   useEffect(() => {
@@ -136,8 +138,8 @@ export default function App() {
       <div style={{ minHeight: "100vh", background: "var(--surface-low)", maxWidth: 720, margin: "0 auto", position: "relative" }}>
         <div key={tab} style={{ animation: "pageFade 0.28s ease" }}>
           <ErrorBoundary key={`eb-${tab}`}>
-            {tab === "read"     && <ReadTab    onReflect={handleReflect} showToast={showToast}                                                                 onSettings={() => switchTab("settings")} />}
-            {tab === "reflect"  && <ReflectTab onSaved={() => {
+            {tab === "read"     && <ReadTab    translation={translation} onReflect={handleReflect} showToast={showToast}                                                                 onSettings={() => switchTab("settings")} />}
+            {tab === "reflect"  && <ReflectTab translation={translation} onSaved={() => {
               setJournalKey((k) => k + 1);
               if (returnToRead) {
                 switchTab("read");
@@ -145,7 +147,7 @@ export default function App() {
               }
             }} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} onSettings={() => switchTab("settings")} />}
             {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast}                                                                       onSettings={() => switchTab("settings")} setTab={switchTab} />}
-            {tab === "settings" && <SettingsTab showToast={showToast} theme={theme} setTheme={setTheme} colorScheme={colorScheme} setColorScheme={setColorScheme} onBack={() => setTab(prevTab)} />}
+            {tab === "settings" && <SettingsTab translation={translation} setTranslation={setTranslation} showToast={showToast} theme={theme} setTheme={setTheme} colorScheme={colorScheme} setColorScheme={setColorScheme} onBack={() => setTab(prevTab)} />}
           </ErrorBoundary>
         </div>
         <BottomNav tab={tab} setTab={switchTab} />

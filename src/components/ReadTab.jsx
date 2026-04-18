@@ -30,7 +30,7 @@ function skeletonLine(widthPct) {
   };
 }
 
-export default function ReadTab({ onReflect, onSettings, showToast }) {
+export default function ReadTab({ translation, onReflect, showToast, onSettings }) {
   const [currentPos, setCurrentPos] = useState(() => {
     const saved = localStorage.getItem(BOOKMARK_KEY);
     if (saved) {
@@ -151,7 +151,7 @@ export default function ReadTab({ onReflect, onSettings, showToast }) {
     setShowTafsir(false); // hide tafsir initially
 
     const controller = new AbortController();
-    fetchAyah(currentPos.surah, currentPos.ayah, controller.signal)
+    fetchAyah(currentPos.surah, currentPos.ayah, controller.signal, translation)
       .then((data) => { setAyah(data); setLoading(false); setContentKey((k) => k + 1); })
       .catch((err) => {
         if (err.name !== "AbortError") {

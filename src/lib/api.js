@@ -1,10 +1,10 @@
 // ── API helpers ───────────────────────────────────────────────────────────────
 
 /** Fetch a range of verses by Surah (used by Reflect tab) */
-export async function fetchVerses(surahNum, startAyah, endAyah, signal) {
+export async function fetchVerses(surahNum, startAyah, endAyah, signal, edition = "en.sahih") {
   const [arRes, enRes] = await Promise.all([
     fetch(`https://api.alquran.cloud/v1/surah/${surahNum}/quran-uthmani`, { signal }),
-    fetch(`https://api.alquran.cloud/v1/surah/${surahNum}/en.sahih`, { signal }),
+    fetch(`https://api.alquran.cloud/v1/surah/${surahNum}/${edition}`, { signal }),
   ]);
   if (!arRes.ok || !enRes.ok) throw new Error("API fetch failed");
   const arData = await arRes.json();
@@ -18,10 +18,10 @@ export async function fetchVerses(surahNum, startAyah, endAyah, signal) {
 }
 
 /** Fetch a specific Ayah with Tafsir and Transliteration (used by Read tab) */
-export async function fetchAyah(surahNum, ayahNum, signal) {
+export async function fetchAyah(surahNum, ayahNum, signal, edition = "en.sahih") {
   const [arRes, enRes, tafsirRes, translitRes] = await Promise.all([
     fetch(`https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/quran-uthmani`, { signal }),
-    fetch(`https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/en.sahih`, { signal }),
+    fetch(`https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/${edition}`, { signal }),
     fetch(`https://api.quran.com/api/v4/tafsirs/169/by_ayah/${surahNum}:${ayahNum}`, { signal }),
     fetch(`https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/en.transliteration`, { signal }),
   ]);
