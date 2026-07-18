@@ -38,7 +38,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap"
     />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -46,16 +46,16 @@
     <style>
       /* ── Design Token Surface Hierarchy ── */
       :root {
-        --primary:            #00361a;
-        --primary-container:  #1a4d2e;
-        --primary-light:      rgba(26,77,46,0.07);
+        --primary:            #c9a84c;
+        --primary-container:  #a88c3e;
+        --primary-light:      rgba(201, 168, 76, 0.15);
         --on-primary:         #ffffff;
-        --surface:            #faf9f6;
-        --surface-low:        #f4f3f1;
+        --surface:            #ffffff;
+        --surface-low:        #fafaf8;
         --surface-lowest:     #ffffff;
-        --on-surface:         #1a1c1a;
-        --on-surface-variant: #4f5350;
-        --outline-ghost:      rgba(193,201,191,0.15);
+        --on-surface:         #121212;
+        --on-surface-variant: #6b6560;
+        --outline-ghost:      rgba(107, 101, 96, 0.15);
       }
 
       [data-theme="dark"] {
@@ -71,16 +71,16 @@
         --outline-ghost:      rgba(100,110,100,0.18);
       }
       [data-theme="light"] {
-        --primary:            #00361a;
-        --primary-container:  #1a4d2e;
-        --primary-light:      rgba(26,77,46,0.07);
+        --primary:            #c9a84c;
+        --primary-container:  #a88c3e;
+        --primary-light:      rgba(201, 168, 76, 0.15);
         --on-primary:         #ffffff;
-        --surface:            #faf9f6;
-        --surface-low:        #f4f3f1;
+        --surface:            #ffffff;
+        --surface-low:        #fafaf8;
         --surface-lowest:     #ffffff;
-        --on-surface:         #1a1c1a;
-        --on-surface-variant: #4f5350;
-        --outline-ghost:      rgba(193,201,191,0.15);
+        --on-surface:         #121212;
+        --on-surface-variant: #6b6560;
+        --outline-ghost:      rgba(107, 101, 96, 0.15);
       }
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme]) {
@@ -262,7 +262,7 @@
       body {
         background: var(--surface-low);
         color: var(--on-surface);
-        font-family: 'Inter', sans-serif;
+        font-family: 'DM Sans', sans-serif;
       }
       select option { background: var(--surface-lowest); color: var(--on-surface); }
 

@@ -38,8 +38,8 @@ export default function PageHeader({ title, subtitle, onSettings }) {
             padding: "16px", borderRadius: 12, boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
             width: 250, 
           }}>
-            <h4 style={{ margin: "0 0 8px 0", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "var(--on-surface)" }}>How to use this page</h4>
-            <ul style={{ margin: 0, paddingLeft: 18, color: "var(--on-surface-variant)", fontSize: 12, fontFamily: "'Inter',sans-serif", lineHeight: 1.6 }}>
+            <h4 style={{ margin: "0 0 8px 0", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "var(--on-surface)" }}>How to use this page</h4>
+            <ul style={{ margin: 0, paddingLeft: 18, color: "var(--on-surface-variant)", fontSize: 12, fontFamily: "'DM Sans',sans-serif", lineHeight: 1.6 }}>
               {tooltipText.split('\n').map((line, i) => <li key={i}>{line}</li>)}
             </ul>
           </div>

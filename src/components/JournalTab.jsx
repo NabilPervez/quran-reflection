@@ -169,7 +169,7 @@ export default function JournalTab({ refreshKey, showToast, onSettings, setTab }
   };
 
   if (loading) return (
-    <div style={{ padding: "80px 24px", textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif" }}>
+    <div style={{ padding: "80px 24px", textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif" }}>
       Loading…
     </div>
   );
@@ -191,17 +191,17 @@ export default function JournalTab({ refreshKey, showToast, onSettings, setTab }
           border: "1px solid var(--outline-ghost)"
         }}>
           <div style={{ textAlign: "center", flex: 1 }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: "var(--primary-container)", fontFamily: "'Inter',sans-serif", marginBottom: 2 }}>{stats.total}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "var(--primary-container)", fontFamily: "'DM Sans',sans-serif", marginBottom: 2 }}>{stats.total}</div>
             <div style={{ fontSize: 11, color: "var(--on-surface-variant)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>Total</div>
           </div>
           <div style={{ width: 1, height: 32, background: "var(--outline-ghost)" }} />
           <div style={{ textAlign: "center", flex: 1 }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: "var(--primary-container)", fontFamily: "'Inter',sans-serif", marginBottom: 2 }}>{stats.currentStreak} <span style={{fontSize: 14}}>🔥</span></div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "var(--primary-container)", fontFamily: "'DM Sans',sans-serif", marginBottom: 2 }}>{stats.currentStreak} <span style={{fontSize: 14}}>🔥</span></div>
             <div style={{ fontSize: 11, color: "var(--on-surface-variant)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>Current Streak</div>
           </div>
           <div style={{ width: 1, height: 32, background: "var(--outline-ghost)" }} />
           <div style={{ textAlign: "center", flex: 1 }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: "var(--primary-container)", fontFamily: "'Inter',sans-serif", marginBottom: 2 }}>{stats.longestStreak}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "var(--primary-container)", fontFamily: "'DM Sans',sans-serif", marginBottom: 2 }}>{stats.longestStreak}</div>
             <div style={{ fontSize: 11, color: "var(--on-surface-variant)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>Best Streak</div>
           </div>
         </div>
@@ -234,7 +234,7 @@ export default function JournalTab({ refreshKey, showToast, onSettings, setTab }
                   border: "1px solid var(--outline-ghost)",
                   background: active ? "var(--primary-light)" : "transparent",
                   color: active ? "var(--primary-container)" : "var(--on-surface-variant)",
-                  fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: active ? 600 : 400,
+                  fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: active ? 600 : 400,
                   cursor: "pointer", transition: "all 0.2s ease",
                 }}
               >
@@ -243,7 +243,7 @@ export default function JournalTab({ refreshKey, showToast, onSettings, setTab }
             );
           })}
           {activeTag && (
-            <button onClick={() => setActiveTag(null)} style={{ padding: "5px 14px", borderRadius: 40, border: "1px solid var(--outline-ghost)", background: "transparent", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 12, cursor: "pointer" }}>
+            <button onClick={() => setActiveTag(null)} style={{ padding: "5px 14px", borderRadius: 40, border: "1px solid var(--outline-ghost)", background: "transparent", color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif", fontSize: 12, cursor: "pointer" }}>
               × Clear
             </button>
           )}
@@ -253,15 +253,15 @@ export default function JournalTab({ refreshKey, showToast, onSettings, setTab }
       {entries.length === 0 ? (
         <div style={{ padding: "80px 0", textAlign: "center" }}>
           <div style={{ fontSize: 48, marginBottom: 20, opacity: 0.25 }}>✦</div>
-          <h2 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, color: "var(--on-surface)", marginBottom: 10, fontSize: 20 }}>
+          <h2 style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 600, color: "var(--on-surface)", marginBottom: 10, fontSize: 20 }}>
             No reflections yet
           </h2>
-          <p style={{ color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 14, lineHeight: 1.7 }}>
+          <p style={{ color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif", fontSize: 14, lineHeight: 1.7 }}>
             Head over to the Reflect tab to begin your first Tadabbur.
           </p>
         </div>
       ) : regularEntries.length === 0 && favoriteEntries.length === 0 ? (
-        <p style={{ color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 14, textAlign: "center", padding: "48px 0" }}>
+        <p style={{ color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif", fontSize: 14, textAlign: "center", padding: "48px 0" }}>
           No reflections match {activeTag ? `"${activeTag}"` : `"${search}"`}.
         </p>
       ) : (
@@ -278,13 +278,13 @@ export default function JournalTab({ refreshKey, showToast, onSettings, setTab }
               {/* Header row */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                 <div>
-                  <div style={{ fontFamily: "'Inter',sans-serif", color: "var(--on-surface)", fontSize: 17, fontWeight: 600 }}>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", color: "var(--on-surface)", fontSize: 17, fontWeight: 600 }}>
                     {entry.surahName}
                     <span style={{ color: "var(--on-surface-variant)", fontSize: 13, fontWeight: 400, marginLeft: 8 }}>
                       {entry.surahNumber}:{entry.startAyah}{entry.startAyah !== entry.endAyah ? `–${entry.endAyah}` : ""}
                     </span>
                   </div>
-                  <div style={{ color: "var(--on-surface-variant)", fontSize: 11, fontFamily: "'Inter',sans-serif", marginTop: 3, fontWeight: 400 }}>
+                  <div style={{ color: "var(--on-surface-variant)", fontSize: 11, fontFamily: "'DM Sans',sans-serif", marginTop: 3, fontWeight: 400 }}>
                     {new Date(entry.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                   </div>
                 </div>
@@ -309,7 +309,7 @@ export default function JournalTab({ refreshKey, showToast, onSettings, setTab }
                         padding: "3px 10px", borderRadius: 40,
                         background: activeTag === tag ? "var(--primary-light)" : "var(--surface-low)",
                         color: "var(--primary-container)",
-                        fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 600,
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 600,
                         cursor: "pointer", transition: "all 0.2s ease",
                       }}
                     >
@@ -332,7 +332,7 @@ export default function JournalTab({ refreshKey, showToast, onSettings, setTab }
               {/* English */}
               <div style={{ marginBottom: 24 }}>
                 {entry.english.map((a) => (
-                  <p key={a.number} style={{ fontFamily: "'Inter',sans-serif", fontSize: 13.5, lineHeight: 1.8, color: "var(--on-surface-variant)", margin: "0 0 8px", fontWeight: 400 }}>
+                  <p key={a.number} style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: 13.5, lineHeight: 1.8, color: "var(--on-surface-variant)", margin: "0 0 8px", fontWeight: 400 }}>
                     <span style={{ color: "var(--primary-container)", fontSize: 10, fontWeight: 600, marginRight: 4 }}>[{a.number}]</span>
                     {a.text}
                   </p>
@@ -341,14 +341,14 @@ export default function JournalTab({ refreshKey, showToast, onSettings, setTab }
 
               {/* Reflection */}
               {displayText !== "Favorited Ayah" && (
-                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 14.5, lineHeight: 1.9, color: "var(--on-surface)", margin: 0, whiteSpace: "pre-wrap", fontWeight: 400 }}>
+                <p style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: 17, lineHeight: 1.9, color: "var(--on-surface)", fontStyle: "italic", margin: 0, whiteSpace: "pre-wrap", fontWeight: 400 }}>
                   {displayText}
                 </p>
               )}
               {shouldTruncate && (
                 <button
                   onClick={() => setExpanded((p) => ({ ...p, [entry.id]: !isExpanded }))}
-                  style={{ background: "none", border: "none", color: "var(--primary-container)", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 500, padding: "8px 0 0", transition: "opacity 0.3s ease" }}
+                  style={{ background: "none", border: "none", color: "var(--primary-container)", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 500, padding: "8px 0 0", transition: "opacity 0.3s ease" }}
                 >
                   {isExpanded ? "Show less ↑" : "Read more ↓"}
                 </button>
@@ -358,12 +358,12 @@ export default function JournalTab({ refreshKey, showToast, onSettings, setTab }
         })}
         {favoriteEntries.length > 0 && (
           <div style={{ marginTop: 40, paddingTop: 24, borderTop: "1px dashed var(--outline-ghost)" }}>
-            <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, color: "var(--on-surface)", fontSize: 18, marginBottom: 20 }}>Favorites</h3>
+            <h3 style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 600, color: "var(--on-surface)", fontSize: 18, marginBottom: 20 }}>Favorites</h3>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               {favoriteEntries.map((entry) => (
                 <div key={entry.id} style={{ ...cardStyle, padding: "16px", flex: "1 1 200px", maxWidth: 280, display: "flex", flexDirection: "column", gap: 12 }}>
                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span onClick={() => jumpToFavorite(entry)} style={{ display: "inline-block", background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 700, padding: "6px 14px", borderRadius: 20, letterSpacing: "0.04em", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(26,77,46,0.18)"} onMouseLeave={(e) => e.currentTarget.style.background = "var(--primary-light)"}>
+                    <span onClick={() => jumpToFavorite(entry)} style={{ display: "inline-block", background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 700, padding: "6px 14px", borderRadius: 20, letterSpacing: "0.04em", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(26,77,46,0.18)"} onMouseLeave={(e) => e.currentTarget.style.background = "var(--primary-light)"}>
                         Surah {entry.surahNumber} : {entry.startAyah}
                     </span>
                     <button onClick={() => setDeleteTarget(entry)} style={{ background: "transparent", border: "none", color: "#b91c1c", fontSize: 16, cursor: "pointer", opacity: 0.6 }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}>×</button>
@@ -380,8 +380,8 @@ export default function JournalTab({ refreshKey, showToast, onSettings, setTab }
       {editEntry && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(26,28,26,0.48)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 20, animation: "fadeIn 0.25s ease" }}>
           <div style={{ background: "var(--surface-lowest)", borderRadius: 20, padding: 32, maxWidth: 560, width: "100%", boxShadow: "0 40px 80px rgba(26,28,26,0.06)" }}>
-            <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, color: "var(--on-surface)", margin: "0 0 4px", fontSize: 18 }}>Edit Reflection</h3>
-            <p style={{ color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 12, margin: "0 0 20px" }}>
+            <h3 style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 600, color: "var(--on-surface)", margin: "0 0 4px", fontSize: 18 }}>Edit Reflection</h3>
+            <p style={{ color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif", fontSize: 12, margin: "0 0 20px" }}>
               {editEntry.surahName} {editEntry.surahNumber}:{editEntry.startAyah}
               {editEntry.startAyah !== editEntry.endAyah ? `–${editEntry.endAyah}` : ""}
             </p>

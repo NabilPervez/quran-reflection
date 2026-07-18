@@ -161,7 +161,7 @@ export default function SettingsTab({ translation, setTranslation, showToast, th
             style={{
               width: "100%", padding: "10px 14px", borderRadius: 8,
               border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)",
-              color: "var(--on-surface)", fontFamily: "'Inter',sans-serif", fontSize: 14,
+              color: "var(--on-surface)", fontFamily: "'DM Sans',sans-serif", fontSize: 14,
             }}
           >
             {translationOptions.map(opt => (
@@ -187,7 +187,7 @@ export default function SettingsTab({ translation, setTranslation, showToast, th
                   ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)"
                   : "var(--surface-low)",
                 color: theme === opt.value ? "var(--on-primary)" : "var(--on-surface-variant)",
-                cursor: "pointer", fontFamily: "'Inter',sans-serif",
+                cursor: "pointer", fontFamily: "'DM Sans',sans-serif",
                 fontSize: 13, fontWeight: 500, transition: "all 0.3s ease",
               }}
             >{opt.label}</button>
@@ -208,7 +208,7 @@ export default function SettingsTab({ translation, setTranslation, showToast, th
                   ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)"
                   : "var(--surface-low)",
                 color: colorScheme === opt.value ? "var(--on-primary)" : "var(--on-surface-variant)",
-                cursor: "pointer", fontFamily: "'Inter',sans-serif",
+                cursor: "pointer", fontFamily: "'DM Sans',sans-serif",
                 fontSize: 13, fontWeight: 500, transition: "all 0.3s ease",
               }}
             >{opt.label}</button>

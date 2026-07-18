@@ -20,7 +20,7 @@ class ErrorBoundary extends Component {
       return (
         <div style={{
           padding: "60px 24px", maxWidth: 480, margin: "0 auto", textAlign: "center",
-          fontFamily: "'Inter', sans-serif",
+          fontFamily: "'DM Sans', sans-serif",
         }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
           <h2 style={{ color: "var(--on-surface)", marginBottom: 10, fontSize: 20, fontWeight: 600 }}>
@@ -35,7 +35,7 @@ class ErrorBoundary extends Component {
               padding: "10px 24px", borderRadius: 6, border: "none",
               background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)",
               color: "var(--on-primary)", cursor: "pointer",
-              fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 600,
+              fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600,
             }}
           >
             Try again
@@ -160,7 +160,7 @@ export default function App() {
           background: "rgba(250,249,246,0.9)", backdropFilter: "blur(12px)",
           border: "1px solid var(--outline-ghost)",
           padding: "12px 16px", borderRadius: 12,
-          fontFamily: "'Inter',sans-serif", fontSize: 13,
+          fontFamily: "'DM Sans',sans-serif", fontSize: 13,
           zIndex: 9999, boxShadow: "0 8px 30px rgba(0,0,0,0.1)",
           animation: "fadeIn 0.5s ease",
           display: "flex", alignItems: "center", gap: 12,
@@ -190,7 +190,7 @@ export default function App() {
           background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)",
           color: "var(--on-primary)",
           padding: "12px 28px", borderRadius: 40,
-          fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 500,
+          fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 500,
           zIndex: 9999, boxShadow: "0 8px 40px rgba(0,54,26,0.20)",
           animation: "fadeIn 0.5s ease", whiteSpace: "nowrap",
         }}>
