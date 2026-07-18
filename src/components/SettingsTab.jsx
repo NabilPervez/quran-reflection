@@ -125,6 +125,7 @@ export default function SettingsTab({ translation, setTranslation, showToast, th
     { value: "en.arberry", label: "A. J. Arberry" },
     { value: "en.asad", label: "Muhammad Asad" },
     { value: "en.daryabadi", label: "Abdul Majid Daryabadi" },
+    { value: "en.itani", label: "Clear Quran Talal Itani" },
   ];
 
   return (
