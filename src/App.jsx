@@ -3,6 +3,7 @@ import ReadTab     from "./components/ReadTab";
 import ReflectTab  from "./components/ReflectTab";
 import JournalTab  from "./components/JournalTab";
 import SettingsTab from "./components/SettingsTab";
+import SelectTab   from "./components/SelectTab";
 import BottomNav   from "./components/BottomNav";
 import Toast       from "./components/Toast";
 
@@ -49,8 +50,9 @@ class ErrorBoundary extends Component {
 
 // ── Root App ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [tab, setTab]               = useState("read");
-  const [prevTab, setPrevTab]       = useState("read");
+  const [tab, setTab]               = useState("select");
+  const [readKey, setReadKey]       = useState(0);
+  const [prevTab, setPrevTab]       = useState("select");
   const [toast, setToast]           = useState(null);
   const [journalKey, setJournalKey] = useState(0);
   const [firstVisit, setFirstVisit] = useState(false);
@@ -62,6 +64,12 @@ export default function App() {
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+
+  const handleSelectSurah = (surahNum) => {
+    localStorage.setItem("qr_bookmark_ayah", `${surahNum}:1`);
+    setReadKey(k => k + 1);
+    switchTab("read");
+  };
 
   const switchTab = (newTab) => {
     if (tab !== "settings" && newTab === "settings") {
@@ -138,7 +146,8 @@ export default function App() {
       <div style={{ minHeight: "100vh", background: "var(--surface-low)", maxWidth: 720, margin: "0 auto", position: "relative" }}>
         <div key={tab} style={{ animation: "pageFade 0.28s ease" }}>
           <ErrorBoundary key={`eb-${tab}`}>
-            {tab === "read"     && <ReadTab    translation={translation} onReflect={handleReflect} showToast={showToast}                                                                 onSettings={() => switchTab("settings")} />}
+            {tab === "select"   && <SelectTab onSettings={() => switchTab("settings")} onSelectSurah={handleSelectSurah} />}
+            {tab === "read"     && <ReadTab key={`read-${readKey}-${journalKey}`}    translation={translation} onReflect={handleReflect} showToast={showToast}                                                                 onSettings={() => switchTab("settings")} />}
             {tab === "reflect"  && <ReflectTab translation={translation} onSaved={() => {
               setJournalKey((k) => k + 1);
               if (returnToRead) {

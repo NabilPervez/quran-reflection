@@ -1,7 +1,8 @@
 export default function BottomNav({ tab, setTab }) {
   const tabs = [
+    { id: "select",  label: "Select",  icon: "📚" },
     { id: "read",    label: "Read",    icon: "✧" },
-    { id: "reflect", label: "Reflect", icon: "✦" },
+
     { id: "journal", label: "Journal", icon: "✴" },
   ];
   return (
