@@ -33,7 +33,7 @@ export default function BottomNav({ tab, setTab }) {
             display: "block",
           }}>{t.icon}</span>
           <span style={{
-            fontSize: 10, fontFamily: "'Inter',sans-serif", fontWeight: 600,
+            fontSize: 10, fontFamily: "'DM Sans',sans-serif", fontWeight: 600,
             color: tab === t.id ? "var(--primary-container)" : "var(--on-surface-variant)",
             transition: "color 0.3s ease", letterSpacing: "0.06em", textTransform: "uppercase",
           }}>{t.label}</span>

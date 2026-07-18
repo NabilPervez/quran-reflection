@@ -16,7 +16,7 @@ export default function ConfirmModal({ message, onConfirm, onCancel, confirmLabe
         boxShadow: "0 40px 80px rgba(26,28,26,0.06)",
       }}>
         <p style={{
-          color: "var(--on-surface)", fontFamily: "'Inter', sans-serif",
+          color: "var(--on-surface)", fontFamily: "'DM Sans', sans-serif",
           lineHeight: 1.7, margin: "0 0 24px", fontSize: 15, fontWeight: 400,
         }}>{message}</p>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>

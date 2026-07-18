@@ -273,7 +273,7 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
     border: "1px solid var(--outline-ghost)",
     background: active ? "var(--primary-light)" : "transparent",
     color: "var(--primary-container)",
-    fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600,
+    fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600,
     cursor: "pointer", transition: "all 0.3s ease",
   });
 
@@ -306,7 +306,7 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
         <button id="bookmark-btn" onClick={toggleBookmark}
           title={bookmarked ? "Remove bookmark" : "Bookmark this page"}
-          style={{ background: bookmarked ? "var(--primary-light)" : "var(--surface-low)", color: bookmarked ? "var(--primary-container)" : "var(--on-surface-variant)", border: bookmarked ? "1px solid var(--primary-container)" : "1px solid var(--outline-ghost)", borderRadius: 40, padding: "7px 16px", display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "'Inter',sans-serif", transition: "all 0.3s ease" }}
+          style={{ background: bookmarked ? "var(--primary-light)" : "var(--surface-low)", color: bookmarked ? "var(--primary-container)" : "var(--on-surface-variant)", border: bookmarked ? "1px solid var(--primary-container)" : "1px solid var(--outline-ghost)", borderRadius: 40, padding: "7px 16px", display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", transition: "all 0.3s ease" }}
         >
           🔖 {bookmarked ? "Saved" : "Save Bookmark"}
         </button>
@@ -321,7 +321,7 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
               padding: "7px 16px", borderRadius: 40,
               background: "var(--surface-lowest)", border: "1px solid var(--outline-ghost)",
               color: "var(--primary-container)",
-              fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600,
+              fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600,
               cursor: "pointer", transition: "all 0.3s ease",
             }}
             onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-light)"}
@@ -361,11 +361,11 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
                 outline: "1px solid rgba(193,201,191,0.15)",
               }}>
                 {filteredSurahs.length === 0 && (
-                  <div style={{ padding: "14px 18px", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 13 }}>No results</div>
+                  <div style={{ padding: "14px 18px", color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>No results</div>
                 )}
                 {filteredSurahs.map((s) => (
                   <div key={s[0]} onClick={() => handleSurahSelect(s[0])}
-                    style={{ padding: "11px 18px", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "var(--on-surface)", background: selectedSurahNum === s[0] ? "var(--primary-light)" : "transparent", transition: "background 0.2s ease" }}
+                    style={{ padding: "11px 18px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "var(--on-surface)", background: selectedSurahNum === s[0] ? "var(--primary-light)" : "transparent", transition: "background 0.2s ease" }}
                     onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-light)"}
                     onMouseLeave={(e) => e.currentTarget.style.background = selectedSurahNum === s[0] ? "var(--primary-light)" : "transparent"}
                   >
@@ -443,7 +443,7 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
       {/* Error */}
       {fetchError && !loading && (
         <div style={{ ...verseAreaStyle, background: "#fef2f2" }}>
-          <p style={{ color: "#b91c1c", fontFamily: "'Inter',sans-serif", fontSize: 13, margin: 0 }}>⚠ {fetchError}</p>
+          <p style={{ color: "#b91c1c", fontFamily: "'DM Sans',sans-serif", fontSize: 13, margin: 0 }}>⚠ {fetchError}</p>
         </div>
       )}
 
@@ -466,13 +466,13 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
                         border: "1px solid var(--primary-container)", borderRadius: 20,
                         padding: "3px 10px", fontSize: 10, fontWeight: 700,
                         color: "var(--primary-container)", cursor: "pointer",
-                        fontFamily: "'Inter',sans-serif", letterSpacing: "0.06em",
+                        fontFamily: "'DM Sans',sans-serif", letterSpacing: "0.06em",
                         transition: "all 0.2sease"
                       }}
                     >
                       {showTafsir ? "Hide Tafsir" : "Tafsir"}
                     </button>
-                    <span style={{ background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>
+                    <span style={{ background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>
                       {ayah.surahNum}:{ayah.ayahNum}
                     </span>
                   </div>
@@ -490,7 +490,7 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
                         disabled={disabled}
                         style={{
                           padding: "4px 12px", borderRadius: 40, fontSize: 11, fontWeight: 600,
-                          fontFamily: "'Inter',sans-serif", cursor: disabled ? "not-allowed" : "pointer",
+                          fontFamily: "'DM Sans',sans-serif", cursor: disabled ? "not-allowed" : "pointer",
                           border: `1px solid ${active && !disabled ? "var(--primary-container)" : "var(--outline-ghost)"}`,
                           background: active && !disabled ? "var(--primary-light)" : "transparent",
                           color: active && !disabled ? "var(--primary-container)" : "var(--on-surface-variant)",
@@ -512,22 +512,22 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
 
                   {/* Transliteration */}
                   {showTranslit && ayah.transliteration && (
-                    <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13.5, lineHeight: 1.85, color: "var(--primary-container)", fontStyle: "italic", margin: "0 0 14px", opacity: 0.8 }}>
+                    <p style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: 13.5, lineHeight: 1.85, color: "var(--primary-container)", fontStyle: "italic", margin: "0 0 14px", opacity: 0.8 }}>
                       {ayah.transliteration}
                     </p>
                   )}
 
                   {/* English — text */}
                   {showEnglish && (
-                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 14.5, lineHeight: 1.85, color: "var(--on-surface-variant)", display: "block", marginBottom: 20, fontWeight: 400 }}>
+                  <span style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: 14.5, lineHeight: 1.85, color: "var(--on-surface-variant)", display: "block", marginBottom: 20, fontWeight: 400 }}>
                     {ayah.english}
                   </span>
                   )}
 
                   {showTafsir && (
                     <div style={{ padding: "16px", marginBottom: "20px", background: "var(--surface-lowest)", borderRadius: 8, border: "1px solid var(--outline-ghost)" }}>
-                      <h4 style={{ margin: "0 0 8px 0", fontFamily: "'Inter',sans-serif", fontSize: 12, color: "var(--primary-container)", textTransform: "uppercase" }}>Tafsir (Ibn Kathir)</h4>
-                      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, color: "var(--on-surface-variant)", lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: ayah.tafsir }} />
+                      <h4 style={{ margin: "0 0 8px 0", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "var(--primary-container)", textTransform: "uppercase" }}>Tafsir (Ibn Kathir)</h4>
+                      <div style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: 14, color: "var(--on-surface-variant)", lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: ayah.tafsir }} />
                     </div>
                   )}
 
@@ -578,7 +578,7 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
 
       {/* Keyboard shortcut hint */}
       {!fetchError && ayah && (
-        <p style={{ textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 11, opacity: 0.5, marginTop: 16 }}>
+        <p style={{ textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif", fontSize: 11, opacity: 0.5, marginTop: 16 }}>
           ← → to navigate pages
         </p>
       )}

@@ -150,7 +150,7 @@ export default function ReflectTab({ translation, onSaved, showToast, readHandof
               outline: "1px solid rgba(193,201,191,0.15)",
             }}>
               {filteredSurahs.length === 0 && (
-                <div style={{ padding: "14px 18px", color: "var(--on-surface-variant)", fontFamily: "'Inter',sans-serif", fontSize: 13 }}>No results</div>
+                <div style={{ padding: "14px 18px", color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>No results</div>
               )}
               {filteredSurahs.map((s) => (
                 <div
@@ -162,7 +162,7 @@ export default function ReflectTab({ translation, onSaved, showToast, readHandof
                   }}
                   style={{
                     padding: "11px 18px", cursor: "pointer",
-                    fontFamily: "'Inter',sans-serif", fontSize: 13,
+                    fontFamily: "'DM Sans',sans-serif", fontSize: 13,
                     color: "var(--on-surface)",
                     background: surahIdx !== "" && SURAHS[surahIdx][0] === s[0] ? "var(--primary-light)" : "transparent",
                     transition: "background 0.2s ease",
@@ -229,7 +229,7 @@ export default function ReflectTab({ translation, onSaved, showToast, readHandof
 
       {fetchError && (
         <div style={{ ...verseAreaStyle, background: "#fef2f2" }}>
-          <p style={{ color: "#b91c1c", fontFamily: "'Inter',sans-serif", fontSize: 13, margin: 0 }}>⚠ {fetchError}</p>
+          <p style={{ color: "#b91c1c", fontFamily: "'DM Sans',sans-serif", fontSize: 13, margin: 0 }}>⚠ {fetchError}</p>
         </div>
       )}
 
@@ -239,7 +239,7 @@ export default function ReflectTab({ translation, onSaved, showToast, readHandof
             position: "absolute", top: 16, right: 16,
             background: "transparent", border: "none",
             color: "var(--on-surface-variant)", fontSize: 12,
-            fontFamily: "'Inter',sans-serif", fontWeight: 500,
+            fontFamily: "'DM Sans',sans-serif", fontWeight: 500,
             cursor: "pointer", padding: "4px 8px", borderRadius: 6,
             transition: "color 0.3s ease, background 0.3s ease",
           }}
@@ -258,7 +258,7 @@ export default function ReflectTab({ translation, onSaved, showToast, readHandof
 
           <div style={{ background: "var(--surface-lowest)", borderRadius: 12, padding: "18px 20px", boxShadow: "0 2px 16px rgba(26,28,26,0.04)" }}>
             {verses.english.map((a) => (
-              <p key={a.number} style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, lineHeight: 1.85, color: "var(--on-surface-variant)", margin: "0 0 10px", fontWeight: 400 }}>
+              <p key={a.number} style={{ fontFamily: "\'Cormorant Garamond\', serif", fontSize: 15, lineHeight: 1.85, color: "var(--on-surface-variant)", margin: "0 0 10px", fontWeight: 400 }}>
                 <span style={{ color: "var(--primary-container)", fontWeight: 600, fontSize: 11, marginRight: 4 }}>[{a.number}]</span>
                 {a.text}
               </p>
@@ -306,7 +306,7 @@ export default function ReflectTab({ translation, onSaved, showToast, readHandof
           {tags.map((tag) => (
             <button
               key={tag} type="button" onClick={() => setTags(tags.filter(t => t !== tag))}
-              style={{ padding: "4px 12px", borderRadius: 40, border: "1px solid var(--primary-container)", background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}
+              style={{ padding: "4px 12px", borderRadius: 40, border: "1px solid var(--primary-container)", background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}
             >
               {tag} <span>×</span>
             </button>
@@ -325,7 +325,7 @@ export default function ReflectTab({ translation, onSaved, showToast, readHandof
             : "var(--surface-low)",
           color: canSave && !saving ? "var(--on-primary)" : "var(--on-surface-variant)",
           border: "none", borderRadius: 6,
-          fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
+          fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600,
           cursor: canSave && !saving ? "pointer" : "not-allowed",
           transition: "all 0.3s ease", letterSpacing: "0.02em",
           boxShadow: canSave && !saving ? "0 8px 40px rgba(0,54,26,0.18)" : "none",

@@ -1,19 +1,19 @@
 // ── Shared style objects ──────────────────────────────────────────────────────
 
 export const pageTitleStyle = {
-  fontFamily: "'Inter', sans-serif", fontWeight: 700,
+  fontFamily: "'Cormorant Garamond', serif", fontWeight: 700,
   color: "var(--on-surface)", fontSize: 28,
   marginBottom: 6, marginTop: 0, letterSpacing: "-0.02em",
 };
 
 export const pageSubtitleStyle = {
-  color: "var(--on-surface-variant)", fontFamily: "'Inter', sans-serif",
+  color: "var(--on-surface-variant)", fontFamily: "'Cormorant Garamond', serif",
   fontSize: 14, marginBottom: 36, marginTop: 0, fontWeight: 400,
 };
 
 export const labelStyle = {
   display: "block", marginBottom: 10,
-  fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 600,
+  fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 600,
   color: "var(--on-surface-variant)", letterSpacing: "0.08em", textTransform: "uppercase",
 };
 
@@ -26,7 +26,7 @@ export const underlineInputStyle = {
   padding: "10px 2px",
   color: "var(--on-surface)", fontSize: 15,
   transition: "border-color 0.3s ease, box-shadow 0.3s ease",
-  fontFamily: "'Inter', sans-serif",
+  fontFamily: "'DM Sans', sans-serif",
 };
 
 export const underlineSelectStyle = {
@@ -55,7 +55,7 @@ export const chipBtnStyle = {
   border: "none",
   borderRadius: 40, padding: "5px 14px", cursor: "pointer",
   color: "var(--on-surface-variant)", fontSize: 12,
-  fontFamily: "'Inter',sans-serif", fontWeight: 500,
+  fontFamily: "'DM Sans',sans-serif", fontWeight: 500,
 };
 
 // Primary button (gradient)
@@ -63,7 +63,7 @@ export const primaryBtnStyle = {
   padding: "10px 22px", borderRadius: 6, border: "none",
   background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)",
   color: "var(--on-primary)", cursor: "pointer",
-  fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 600,
+  fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600,
   boxShadow: "0 4px 20px rgba(0,54,26,0.16)",
 };
 
@@ -72,7 +72,7 @@ export const ghostBtnStyle = {
   padding: "10px 22px", borderRadius: 6,
   border: "1px solid var(--outline-ghost)",
   background: "transparent", color: "var(--on-surface-variant)",
-  cursor: "pointer", fontFamily: "'Inter',sans-serif",
+  cursor: "pointer", fontFamily: "'DM Sans',sans-serif",
   fontSize: 13, fontWeight: 500,
 };
 
@@ -81,7 +81,7 @@ export const secondaryBtnStyle = {
   padding: "9px 20px", borderRadius: 40,
   border: "none", background: "var(--surface-low)",
   color: "var(--on-surface-variant)", cursor: "pointer",
-  fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 500,
+  fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 500,
 };
 
 // Settings section — tonal card (surface-lowest)
@@ -92,12 +92,12 @@ export const settingsSectionStyle = {
 };
 
 export const settingsTitleStyle = {
-  fontFamily: "'Inter',sans-serif", fontWeight: 600,
+  fontFamily: "'DM Sans',sans-serif", fontWeight: 600,
   color: "var(--on-surface)", fontSize: 15, marginBottom: 6,
 };
 
 export const settingsDescStyle = {
-  fontFamily: "'Inter',sans-serif", fontSize: 13,
+  fontFamily: "'DM Sans',sans-serif", fontSize: 13,
   color: "var(--on-surface-variant)", lineHeight: 1.7, marginBottom: 16,
 };
 
