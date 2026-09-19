@@ -45,3 +45,36 @@ export async function fetchAyah(surahNum, ayahNum, signal, edition = "en.sahih")
     tafsir: tafsirData?.tafsir?.text || "Tafsir currently unavailable for this ayah.",
   };
 }
+
+// ── Recitation audio ──────────────────────────────────────────────────────────
+
+/** Reciters available on the AlQuran.cloud audio editions */
+export const RECITERS = [
+  { value: "ar.alafasy",            label: "Mishary Rashid Alafasy" },
+  { value: "ar.abdulbasitmurattal", label: "Abdul Basit (Murattal)" },
+  { value: "ar.abdurrahmaansudais", label: "Abdurrahmaan As-Sudais" },
+  { value: "ar.husary",             label: "Mahmoud Khalil Al-Husary" },
+  { value: "ar.husarymujawwad",     label: "Al-Husary (Mujawwad)" },
+  { value: "ar.minshawi",           label: "Mohamed Siddiq Al-Minshawi" },
+  { value: "ar.muhammadayyoub",     label: "Muhammad Ayyoub" },
+  { value: "ar.shaatree",           label: "Abu Bakr Ash-Shaatree" },
+];
+
+export const DEFAULT_RECITER = "ar.alafasy";
+
+/**
+ * Fetch the recitation audio URLs for a single ayah.
+ * Returns { primary, fallbacks } — `fallbacks` are alternate CDN mirrors that
+ * AlQuran.cloud returns for the same recitation.
+ */
+export async function fetchAyahAudio(surahNum, ayahNum, signal, reciter = DEFAULT_RECITER) {
+  const res = await fetch(
+    `https://api.alquran.cloud/v1/ayah/${surahNum}:${ayahNum}/${reciter}`,
+    { signal }
+  );
+  if (!res.ok) throw new Error("Audio fetch failed");
+  const data = await res.json();
+  const primary = data?.data?.audio;
+  if (!primary) throw new Error("No recitation available for this ayah");
+  return { primary, fallbacks: data?.data?.audioSecondary ?? [] };
+}

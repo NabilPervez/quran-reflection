@@ -7,22 +7,28 @@ export default function BottomNav({ tab, setTab }) {
   return (
     <nav style={{
       position: "fixed", bottom: 0, left: 0, right: 0,
-      background: "rgba(250,249,246,0.72)",
+      background: "color-mix(in srgb, var(--surface-lowest) 78%, transparent)",
       backdropFilter: "blur(16px)",
       WebkitBackdropFilter: "blur(16px)",
       display: "flex", justifyContent: "space-around", alignItems: "center",
-      height: 68, zIndex: 100,
-      borderTop: "1px solid rgba(193,201,191,0.15)",
+      height: "calc(var(--nav-h) + env(safe-area-inset-bottom))", zIndex: 100,
+      paddingBottom: "env(safe-area-inset-bottom)",
+      paddingLeft: "env(safe-area-inset-left)",
+      paddingRight: "env(safe-area-inset-right)",
+      borderTop: "1px solid var(--outline-ghost)",
     }}>
       {tabs.map((t) => (
         <button
           key={t.id}
           id={`nav-${t.id}`}
           onClick={() => setTab(t.id)}
+          className="nav-btn"
           style={{
             flex: 1, background: "none", border: "none", cursor: "pointer",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-            padding: "10px 0",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            gap: "var(--nav-gap)",
+            flexDirection: "var(--nav-dir)",
+            padding: "var(--nav-btn-pad)",
           }}
         >
           <span style={{
