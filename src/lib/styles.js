@@ -2,13 +2,13 @@
 
 export const pageTitleStyle = {
   fontFamily: "'Cormorant Garamond', serif", fontWeight: 700,
-  color: "var(--on-surface)", fontSize: 28,
+  color: "var(--on-surface)", fontSize: "var(--title-size)",
   marginBottom: 6, marginTop: 0, letterSpacing: "-0.02em",
 };
 
 export const pageSubtitleStyle = {
   color: "var(--on-surface-variant)", fontFamily: "'Cormorant Garamond', serif",
-  fontSize: 14, marginBottom: 36, marginTop: 0, fontWeight: 400,
+  fontSize: 14, marginBottom: "var(--chrome-gap)", marginTop: 0, fontWeight: 400,
 };
 
 export const labelStyle = {
@@ -37,14 +37,14 @@ export const underlineSelectStyle = {
 // "surface-container-low" tonal area for verse display
 export const verseAreaStyle = {
   background: "var(--surface-low)",
-  borderRadius: 16, padding: "28px 24px",
+  borderRadius: 16, padding: "var(--card-pad)",
   marginBottom: 0,
 };
 
 // Cards = surface-lowest, lifted above surface-low page
 export const cardStyle = {
   background: "var(--surface-lowest)",
-  borderRadius: 16, padding: "24px",
+  borderRadius: 16, padding: "var(--card-pad)",
   marginBottom: 16,
   boxShadow: "0 2px 40px rgba(26,28,26,0.04)",
 };
@@ -109,3 +109,12 @@ export function skeletonLine(widthPct) {
     animation: "shimmer 1.6s infinite linear",
   };
 }
+
+// ── Page shell ────────────────────────────────────────────────────────────────
+// Shared by every tab so padding and measure stay consistent, and so the
+// landscape breakpoints in index.html can retune all of them at once.
+export const pageContainerStyle = {
+  padding: "var(--pad-top) var(--pad-x) var(--pad-bottom)",
+  maxWidth: "var(--content-max)",
+  margin: "0 auto",
+};

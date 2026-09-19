@@ -5,6 +5,7 @@ import JournalTab  from "./components/JournalTab";
 import SettingsTab from "./components/SettingsTab";
 import BottomNav   from "./components/BottomNav";
 import Toast       from "./components/Toast";
+import { FONT_LAYERS, loadFontScales } from "./lib/fonts";
 
 // ── Error Boundary ────────────────────────────────────────────────────────────
 class ErrorBoundary extends Component {
@@ -57,6 +58,10 @@ export default function App() {
   const [theme, setTheme]           = useState(() => localStorage.getItem("qr_theme") || "system");
   const [colorScheme, setColorScheme] = useState(() => localStorage.getItem("qr_color_scheme") || "default");
   const [translation, setTranslation] = useState(() => localStorage.getItem("qr_translation") || "en.sahih");
+  const [reciter, setReciter] = useState(() => localStorage.getItem("qr_reciter") || "ar.alafasy");
+
+  // Per-layer reader font scales (multipliers on the responsive base sizes)
+  const [fontScales, setFontScales] = useState(loadFontScales);
   const [readHandoff, setReadHandoff] = useState(null);
   const [returnToRead, setReturnToRead] = useState(false);
 
@@ -92,6 +97,7 @@ export default function App() {
     localStorage.setItem("qr_theme", theme);
     localStorage.setItem("qr_color_scheme", colorScheme);
     localStorage.setItem("qr_translation", translation);
+    localStorage.setItem("qr_reciter", reciter);
     const root = document.documentElement;
     root.removeAttribute("data-theme");
     root.removeAttribute("data-color-scheme");
@@ -99,7 +105,17 @@ export default function App() {
     if (theme === "dark")  root.setAttribute("data-theme", "dark");
     if (theme === "light") root.setAttribute("data-theme", "light");
     if (colorScheme !== "default") root.setAttribute("data-color-scheme", colorScheme);
-  }, [theme, colorScheme, translation]);
+  }, [theme, colorScheme, translation, reciter]);
+
+  // Push the font scales onto the root element so every var(--*-size) picks
+  // them up, and persist each one.
+  useEffect(() => {
+    const root = document.documentElement;
+    for (const [layer, [storageKey, cssVar]] of Object.entries(FONT_LAYERS)) {
+      root.style.setProperty(cssVar, String(fontScales[layer]));
+      localStorage.setItem(storageKey, String(fontScales[layer]));
+    }
+  }, [fontScales]);
 
   // Listen for PWA install prompt event
   useEffect(() => {
@@ -135,11 +151,11 @@ export default function App() {
 
   return (
     <>
-      <div style={{ minHeight: "100vh", background: "var(--surface-low)", maxWidth: 720, margin: "0 auto", position: "relative" }}>
+      <div className="app-shell" style={{ minHeight: "100dvh", background: "var(--surface-low)", maxWidth: "var(--content-max)", margin: "0 auto", position: "relative" }}>
         <div key={tab} style={{ animation: "pageFade 0.28s ease" }}>
           <ErrorBoundary key={`eb-${tab}`}>
-            {tab === "read"     && <ReadTab    translation={translation} onReflect={handleReflect} showToast={showToast}                                                                 onSettings={() => switchTab("settings")} />}
-            {tab === "reflect"  && <ReflectTab translation={translation} onSaved={() => {
+            {tab === "read"     && <ReadTab    translation={translation} reciter={reciter} onReflect={handleReflect} showToast={showToast}                                                                 onSettings={() => switchTab("settings")} />}
+            {tab === "reflect"  && <ReflectTab translation={translation} reciter={reciter} onSaved={() => {
               setJournalKey((k) => k + 1);
               if (returnToRead) {
                 switchTab("read");
@@ -147,7 +163,7 @@ export default function App() {
               }
             }} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} onSettings={() => switchTab("settings")} />}
             {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast}                                                                       onSettings={() => switchTab("settings")} setTab={switchTab} />}
-            {tab === "settings" && <SettingsTab translation={translation} setTranslation={setTranslation} showToast={showToast} theme={theme} setTheme={setTheme} colorScheme={colorScheme} setColorScheme={setColorScheme} onBack={() => setTab(prevTab)} />}
+            {tab === "settings" && <SettingsTab translation={translation} setTranslation={setTranslation} reciter={reciter} setReciter={setReciter} fontScales={fontScales} setFontScales={setFontScales} showToast={showToast} theme={theme} setTheme={setTheme} colorScheme={colorScheme} setColorScheme={setColorScheme} onBack={() => setTab(prevTab)} />}
           </ErrorBoundary>
         </div>
         <BottomNav tab={tab} setTab={switchTab} />

@@ -6,11 +6,11 @@ import { dbAdd } from "../lib/db";
 import { SURAHS } from "../lib/data";
 import {
   labelStyle, underlineInputStyle, underlineSelectStyle,
-  verseAreaStyle, primaryBtnStyle,
-} from "../lib/styles";
+  verseAreaStyle, primaryBtnStyle, pageContainerStyle } from "../lib/styles";
 import PageHeader from "./PageHeader";
+import AyahAudio from "./AyahAudio";
 
-export default function ReflectTab({ translation, onSaved, showToast, readHandoff, clearHandoff, onSettings }) {
+export default function ReflectTab({ translation, reciter, onSaved, showToast, readHandoff, clearHandoff, onSettings }) {
   const [surahIdx, setSurahIdx] = useState("");
   const [startAyah, setStartAyah] = useState("");
   const [endAyah, setEndAyah] = useState("");
@@ -124,7 +124,7 @@ export default function ReflectTab({ translation, onSaved, showToast, readHandof
   const canSave = reflection.trim().length > 0 && verses && !fetchError && !loading;
 
   return (
-    <div style={{ padding: "36px 24px 110px", maxWidth: 720, margin: "0 auto" }}>
+    <div style={pageContainerStyle}>
       <PageHeader title="New Reflection" subtitle="Select a passage and record your Tadabbur" onSettings={onSettings} />
 
       {/* Surah Selector */}
@@ -247,9 +247,9 @@ export default function ReflectTab({ translation, onSaved, showToast, readHandof
             onMouseLeave={(e) => { e.currentTarget.style.color = "var(--on-surface-variant)"; e.currentTarget.style.background = "transparent"; }}
           >Copy</button>
 
-          <div style={{ textAlign: "center", direction: "rtl", padding: "8px 32px 32px", lineHeight: 2.6 }}>
+          <div style={{ textAlign: "center", direction: "rtl", padding: "8px 0 var(--block-gap)", lineHeight: "var(--ayah-lh)" }}>
             {verses.arabic.map((a) => (
-              <span key={a.number} style={{ fontFamily: "'Amiri', 'Scheherazade New', serif", fontSize: 26, color: "var(--on-surface)", display: "inline" }}>
+              <span key={a.number} style={{ fontFamily: "'Amiri', 'Scheherazade New', serif", fontSize: "var(--ayah-size)", color: "var(--on-surface)", display: "inline" }}>
                 {a.text}{" "}
                 <span style={{ fontSize: 14, color: "var(--primary-container)", opacity: 0.9 }}>﴿{a.number}﴾</span>{" "}
               </span>
@@ -258,9 +258,20 @@ export default function ReflectTab({ translation, onSaved, showToast, readHandof
 
           <div style={{ background: "var(--surface-lowest)", borderRadius: 12, padding: "18px 20px", boxShadow: "0 2px 16px rgba(26,28,26,0.04)" }}>
             {verses.english.map((a) => (
-              <p key={a.number} style={{ fontFamily: "\'Cormorant Garamond\', serif", fontSize: 15, lineHeight: 1.85, color: "var(--on-surface-variant)", margin: "0 0 10px", fontWeight: 400 }}>
+              <p key={a.number} style={{ fontFamily: "\'Cormorant Garamond\', serif", fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)", color: "var(--on-surface-variant)", margin: "0 0 10px", fontWeight: 400 }}>
                 <span style={{ color: "var(--primary-container)", fontWeight: 600, fontSize: 11, marginRight: 4 }}>[{a.number}]</span>
                 {a.text}
+                {selectedSurah && (
+                  <AyahAudio
+                    key={`audio-${selectedSurah[0]}:${a.number}-${reciter}`}
+                    surahNum={selectedSurah[0]}
+                    ayahNum={a.number}
+                    reciter={reciter}
+                    onError={(msg) => showToast && showToast(msg, "error")}
+                    compact
+                    style={{ marginLeft: 8, verticalAlign: "middle" }}
+                  />
+                )}
               </p>
             ))}
           </div>

@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { dbGetAll, dbAdd, dbClear } from "../lib/db";
-import { secondaryBtnStyle, settingsSectionStyle, settingsTitleStyle, settingsDescStyle, pageTitleStyle, pageSubtitleStyle } from "../lib/styles";
+import { secondaryBtnStyle, settingsSectionStyle, settingsTitleStyle, settingsDescStyle, pageTitleStyle, pageSubtitleStyle , pageContainerStyle } from "../lib/styles";
 import ConfirmModal from "./ConfirmModal";
+import { RECITERS } from "../lib/api";
+import { FONT_SCALE_MIN, FONT_SCALE_MAX, FONT_SCALE_STEP, clampFontScale } from "../lib/fonts";
 
-export default function SettingsTab({ translation, setTranslation, showToast, theme, setTheme, colorScheme, setColorScheme, onBack }) {
+export default function SettingsTab({ translation, setTranslation, reciter, setReciter, fontScales, setFontScales, showToast, theme, setTheme, colorScheme, setColorScheme, onBack }) {
   const [clearConfirm1, setClearConfirm1] = useState(false);
   const [clearConfirm2, setClearConfirm2] = useState(false);
   const [entryCount, setEntryCount] = useState(null);
@@ -129,7 +131,7 @@ export default function SettingsTab({ translation, setTranslation, showToast, th
   ];
 
   return (
-    <div style={{ padding: "36px 24px 110px", maxWidth: 720, margin: "0 auto" }}>
+    <div style={pageContainerStyle}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
         {onBack && (
           <button
@@ -169,6 +171,130 @@ export default function SettingsTab({ translation, setTranslation, showToast, th
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Reciter */}
+      <div style={settingsSectionStyle}>
+        <h2 style={settingsTitleStyle}>Reciter</h2>
+        <p style={settingsDescStyle}>Voice used by the Listen button on each ayah.</p>
+        <div style={{ marginBottom: 20 }}>
+          <select
+            value={reciter}
+            onChange={(e) => setReciter(e.target.value)}
+            style={{
+              width: "100%", padding: "10px 14px", borderRadius: 8,
+              border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)",
+              color: "var(--on-surface)", fontFamily: "'DM Sans',sans-serif", fontSize: 14,
+            }}
+          >
+            {RECITERS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Reading size */}
+      <div style={settingsSectionStyle}>
+        <h2 style={settingsTitleStyle}>Reading Size</h2>
+        <p style={settingsDescStyle}>
+          Set each layer independently. Sizes scale with your screen, so these
+          stay comfortable on a phone and a tablet alike.
+        </p>
+
+        {/* Live preview — renders with the real tokens, so it updates as you adjust */}
+        <div style={{
+          background: "var(--surface-low)", borderRadius: 12,
+          padding: "18px 16px", marginBottom: 18,
+          border: "1px solid var(--outline-ghost)",
+          overflow: "hidden",
+        }}>
+          <p style={{
+            fontFamily: "'Amiri','Scheherazade New',serif",
+            fontSize: "var(--ayah-size)", lineHeight: "var(--ayah-lh)",
+            color: "var(--on-surface)", direction: "rtl", textAlign: "right",
+            margin: "0 0 10px",
+          }}>
+            بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+          </p>
+          <p style={{
+            fontFamily: "'Cormorant Garamond',serif", fontStyle: "italic",
+            fontSize: "var(--translit-size)", lineHeight: "var(--translit-lh)",
+            color: "var(--primary-container)", opacity: 0.8, margin: "0 0 8px",
+          }}>
+            Bismi Allahi ar-Rahmani ar-Raheem
+          </p>
+          <p style={{
+            fontFamily: "'Cormorant Garamond',serif",
+            fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)",
+            color: "var(--on-surface-variant)", margin: 0,
+          }}>
+            In the name of Allah, the Entirely Merciful, the Especially Merciful.
+          </p>
+        </div>
+
+        {[
+          { key: "arabic",   label: "Arabic" },
+          { key: "translit", label: "Transliteration" },
+          { key: "trans",    label: "Translation" },
+        ].map(({ key, label }) => {
+          const value = fontScales[key];
+          const atMin = value <= FONT_SCALE_MIN + 0.001;
+          const atMax = value >= FONT_SCALE_MAX - 0.001;
+          // Derive from the previous state, not the render closure, so rapid
+          // taps each register instead of collapsing into a single step.
+          const step = (dir) => setFontScales(prev => ({
+            ...prev,
+            [key]: clampFontScale(prev[key] + dir * FONT_SCALE_STEP),
+          }));
+          const stepBtn = (dir, disabled, glyph) => (
+            <button
+              onClick={() => !disabled && step(dir)}
+              disabled={disabled}
+              aria-label={`${dir > 0 ? "Increase" : "Decrease"} ${label.toLowerCase()} size`}
+              style={{
+                width: 34, height: 34, borderRadius: "50%",
+                border: "1px solid var(--outline-ghost)",
+                background: "var(--surface-low)", color: "var(--on-surface)",
+                fontSize: 16, fontWeight: 600, lineHeight: 1,
+                cursor: disabled ? "not-allowed" : "pointer",
+                opacity: disabled ? 0.35 : 1,
+                fontFamily: "'DM Sans',sans-serif",
+              }}
+            >{glyph}</button>
+          );
+          return (
+            <div key={key} style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              gap: 12, padding: "10px 0", flexWrap: "wrap",
+              borderTop: "1px solid var(--outline-ghost)",
+            }}>
+              <span style={{
+                fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 500,
+                color: "var(--on-surface)",
+              }}>{label}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {stepBtn(-1, atMin, "−")}
+                <span style={{
+                  minWidth: 52, textAlign: "center",
+                  fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600,
+                  color: "var(--on-surface-variant)", fontVariantNumeric: "tabular-nums",
+                }}>{Math.round(value * 100)}%</span>
+                {stepBtn(1, atMax, "+")}
+              </div>
+            </div>
+          );
+        })}
+
+        <button
+          onClick={() => {
+            setFontScales({ arabic: 1, translit: 1, trans: 1 });
+            showToast("Reading sizes reset");
+          }}
+          style={{ ...secondaryBtnStyle, marginTop: 14 }}
+        >
+          Reset to default
+        </button>
       </div>
 
       {/* Appearance */}

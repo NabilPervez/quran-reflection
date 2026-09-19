@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { dbGetAll, dbDelete, dbUpdate } from "../lib/db";
-import { cardStyle, chipBtnStyle, primaryBtnStyle, ghostBtnStyle, underlineInputStyle } from "../lib/styles";
+import { cardStyle, chipBtnStyle, primaryBtnStyle, ghostBtnStyle, underlineInputStyle , pageContainerStyle } from "../lib/styles";
 import PageHeader from "./PageHeader";
 import ConfirmModal from "./ConfirmModal";
 
@@ -175,7 +175,7 @@ export default function JournalTab({ refreshKey, showToast, onSettings, setTab }
   );
 
   return (
-    <div style={{ padding: "36px 24px 110px", maxWidth: 720, margin: "0 auto" }}>
+    <div style={pageContainerStyle}>
       <PageHeader
         title="Journal"
         subtitle="Review and reflect on your past Tadabbur"

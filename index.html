@@ -257,6 +257,117 @@
         }
       }
 
+      /* ── Reading & layout scale ──────────────────────────────────────────
+         Driven by media queries so the inline styles in components stay
+         declarative: components reference var(--…), the breakpoints below
+         re-tune them for phone/tablet portrait and landscape. */
+      :root {
+        /* Page shell */
+        --content-max:   780px;
+        --pad-x:         24px;
+        --pad-top:       32px;
+        --pad-bottom:    104px;   /* clears the fixed bottom nav */
+        --nav-h:         68px;
+        --card-pad:      26px;
+        --block-gap:     20px;
+
+        /* Verse typography — the ayah is the hero of the page */
+        --ayah-size-base:     clamp(30px, 2.2vw + 22px, 44px);
+        --ayah-lh:       2.05;
+        --translit-size-base: clamp(14px, 0.4vw + 12px, 17px);
+        --translit-lh:   1.9;
+        --trans-size-base:    clamp(16px, 0.5vw + 14px, 19px);
+        --trans-lh:      1.85;
+        --trans-measure: 64ch;    /* comfortable line length for English */
+
+        /* Page chrome */
+        --title-size:    28px;
+        --chrome-gap:    24px;
+
+        /* Reader font scales — set from Settings, persisted per layer.
+           These multiply the responsive base sizes above rather than
+           replacing them, so a user's choice still adapts to the device. */
+        --ayah-scale:     1;
+        --translit-scale: 1;
+        --trans-scale:    1;
+
+        /* Bottom nav */
+        --nav-dir:       column;
+        --nav-gap:       4px;
+        --nav-btn-pad:   10px 0;
+      }
+
+      /* Tablet portrait and up — a little more air, longer measure */
+      @media (min-width: 768px) {
+        :root {
+          --pad-x:     32px;
+          --pad-top:   40px;
+          --card-pad:  32px;
+        }
+      }
+
+      /* Landscape with room to spare (tablets) — trim the chrome a little so
+         the verse sits higher, but keep every control visible. */
+      @media (orientation: landscape) and (min-height: 601px) {
+        :root {
+          --pad-top:    20px;
+          --pad-bottom: 88px;
+          --chrome-gap: 16px;
+          --block-gap:  16px;
+        }
+      }
+
+      /* ── Landscape on phones and small tablets ──────────────────────────
+         Vertical space is the scarce resource here, so collapse the chrome
+         and let the verse keep as much of the viewport as possible. */
+      @media (orientation: landscape) and (max-height: 600px) {
+        :root {
+          --pad-top:    10px;
+          --pad-bottom: 60px;
+          --nav-h:      46px;
+          --card-pad:   16px;
+          --block-gap:  12px;
+          --chrome-gap: 12px;
+          --title-size: 20px;
+
+          --ayah-size-base:  clamp(28px, 4vh + 10px, 38px);
+          --ayah-lh:    1.7;
+          --trans-lh:   1.65;
+          --translit-lh:1.6;
+
+          /* Icon and label share one row so the bar costs less height */
+          --nav-dir:     row;
+          --nav-gap:     7px;
+          --nav-btn-pad: 4px 0;
+        }
+        /* Secondary chrome that is not worth its height in landscape */
+        .landscape-hide { display: none !important; }
+      }
+
+      /* Very short landscape (phones held sideways) — tighten once more */
+      @media (orientation: landscape) and (max-height: 430px) {
+        :root {
+          --pad-top:   6px;
+          --card-pad:  13px;
+          --ayah-size-base: clamp(27px, 4.4vh + 9px, 33px);
+          --ayah-lh:   1.6;
+        }
+      }
+
+      /* Effective reading sizes = responsive base x the user's scale */
+      :root {
+        --ayah-size:     calc(var(--ayah-size-base)     * var(--ayah-scale));
+        --translit-size: calc(var(--translit-size-base) * var(--translit-scale));
+        --trans-size:    calc(var(--trans-size-base)    * var(--trans-scale));
+      }
+
+      /* Notch / rounded-corner safety — matters most in landscape, where the
+         cutout sits on the side of the screen. */
+      .app-shell {
+        padding-left:  env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+      }
+
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html { -webkit-tap-highlight-color: transparent; }
       body {
@@ -284,6 +395,10 @@
       @keyframes shimmer {
         0%   { background-position: -600px 0; }
         100% { background-position:  600px 0; }
+      }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
       }
 
       button { transition: all 0.3s ease; }

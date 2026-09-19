@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { fetchAyah } from "../lib/api";
 import { dbGetAll, dbAdd, dbDelete, dbUpdate } from "../lib/db";
 import { SURAHS, SURAH_START_PAGE, JUZ_START_PAGE } from "../lib/data";
-import { cardStyle, labelStyle, underlineInputStyle, verseAreaStyle, secondaryBtnStyle, primaryBtnStyle, underlineSelectStyle } from "../lib/styles";
+import { cardStyle, labelStyle, underlineInputStyle, verseAreaStyle, secondaryBtnStyle, primaryBtnStyle, underlineSelectStyle, pageContainerStyle } from "../lib/styles";
 import PageHeader from "./PageHeader";
+import AyahAudio from "./AyahAudio";
 
 // ── Pre-compute cumulative ayah ordinals for the progress bar ─────────────────
 // AYAH_ORDINALS[surahNum] = ordinal (1-based) of the first ayah in that surah
@@ -30,7 +31,7 @@ function skeletonLine(widthPct) {
   };
 }
 
-export default function ReadTab({ translation, onReflect, showToast, onSettings }) {
+export default function ReadTab({ translation, reciter, onReflect, showToast, onSettings }) {
   const [currentPos, setCurrentPos] = useState(() => {
     const saved = localStorage.getItem(BOOKMARK_KEY);
     if (saved) {
@@ -284,12 +285,12 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
   }, [currentPos]);
 
   return (
-    <div style={{ padding: "36px 24px 140px", maxWidth: 720, margin: "0 auto" }} ref={topRef}>
+    <div style={pageContainerStyle} ref={topRef}>
       {/* H3 — Reading Progress Bar */}
       <div style={{
         position: "sticky", top: 0, left: 0, right: 0, zIndex: 50,
         height: 3, background: "var(--outline-ghost)",
-        marginBottom: 20,
+        marginBottom: "var(--block-gap)",
       }}>
         <div style={{
           height: "100%",
@@ -303,7 +304,7 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
       <PageHeader title="Read & Reflect" onSettings={onSettings} />
 
       {/* Bookmark actions */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+      <div className="landscape-hide" style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "var(--chrome-gap)", flexWrap: "wrap" }}>
         <button id="bookmark-btn" onClick={toggleBookmark}
           title={bookmarked ? "Remove bookmark" : "Bookmark this page"}
           style={{ background: bookmarked ? "var(--primary-light)" : "var(--surface-low)", color: bookmarked ? "var(--primary-container)" : "var(--on-surface-variant)", border: bookmarked ? "1px solid var(--primary-container)" : "1px solid var(--outline-ghost)", borderRadius: 40, padding: "7px 16px", display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", transition: "all 0.3s ease" }}
@@ -332,7 +333,7 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
         )}
       </div>
 
-      <details style={{ marginBottom: 24, cursor: 'pointer', outline: 'none' }}>
+      <details style={{ marginBottom: "var(--block-gap)", cursor: 'pointer', outline: 'none' }}>
         <summary style={{ padding: 12, background: 'var(--surface-lowest)', borderRadius: 12, border: '1px solid var(--outline-ghost)', fontWeight: 600, color: 'var(--on-surface-variant)' }}>
           Navigation
         </summary>
@@ -456,9 +457,17 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
               <div key={ayah.verseKey}>
 
 
-                <div style={{ ...cardStyle, padding: "24px" }}>
-                  {/* Ayah badge */}
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                <div style={cardStyle}>
+                  {/* Verse toolbar — reference, tafsir and layer toggles share
+                      one row so the verse itself starts higher up the card. */}
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    gap: 8, flexWrap: "wrap", marginBottom: "var(--block-gap)",
+                  }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>
+                      {ayah.surahNum}:{ayah.ayahNum}
+                    </span>
                     <button
                       onClick={() => setShowTafsir(!showTafsir)}
                       style={{
@@ -472,13 +481,10 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
                     >
                       {showTafsir ? "Hide Tafsir" : "Tafsir"}
                     </button>
-                    <span style={{ background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>
-                      {ayah.surahNum}:{ayah.ayahNum}
-                    </span>
                   </div>
 
                   {/* H4 — Independent verse layer toggles */}
-                  <div style={{ display: "flex", gap: 6, marginBottom: 18, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", flexWrap: "wrap" }}>
                     {[
                       { label: "Arabic",           active: showArabic,   toggle: () => setShowArabic(v => !v),   disabled: false },
                       { label: "Transliteration",  active: showTranslit,  toggle: () => setShowTranslit(v => !v), disabled: !ayah.transliteration },
@@ -502,24 +508,25 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
                       </button>
                     ))}
                   </div>
+                  </div>
 
                   {/* Arabic */}
                   {showArabic && (
-                  <p style={{ fontFamily: "'Amiri','Scheherazade New',serif", fontSize: 26, lineHeight: 2.4, color: "var(--on-surface)", direction: "rtl", textAlign: "right", margin: "0 0 20px" }}>
+                  <p style={{ fontFamily: "'Amiri','Scheherazade New',serif", fontSize: "var(--ayah-size)", lineHeight: "var(--ayah-lh)", color: "var(--on-surface)", direction: "rtl", textAlign: "right", margin: "0 0 var(--block-gap)", textWrap: "pretty" }}>
                     {ayah.arabic}
                   </p>
                   )}
 
                   {/* Transliteration */}
                   {showTranslit && ayah.transliteration && (
-                    <p style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: 13.5, lineHeight: 1.85, color: "var(--primary-container)", fontStyle: "italic", margin: "0 0 14px", opacity: 0.8 }}>
+                    <p style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: "var(--translit-size)", lineHeight: "var(--translit-lh)", color: "var(--primary-container)", fontStyle: "italic", margin: "0 0 14px", opacity: 0.8, maxWidth: "var(--trans-measure)" }}>
                       {ayah.transliteration}
                     </p>
                   )}
 
                   {/* English — text */}
                   {showEnglish && (
-                  <span style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: 14.5, lineHeight: 1.85, color: "var(--on-surface-variant)", display: "block", marginBottom: 20, fontWeight: 400 }}>
+                  <span style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)", color: "var(--on-surface-variant)", display: "block", marginBottom: "var(--block-gap)", fontWeight: 400, maxWidth: "var(--trans-measure)" }}>
                     {ayah.english}
                   </span>
                   )}
@@ -527,12 +534,20 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
                   {showTafsir && (
                     <div style={{ padding: "16px", marginBottom: "20px", background: "var(--surface-lowest)", borderRadius: 8, border: "1px solid var(--outline-ghost)" }}>
                       <h4 style={{ margin: "0 0 8px 0", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "var(--primary-container)", textTransform: "uppercase" }}>Tafsir (Ibn Kathir)</h4>
-                      <div style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: 14, color: "var(--on-surface-variant)", lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: ayah.tafsir }} />
+                      <div style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: "var(--trans-size)", color: "var(--on-surface-variant)", lineHeight: "var(--trans-lh)", maxWidth: "var(--trans-measure)" }} dangerouslySetInnerHTML={{ __html: ayah.tafsir }} />
                     </div>
                   )}
 
                   {/* Action buttons */}
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                    {/* Listen button */}
+                    <AyahAudio
+                      key={`audio-${ayah.verseKey}-${reciter}`}
+                      surahNum={ayah.surahNum}
+                      ayahNum={ayah.ayahNum}
+                      reciter={reciter}
+                      onError={(msg) => showToast && showToast(msg, "error")}
+                    />
                     {/* Favorite button */}
                     <button
                       onClick={() => handleFavorite(ayah)}
@@ -562,7 +577,7 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
 
       {/* Pagination controls */}
       {!fetchError && (
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 40 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: "var(--chrome-gap)" }}>
           <button id="prev-ayah" onClick={prevAyah} disabled={currentPos.surah === 1 && currentPos.ayah === 1 || loading}
             style={{ ...secondaryBtnStyle, padding: "12px 24px", borderRadius: 40, opacity: (currentPos.surah === 1 && currentPos.ayah === 1 || loading) ? 0.35 : 1, cursor: (currentPos.surah === 1 && currentPos.ayah === 1 || loading) ? "not-allowed" : "pointer", flex: 1 }}
           >
@@ -578,7 +593,7 @@ export default function ReadTab({ translation, onReflect, showToast, onSettings 
 
       {/* Keyboard shortcut hint */}
       {!fetchError && ayah && (
-        <p style={{ textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif", fontSize: 11, opacity: 0.5, marginTop: 16 }}>
+        <p className="landscape-hide" style={{ textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif", fontSize: 11, opacity: 0.5, marginTop: 16 }}>
           ← → to navigate pages
         </p>
       )}
