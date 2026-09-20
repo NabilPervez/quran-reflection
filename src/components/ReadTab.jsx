@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { fetchAyah } from "../lib/api";
 import { dbGetAll, dbAdd, dbDelete, dbUpdate } from "../lib/db";
-import { SURAHS, SURAH_START_PAGE, JUZ_START_PAGE } from "../lib/data";
-import { cardStyle, labelStyle, underlineInputStyle, verseAreaStyle, secondaryBtnStyle, primaryBtnStyle, underlineSelectStyle, pageContainerStyle } from "../lib/styles";
+import { SURAHS } from "../lib/data";
+import { cardStyle, verseAreaStyle, secondaryBtnStyle, primaryBtnStyle, pageContainerStyle } from "../lib/styles";
 import PageHeader from "./PageHeader";
 import AyahAudio from "./AyahAudio";
+import TableOfContents from "./TableOfContents";
 
 // ── Pre-compute cumulative ayah ordinals for the progress bar ─────────────────
 // AYAH_ORDINALS[surahNum] = ordinal (1-based) of the first ayah in that surah
@@ -45,11 +46,8 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
   const [showTafsir, setShowTafsir] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState("");
-  const [surahSearch, setSurahSearch] = useState("");
-  const [showSurahDrop, setShowSurahDrop] = useState(false);
-  const [selectedSurahNum, setSelectedSurahNum] = useState(null);
-  const [selectedJuzNum, setSelectedJuzNum] = useState("");
   const [bookmarked, setBookmarked] = useState(false);
+  const [showContents, setShowContents] = useState(false);
 
   // H4 — Independent verse layer toggles: each can be on/off independently
   const [showArabic, setShowArabic] = useState(
@@ -121,7 +119,6 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
   useEffect(() => { localStorage.setItem("qr_show_translit", showTranslit ? "1" : "0"); }, [showTranslit]);
   useEffect(() => { localStorage.setItem("qr_show_english",  showEnglish  ? "1" : "0"); }, [showEnglish]);
 
-  const surahRef = useRef(null);
   const topRef = useRef(null);
   const touchStartRef = useRef(null); // L5 swipe
 
@@ -130,19 +127,6 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [currentPos]
   );
-
-  const filteredSurahs = SURAHS.filter(
-    (s) => s[1].toLowerCase().includes(surahSearch.toLowerCase()) || String(s[0]).includes(surahSearch)
-  );
-
-  // Close Surah dropdown on outside click
-  useEffect(() => {
-    const handler = (e) => {
-      if (surahRef.current && !surahRef.current.contains(e.target)) setShowSurahDrop(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
   // Fetch ayah whenever currentPos changes
   useEffect(() => {
@@ -241,33 +225,6 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
     }
   };
 
-  const handleSurahSelect = (surahNum) => {
-    setSelectedSurahNum(surahNum);
-    setSelectedJuzNum(""); // Clear juz selection when surah is selected
-    setSurahSearch("");
-    setShowSurahDrop(false);
-    goToAyah(surahNum, 1);
-  };
-
-  const handleJuzSelect = (juzNum) => {
-    setSelectedJuzNum(juzNum);
-    setSelectedSurahNum(null); // Clear surah selection when juz is selected
-    if (juzNum) {
-      // Find surah that starts exactly at this Juz page, fallback to Surah 1
-      const startPage = JUZ_START_PAGE[juzNum] ?? 1;
-      let targetSurah = 1;
-      for (const [surah, pg] of Object.entries(SURAH_START_PAGE)) {
-        if (pg <= startPage) targetSurah = Number(surah);
-        else break;
-      }
-      goToAyah(targetSurah, 1);
-    }
-  };
-
-  const selectedSurahLabel = selectedSurahNum
-    ? `${selectedSurahNum}. ${SURAHS.find((s) => s[0] === selectedSurahNum)?.[1] ?? ""}`
-    : null;
-
   const chipBtn = (active) => ({
     display: "inline-flex", alignItems: "center", gap: 5,
     padding: "7px 16px", borderRadius: 40,
@@ -283,6 +240,16 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
     const ordinal = (AYAH_ORDINALS[currentPos.surah] ?? 1) + currentPos.ayah - 1;
     return Math.min(100, (ordinal / TOTAL_AYAHS) * 100);
   }, [currentPos]);
+
+  if (showContents) {
+    return (
+      <TableOfContents
+        current={currentPos}
+        onSelect={(surah, ayah) => { setShowContents(false); goToAyah(surah, ayah); }}
+        onClose={() => setShowContents(false)}
+      />
+    );
+  }
 
   return (
     <div style={pageContainerStyle} ref={topRef}>
@@ -333,96 +300,27 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
         )}
       </div>
 
-      <details style={{ marginBottom: "var(--block-gap)", cursor: 'pointer', outline: 'none' }}>
-        <summary style={{ padding: 12, background: 'var(--surface-lowest)', borderRadius: 12, border: '1px solid var(--outline-ghost)', fontWeight: 600, color: 'var(--on-surface-variant)' }}>
-          Navigation
-        </summary>
-        <div style={{ padding: '16px 0' }}>
-      {/* Navigation Selectors */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 20, marginBottom: 24 }}>
-        {/* Surah Selector */}
-        <div ref={surahRef}>
-          <label style={labelStyle}>Jump to Surah</label>
-          <div style={{ position: "relative" }}>
-          <input
-            id="read-surah-search"
-            value={surahSearch}
-            onChange={(e) => { setSurahSearch(e.target.value); setShowSurahDrop(true); }}
-            onFocus={() => setShowSurahDrop(true)}
-            placeholder={selectedSurahLabel ?? "Search by name or number…"}
-            style={{ ...underlineInputStyle, width: "100%", boxSizing: "border-box" }}
-            autoComplete="off"
-          />
-            {showSurahDrop && (
-              <div style={{
-                position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0,
-                background: "var(--surface-lowest)", borderRadius: 14,
-                maxHeight: 240, overflowY: "auto", zIndex: 200,
-                boxShadow: "0 40px 60px rgba(26,28,26,0.06)",
-                outline: "1px solid rgba(193,201,191,0.15)",
-              }}>
-                {filteredSurahs.length === 0 && (
-                  <div style={{ padding: "14px 18px", color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>No results</div>
-                )}
-                {filteredSurahs.map((s) => (
-                  <div key={s[0]} onClick={() => handleSurahSelect(s[0])}
-                    style={{ padding: "11px 18px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "var(--on-surface)", background: selectedSurahNum === s[0] ? "var(--primary-light)" : "transparent", transition: "background 0.2s ease" }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-light)"}
-                    onMouseLeave={(e) => e.currentTarget.style.background = selectedSurahNum === s[0] ? "var(--primary-light)" : "transparent"}
-                  >
-                    <span style={{ color: "var(--primary-container)", fontWeight: 600, marginRight: 8, fontSize: 12 }}>{s[0]}.</span>
-                    {s[1]}
-                    <span style={{ color: "var(--on-surface-variant)", fontSize: 11, marginLeft: 6 }}>({s[2]} āyāt)</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Contents — opens the full Surah/Ayah browser */}
+      <button
+        onClick={() => setShowContents(true)}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          marginBottom: "var(--block-gap)",
+          padding: "9px 18px", borderRadius: 40, cursor: "pointer",
+          border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)",
+          color: "var(--on-surface-variant)",
+          fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600,
+          transition: "all 0.3s ease",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.color = "var(--primary-container)"; e.currentTarget.style.borderColor = "var(--primary-container)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-lowest)"; e.currentTarget.style.color = "var(--on-surface-variant)"; e.currentTarget.style.borderColor = "var(--outline-ghost)"; }}
+      >
+        <span aria-hidden="true">☰</span> Contents
+        <span style={{ opacity: 0.7, fontWeight: 500 }}>
+          · {SURAHS.find((s) => s[0] === currentPos.surah)?.[1] ?? ""} {currentPos.ayah}
+        </span>
+      </button>
 
-        {/* Juz Selector */}
-        <div>
-          <label style={labelStyle}>Jump to Juz</label>
-          <select
-            id="read-juz-select"
-            value={selectedJuzNum}
-            onChange={(e) => handleJuzSelect(e.target.value)}
-            style={{ ...underlineSelectStyle, width: "100%", boxSizing: "border-box", padding: "10px 2px" }}
-          >
-            <option value="">Select Juz…</option>
-            {Array.from({ length: 30 }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>Juz {n}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Ayah Selector */}
-        <div>
-          <label style={labelStyle}>Jump to Ayah</label>
-          <div style={{ position: "relative" }}>
-            <input
-              id="read-ayah-select"
-              type="number"
-              min="1"
-              max={SURAHS.find(s => s[0] === currentPos.surah)?.[2] || 1}
-              value={currentPos.ayah || ""}
-              onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
-                if (!isNaN(val)) {
-                  const maxAyah = SURAHS.find(s => s[0] === currentPos.surah)?.[2] || 1;
-                  if (val >= 1 && val <= maxAyah) {
-                    goToAyah(currentPos.surah, val);
-                  }
-                }
-              }}
-              placeholder={`1 - ${SURAHS.find(s => s[0] === currentPos.surah)?.[2] || 1}`}
-              style={{ ...underlineInputStyle, width: "100%", boxSizing: "border-box" }}
-            />
-          </div>
-        </div>
-      </div>
-      </div>
-      </details>
 
       {/* (Page indicator removed as requested) */}
       {/* Loading skeletons */}

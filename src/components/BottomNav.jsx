@@ -1,7 +1,10 @@
 export default function BottomNav({ tab, setTab }) {
+  // Reflect is a sub-flow of reading, so it keeps Read lit rather than
+  // leaving the bar with nothing selected.
+  const activeTab = tab === "reflect" ? "read" : tab;
+  // Reflect is reached from the Reflect action on an ayah, not from the bar.
   const tabs = [
     { id: "read",    label: "Read",    icon: "✧" },
-    { id: "reflect", label: "Reflect", icon: "✦" },
     { id: "journal", label: "Journal", icon: "✴" },
   ];
   return (
@@ -33,14 +36,14 @@ export default function BottomNav({ tab, setTab }) {
         >
           <span style={{
             fontSize: 20,
-            color: tab === t.id ? "var(--primary-container)" : "var(--on-surface-variant)",
+            color: activeTab === t.id ? "var(--primary-container)" : "var(--on-surface-variant)",
             transition: "color 0.3s ease, transform 0.3s ease",
-            transform: tab === t.id ? "scale(1.15)" : "scale(1)",
+            transform: activeTab === t.id ? "scale(1.15)" : "scale(1)",
             display: "block",
           }}>{t.icon}</span>
           <span style={{
             fontSize: 10, fontFamily: "'DM Sans',sans-serif", fontWeight: 600,
-            color: tab === t.id ? "var(--primary-container)" : "var(--on-surface-variant)",
+            color: activeTab === t.id ? "var(--primary-container)" : "var(--on-surface-variant)",
             transition: "color 0.3s ease", letterSpacing: "0.06em", textTransform: "uppercase",
           }}>{t.label}</span>
         </button>
