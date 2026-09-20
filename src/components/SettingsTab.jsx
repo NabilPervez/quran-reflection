@@ -118,6 +118,7 @@ export default function SettingsTab({ translation, setTranslation, reciter, setR
     { value: "andalusian", label: "Andalusian Courtyard" },
     { value: "fajr", label: "Fajr Glow" },
     { value: "medina", label: "Vibrant Medina" },
+    { value: "gilded-amethyst", label: "Gilded Amethyst" },
   ];
 
   const translationOptions = [

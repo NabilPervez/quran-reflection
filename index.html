@@ -257,6 +257,46 @@
         }
       }
 
+      /* ── Gilded Amethyst ── */
+      [data-color-scheme="gilded-amethyst"] {
+        --primary:            #A87406;
+        --primary-container:  #8A5C08;
+        --primary-light:      rgba(168, 116, 6, 0.12);
+        --on-primary:         #FFFFFF;
+        --surface:            #FFFFFF;
+        --surface-low:        #EDEAFB;
+        --surface-lowest:     #FAF9FF;
+        --on-surface:         #17123F;
+        --on-surface-variant: #565094;
+        --outline-ghost:      rgba(86, 80, 148, 0.20);
+      }
+      [data-color-scheme="gilded-amethyst"][data-theme="dark"] {
+        --primary:          #FFD966;
+        --primary-container:  #F5C542;
+        --primary-light:      rgba(245, 197, 66, 0.14);
+        --on-primary:         #0F0B2E;
+        --surface:          #14103A;
+        --surface-low:        #0F0B2E;
+        --surface-lowest:     #1B1547;
+        --on-surface:         #EEEBFF;
+        --on-surface-variant: #AFA7E0;
+        --outline-ghost:      rgba(245, 200, 70, 0.22);
+      }
+      @media (prefers-color-scheme: dark) {
+        [data-color-scheme="gilded-amethyst"]:not([data-theme="light"]) {
+          --primary:            #FFD966;
+          --primary-container:  #F5C542;
+          --primary-light:      rgba(245, 197, 66, 0.14);
+          --on-primary:         #0F0B2E;
+          --surface:            #14103A;
+          --surface-low:        #0F0B2E;
+          --surface-lowest:     #1B1547;
+          --on-surface:         #EEEBFF;
+          --on-surface-variant: #AFA7E0;
+          --outline-ghost:      rgba(245, 200, 70, 0.22);
+        }
+      }
+
       /* ── Reading & layout scale ──────────────────────────────────────────
          Driven by media queries so the inline styles in components stay
          declarative: components reference var(--…), the breakpoints below
