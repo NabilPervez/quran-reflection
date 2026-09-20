@@ -6,6 +6,7 @@ import { cardStyle, verseAreaStyle, secondaryBtnStyle, primaryBtnStyle, pageCont
 import PageHeader from "./PageHeader";
 import AyahAudio from "./AyahAudio";
 import TableOfContents from "./TableOfContents";
+import LayerMenu from "./LayerMenu";
 
 // ── Pre-compute cumulative ayah ordinals for the progress bar ─────────────────
 // AYAH_ORDINALS[surahNum] = ordinal (1-based) of the first ayah in that surah
@@ -347,13 +348,12 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
 
 
                 <div style={cardStyle}>
-                  {/* Verse toolbar — reference, tafsir and layer toggles share
-                      one row so the verse itself starts higher up the card. */}
+                  {/* Verse toolbar — reference, tafsir and the layer
+                      dropdown share one row, so the verse starts higher. */}
                   <div style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    gap: 8, flexWrap: "wrap", marginBottom: "var(--block-gap)",
+                    display: "flex", alignItems: "center", gap: 8,
+                    flexWrap: "wrap", marginBottom: "var(--block-gap)",
                   }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>
                       {ayah.surahNum}:{ayah.ayahNum}
                     </span>
@@ -365,38 +365,18 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
                         padding: "3px 10px", fontSize: 10, fontWeight: 700,
                         color: "var(--primary-container)", cursor: "pointer",
                         fontFamily: "'DM Sans',sans-serif", letterSpacing: "0.06em",
-                        transition: "all 0.2sease"
+                        transition: "all 0.2s ease",
                       }}
                     >
                       {showTafsir ? "Hide Tafsir" : "Tafsir"}
                     </button>
-                  </div>
-
-                  {/* H4 — Independent verse layer toggles */}
-                  <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", flexWrap: "wrap" }}>
-                    {[
-                      { label: "Arabic",           active: showArabic,   toggle: () => setShowArabic(v => !v),   disabled: false },
-                      { label: "Transliteration",  active: showTranslit,  toggle: () => setShowTranslit(v => !v), disabled: !ayah.transliteration },
-                      { label: "English",          active: showEnglish,   toggle: () => setShowEnglish(v => !v),  disabled: false },
-                    ].map(({ label, active, toggle, disabled }) => (
-                      <button
-                        key={label}
-                        onClick={() => !disabled && toggle()}
-                        disabled={disabled}
-                        style={{
-                          padding: "4px 12px", borderRadius: 40, fontSize: 11, fontWeight: 600,
-                          fontFamily: "'DM Sans',sans-serif", cursor: disabled ? "not-allowed" : "pointer",
-                          border: `1px solid ${active && !disabled ? "var(--primary-container)" : "var(--outline-ghost)"}`,
-                          background: active && !disabled ? "var(--primary-light)" : "transparent",
-                          color: active && !disabled ? "var(--primary-container)" : "var(--on-surface-variant)",
-                          opacity: disabled ? 0.35 : 1,
-                          transition: "all 0.2s ease",
-                        }}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
+                    <LayerMenu
+                      layers={[
+                        { key: "arabic",   label: "Arabic",          active: showArabic,   disabled: false,                 toggle: () => setShowArabic(v => !v) },
+                        { key: "translit", label: "Transliteration", active: showTranslit, disabled: !ayah.transliteration, toggle: () => setShowTranslit(v => !v) },
+                        { key: "english",  label: "Translation",     active: showEnglish,  disabled: false,                 toggle: () => setShowEnglish(v => !v) },
+                      ]}
+                    />
                   </div>
 
                   {/* Arabic */}
@@ -428,7 +408,7 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
                   )}
 
                   {/* Action buttons */}
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "nowrap", justifyContent: "center", alignItems: "stretch" }}>
                     {/* Listen button */}
                     <AyahAudio
                       key={`audio-${ayah.verseKey}-${reciter}`}
@@ -480,12 +460,6 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
         </div>
       )}
 
-      {/* Keyboard shortcut hint */}
-      {!fetchError && ayah && (
-        <p className="landscape-hide" style={{ textAlign: "center", color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif", fontSize: 11, opacity: 0.5, marginTop: 16 }}>
-          ← → to navigate pages
-        </p>
-      )}
     </div>
   );
 }
