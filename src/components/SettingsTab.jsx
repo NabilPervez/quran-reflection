@@ -118,6 +118,7 @@ export default function SettingsTab({ translation, setTranslation, reciter, setR
     { value: "andalusian", label: "Andalusian Courtyard" },
     { value: "fajr", label: "Fajr Glow" },
     { value: "medina", label: "Vibrant Medina" },
+    { value: "gilded-amethyst", label: "Gilded Amethyst" },
   ];
 
   const translationOptions = [
@@ -220,14 +221,14 @@ export default function SettingsTab({ translation, setTranslation, reciter, setR
           <p style={{
             fontFamily: "'Cormorant Garamond',serif", fontStyle: "italic",
             fontSize: "var(--translit-size)", lineHeight: "var(--translit-lh)",
-            color: "var(--primary-container)", opacity: 0.8, margin: "0 0 8px",
+            color: "var(--verse-translit)", margin: "0 0 8px",
           }}>
             Bismi Allahi ar-Rahmani ar-Raheem
           </p>
           <p style={{
             fontFamily: "'Cormorant Garamond',serif",
             fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)",
-            color: "var(--on-surface-variant)", margin: 0,
+            color: "var(--verse-translation)", margin: 0,
           }}>
             In the name of Allah, the Entirely Merciful, the Especially Merciful.
           </p>

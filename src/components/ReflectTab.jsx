@@ -258,7 +258,7 @@ export default function ReflectTab({ translation, reciter, onSaved, showToast, r
 
           <div style={{ background: "var(--surface-lowest)", borderRadius: 12, padding: "18px 20px", boxShadow: "0 2px 16px rgba(26,28,26,0.04)" }}>
             {verses.english.map((a) => (
-              <p key={a.number} style={{ fontFamily: "\'Cormorant Garamond\', serif", fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)", color: "var(--on-surface-variant)", margin: "0 0 10px", fontWeight: 400 }}>
+              <p key={a.number} style={{ fontFamily: "\'Cormorant Garamond\', serif", fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)", color: "var(--verse-translation)", margin: "0 0 10px", fontWeight: 400 }}>
                 <span style={{ color: "var(--primary-container)", fontWeight: 600, fontSize: 11, marginRight: 4 }}>[{a.number}]</span>
                 {a.text}
                 {selectedSurah && (
