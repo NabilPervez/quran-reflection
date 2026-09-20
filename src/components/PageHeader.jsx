@@ -1,7 +1,25 @@
 import { useState } from "react";
 import { pageTitleStyle, pageSubtitleStyle } from "../lib/styles";
 
-export default function PageHeader({ title, subtitle, onSettings }) {
+// Shared circular icon button used by the header action group
+const iconBtnStyle = (active) => ({
+  background: active ? "var(--primary-light)" : "var(--surface-low)",
+  border: active ? "1px solid var(--primary-container)" : "1px solid transparent",
+  borderRadius: "50%",
+  width: 38, height: 38,
+  display: "flex", alignItems: "center", justifyContent: "center",
+  cursor: "pointer",
+  color: active ? "var(--primary-container)" : "var(--on-surface-variant)",
+  fontSize: 17,
+  flexShrink: 0,
+  transition: "background 0.3s ease, color 0.3s ease, border-color 0.3s ease",
+});
+
+/**
+ * @param actions  extra icon buttons shown to the left of the settings cog:
+ *                 [{ id, icon, label, onClick, active }]
+ */
+export default function PageHeader({ title, subtitle, onSettings, actions = [] }) {
   const [showTip, setShowTip] = useState(false);
 
   let tooltipText = "";
@@ -45,30 +63,39 @@ export default function PageHeader({ title, subtitle, onSettings }) {
           </div>
         )}
       </div>
-      {onSettings && (
-        <button
-          id="settings-btn"
-          onClick={onSettings}
-          aria-label="Settings"
-          style={{
-            background: "var(--surface-low)",
-            border: "none",
-            borderRadius: "50%",
-            width: 38, height: 38,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer",
-            color: "var(--on-surface-variant)",
-            fontSize: 17,
-            flexShrink: 0,
-            marginTop: 4,
-            transition: "background 0.3s ease, color 0.3s ease",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.color = "var(--primary-container)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-low)"; e.currentTarget.style.color = "var(--on-surface-variant)"; }}
-        >
-          ⚙️
-        </button>
-      )}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginTop: 4 }}>
+        {actions.map(({ id, icon, label, onClick, active }) => (
+          <button
+            key={id}
+            id={id}
+            onClick={onClick}
+            aria-label={label}
+            aria-pressed={active === undefined ? undefined : !!active}
+            title={label}
+            style={iconBtnStyle(active)}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.color = "var(--primary-container)"; }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = active ? "var(--primary-light)" : "var(--surface-low)";
+              e.currentTarget.style.color = active ? "var(--primary-container)" : "var(--on-surface-variant)";
+            }}
+          >
+            {icon}
+          </button>
+        ))}
+        {onSettings && (
+          <button
+            id="settings-btn"
+            onClick={onSettings}
+            aria-label="Settings"
+            title="Settings"
+            style={iconBtnStyle(false)}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.color = "var(--primary-container)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-low)"; e.currentTarget.style.color = "var(--on-surface-variant)"; }}
+          >
+            ⚙️
+          </button>
+        )}
+      </div>
     </div>
   );
 }

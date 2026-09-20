@@ -354,6 +354,17 @@
         }
       }
 
+      /* Verse text colours.
+         Derived from the theme's own tokens so every colour scheme gets them,
+         and mixed toward --on-surface for contrast: the transliteration used
+         to render in --primary-container, which sat at 2.4:1 on the dark
+         card and failed WCAG AA. Opacity is baked into the mix rather than
+         applied separately, since that silently lowers contrast again. */
+      :root {
+        --verse-translit:     color-mix(in srgb, var(--on-surface) 70%, var(--primary-container));
+        --verse-translation:  color-mix(in srgb, var(--on-surface) 80%, var(--surface-lowest));
+      }
+
       /* Effective reading sizes = responsive base x the user's scale */
       :root {
         --ayah-size:     calc(var(--ayah-size-base)     * var(--ayah-scale));

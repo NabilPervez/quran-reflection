@@ -268,58 +268,49 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
         }} />
       </div>
 
-      <PageHeader title="Read & Reflect" onSettings={onSettings} />
+      <PageHeader
+        title="Read & Reflect"
+        onSettings={onSettings}
+        actions={[
+          {
+            id: "contents-btn",
+            icon: "☰",
+            label: `Contents — ${SURAHS.find((s) => s[0] === currentPos.surah)?.[1] ?? ""} ${currentPos.ayah}`,
+            onClick: () => setShowContents(true),
+          },
+          {
+            id: "bookmark-btn",
+            icon: bookmarked ? "🔖" : "☆",
+            label: bookmarked ? "Remove bookmark" : "Save bookmark",
+            onClick: toggleBookmark,
+            active: bookmarked,
+          },
+        ]}
+      />
 
-      {/* Bookmark actions */}
-      <div className="landscape-hide" style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "var(--chrome-gap)", flexWrap: "wrap" }}>
-        <button id="bookmark-btn" onClick={toggleBookmark}
-          title={bookmarked ? "Remove bookmark" : "Bookmark this page"}
-          style={{ background: bookmarked ? "var(--primary-light)" : "var(--surface-low)", color: bookmarked ? "var(--primary-container)" : "var(--on-surface-variant)", border: bookmarked ? "1px solid var(--primary-container)" : "1px solid var(--outline-ghost)", borderRadius: 40, padding: "7px 16px", display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", transition: "all 0.3s ease" }}
+      {/* Only surfaces when the saved bookmark is somewhere other than here */}
+      {savedBookmark && savedBookmark !== `${currentPos.surah}:${currentPos.ayah}` && (
+        <button
+          onClick={() => {
+            const [sNum, aNum] = savedBookmark.split(":");
+            goToAyah(Number(sNum), Number(aNum));
+          }}
+          className="landscape-hide"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            marginBottom: "var(--block-gap)",
+            padding: "6px 14px", borderRadius: 40,
+            background: "var(--surface-lowest)", border: "1px solid var(--outline-ghost)",
+            color: "var(--primary-container)",
+            fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600,
+            cursor: "pointer", transition: "all 0.3s ease",
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-light)"}
+          onMouseLeave={(e) => e.currentTarget.style.background = "var(--surface-lowest)"}
         >
-          🔖 {bookmarked ? "Saved" : "Save Bookmark"}
+          Resume at {savedBookmark.replace(":", " Ayah ")}
         </button>
-        {savedBookmark && savedBookmark !== `${currentPos.surah}:${currentPos.ayah}` && (
-          <button
-            onClick={() => {
-              const [s, a] = savedBookmark.split(":");
-              goToAyah(Number(s), Number(a));
-            }}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "7px 16px", borderRadius: 40,
-              background: "var(--surface-lowest)", border: "1px solid var(--outline-ghost)",
-              color: "var(--primary-container)",
-              fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600,
-              cursor: "pointer", transition: "all 0.3s ease",
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-light)"}
-            onMouseLeave={(e) => e.currentTarget.style.background = "var(--surface-lowest)"}
-          >
-            Resume at Surah {savedBookmark.replace(':', ' Ayah ')}
-          </button>
-        )}
-      </div>
-
-      {/* Contents — opens the full Surah/Ayah browser */}
-      <button
-        onClick={() => setShowContents(true)}
-        style={{
-          display: "inline-flex", alignItems: "center", gap: 8,
-          marginBottom: "var(--block-gap)",
-          padding: "9px 18px", borderRadius: 40, cursor: "pointer",
-          border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)",
-          color: "var(--on-surface-variant)",
-          fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600,
-          transition: "all 0.3s ease",
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.color = "var(--primary-container)"; e.currentTarget.style.borderColor = "var(--primary-container)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-lowest)"; e.currentTarget.style.color = "var(--on-surface-variant)"; e.currentTarget.style.borderColor = "var(--outline-ghost)"; }}
-      >
-        <span aria-hidden="true">☰</span> Contents
-        <span style={{ opacity: 0.7, fontWeight: 500 }}>
-          · {SURAHS.find((s) => s[0] === currentPos.surah)?.[1] ?? ""} {currentPos.ayah}
-        </span>
-      </button>
+      )}
 
 
       {/* (Page indicator removed as requested) */}
@@ -417,14 +408,14 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
 
                   {/* Transliteration */}
                   {showTranslit && ayah.transliteration && (
-                    <p style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: "var(--translit-size)", lineHeight: "var(--translit-lh)", color: "var(--primary-container)", fontStyle: "italic", margin: "0 0 14px", opacity: 0.8, maxWidth: "var(--trans-measure)" }}>
+                    <p style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: "var(--translit-size)", lineHeight: "var(--translit-lh)", color: "var(--verse-translit)", fontStyle: "italic", margin: "0 0 14px", maxWidth: "var(--trans-measure)" }}>
                       {ayah.transliteration}
                     </p>
                   )}
 
                   {/* English — text */}
                   {showEnglish && (
-                  <span style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)", color: "var(--on-surface-variant)", display: "block", marginBottom: "var(--block-gap)", fontWeight: 400, maxWidth: "var(--trans-measure)" }}>
+                  <span style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)", color: "var(--verse-translation)", display: "block", marginBottom: "var(--block-gap)", fontWeight: 400, maxWidth: "var(--trans-measure)" }}>
                     {ayah.english}
                   </span>
                   )}
@@ -432,7 +423,7 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
                   {showTafsir && (
                     <div style={{ padding: "16px", marginBottom: "20px", background: "var(--surface-lowest)", borderRadius: 8, border: "1px solid var(--outline-ghost)" }}>
                       <h4 style={{ margin: "0 0 8px 0", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "var(--primary-container)", textTransform: "uppercase" }}>Tafsir (Ibn Kathir)</h4>
-                      <div style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: "var(--trans-size)", color: "var(--on-surface-variant)", lineHeight: "var(--trans-lh)", maxWidth: "var(--trans-measure)" }} dangerouslySetInnerHTML={{ __html: ayah.tafsir }} />
+                      <div style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: "var(--trans-size)", color: "var(--verse-translation)", lineHeight: "var(--trans-lh)", maxWidth: "var(--trans-measure)" }} dangerouslySetInnerHTML={{ __html: ayah.tafsir }} />
                     </div>
                   )}
 
