@@ -6,6 +6,13 @@ import SettingsTab from "./components/SettingsTab";
 import BottomNav   from "./components/BottomNav";
 import Toast       from "./components/Toast";
 import { FONT_LAYERS, loadFontScales } from "./lib/fonts";
+import { PrivacyPage, DataPage } from "./components/LegalPages";
+
+// Standalone pages with real URLs, so the Play listing can link to them and
+// Android's back button walks the history as expected.
+const PAGE_PATHS = { "/privacy": "privacy", "/data": "data" };
+const pageFromLocation = () =>
+  PAGE_PATHS[window.location.pathname.replace(/\/+$/, "") || "/"] ?? null;
 
 // ── Error Boundary ────────────────────────────────────────────────────────────
 class ErrorBoundary extends Component {
@@ -63,6 +70,7 @@ export default function App() {
   // Per-layer reader font scales (multipliers on the responsive base sizes)
   const [fontScales, setFontScales] = useState(loadFontScales);
   const [readHandoff, setReadHandoff] = useState(null);
+  const [page, setPage] = useState(pageFromLocation);
   const [returnToRead, setReturnToRead] = useState(false);
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -92,6 +100,28 @@ export default function App() {
   useEffect(() => {
     if (firstVisit) setTimeout(() => setFirstVisit(false), 4500);
   }, [firstVisit]);
+
+  useEffect(() => {
+    const onPop = () => setPage(pageFromLocation());
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  const openPage = (key) => {
+    const path = Object.keys(PAGE_PATHS).find((p) => PAGE_PATHS[p] === key);
+    window.history.pushState({ fromApp: true }, "", path);
+    setPage(key);
+  };
+
+  // Came from inside the app: step back. Landed on the URL directly (e.g. from
+  // the Play listing): there is nothing to go back to, so open the app.
+  const closePage = () => {
+    if (window.history.state?.fromApp) window.history.back();
+    else {
+      window.history.replaceState(null, "", "/");
+      setPage(null);
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem("qr_theme", theme);
@@ -149,6 +179,21 @@ export default function App() {
 
   const showToast = (msg, type = "success") => setToast({ msg, type, key: Date.now() });
 
+  if (page) {
+    return (
+      <div className="app-shell" style={{ minHeight: "100dvh", background: "var(--surface-low)", maxWidth: "var(--content-max)", margin: "0 auto" }}>
+        {page === "privacy" && <PrivacyPage onBack={closePage} onOpenData={() => openPage("data")} />}
+        {page === "data" && (
+          <DataPage
+            onBack={closePage}
+            onOpenPrivacy={() => openPage("privacy")}
+            onOpenSettings={() => { closePage(); switchTab("settings"); }}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="app-shell" style={{ minHeight: "100dvh", background: "var(--surface-low)", maxWidth: "var(--content-max)", margin: "0 auto", position: "relative" }}>
@@ -163,7 +208,7 @@ export default function App() {
               }
             }} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} onSettings={() => switchTab("settings")} />}
             {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast}                                                                       onSettings={() => switchTab("settings")} setTab={switchTab} />}
-            {tab === "settings" && <SettingsTab translation={translation} setTranslation={setTranslation} reciter={reciter} setReciter={setReciter} fontScales={fontScales} setFontScales={setFontScales} showToast={showToast} theme={theme} setTheme={setTheme} colorScheme={colorScheme} setColorScheme={setColorScheme} onBack={() => setTab(prevTab)} />}
+            {tab === "settings" && <SettingsTab onOpenPage={openPage} translation={translation} setTranslation={setTranslation} reciter={reciter} setReciter={setReciter} fontScales={fontScales} setFontScales={setFontScales} showToast={showToast} theme={theme} setTheme={setTheme} colorScheme={colorScheme} setColorScheme={setColorScheme} onBack={() => setTab(prevTab)} />}
           </ErrorBoundary>
         </div>
         <BottomNav tab={tab} setTab={switchTab} />
