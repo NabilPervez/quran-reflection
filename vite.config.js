@@ -10,8 +10,8 @@ export default defineConfig({
       includeAssets: ["favicon.svg", "favicon.ico", "apple-touch-icon-180x180.png"],
       manifest: {
         id: "/",
-        name: "Quran Reflect",
-        short_name: "Quran Reflect",
+        name: "Quran Reflections",
+        short_name: "Reflections",
         description:
           "Read the Quran ayah by ayah with Arabic, transliteration, translation, tafsir and recitation, and keep a private reflection journal that never leaves your device.",
         lang: "en",

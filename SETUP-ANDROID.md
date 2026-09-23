@@ -1,4 +1,4 @@
-# Publishing Quran Reflect on Google Play
+# Publishing Quran Reflections on Google Play
 
 The Android app is a **Trusted Web Activity (TWA)**: a thin shell that opens
 `https://quran-reflection.netlify.app` full-screen in Chrome. You've done this once already for
@@ -34,9 +34,9 @@ rebuild and re-upload when the app's name, icon, colours or Android settings cha
 
 | Decision | Value | Can it change later? |
 | --- | --- | --- |
-| Package name | `com.nabilpervezconsulting.quranreflect` | **Never.** If you pick another, change it in `assetlinks.json` and `EXPECTED_PACKAGE` in `scripts/check-twa.mjs` to match exactly. |
-| App name (Play) | `Quran Reflect` | Yes |
-| Launcher name | `Quran Reflect` is 13 characters and may show as "Quran Refle…" on some phones. `QuranReflect` (12) fits. | With a new build |
+| Package name | `com.nabilpervez.quranreflections` | **Never.** If you pick another, change it in `assetlinks.json` and `EXPECTED_PACKAGE` in `scripts/check-twa.mjs` to match exactly. |
+| App name (Play) | `Quran Reflections` | Yes |
+| Launcher name | `Quran Reflections` is 13 characters and may show as "Quran Refle…" on some phones. `QuranReflect` (12) fits. | With a new build |
 | Signing key | Reuse `C:\Users\perve\bullet-journal-android\android.keystore` | — |
 | Status bar | Light `#FAFAF8`, dark `#1C1F1A` | With a new build |
 
@@ -67,8 +67,8 @@ npm run twa:check
 
 | Setting | Value |
 | --- | --- |
-| Package | `com.nabilpervezconsulting.quranreflect` |
-| Launcher name | `Quran Reflect` |
+| Package | `com.nabilpervez.quranreflections` |
+| Launcher name | `Quran Reflections` |
 | Orientation | `any` |
 | Status bar / splash | `#FAFAF8`, dark `#1C1F1A` |
 | Icons | Read from the live manifest |
@@ -117,7 +117,7 @@ bubblewrap build
 
 ### C1. Create the app and upload
 
-1. **Create app** → name `Quran Reflect`, App, Free.
+1. **Create app** → name `Quran Reflections`, App, Free.
 2. Upload `app-release-bundle.aab` to a testing track. If your account requires a closed test
    before production (12 testers for 14 days on newer personal accounts, and it applies to each
    new app), start it now, since it's the longest step. You did this for Bullet Journal.
@@ -153,7 +153,7 @@ bubblewrap build
 
 Full description:
 
-> Quran Reflect is a quiet place to read the Quran and reflect on it, one ayah at a time.
+> Quran Reflections is a quiet place to read the Quran and reflect on it, one ayah at a time.
 >
 > • Arabic text with transliteration and translation, each shown or hidden as you like
 > • Tafsir Ibn Kathir for every ayah
@@ -199,7 +199,7 @@ Work down this list; it's ordered by how often each is the cause.
    certificate**, not the upload key. `npm run twa:check` shows how many fingerprints are live.
 2. **The phone cached a failed check.** Chrome remembers the result. After fixing
    `assetlinks.json`: on the phone, open Settings → Apps → **Chrome** → Storage → *Clear
-   storage* (or at least *Clear cache*), then uninstall Quran Reflect and reinstall it from Play.
+   storage* (or at least *Clear cache*), then uninstall Quran Reflections and reinstall it from Play.
 3. **Google hasn't picked up the change yet.** Its verifier caches for up to about an hour.
    Check what it currently sees:
 

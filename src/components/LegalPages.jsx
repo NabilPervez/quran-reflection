@@ -27,7 +27,7 @@ function Section({ title, children }) {
 function Shell({ title, subtitle, onBack, children }) {
   useEffect(() => {
     const previous = document.title;
-    document.title = `${title} — Quran Reflect`;
+    document.title = `${title} — Quran Reflections`;
     window.scrollTo(0, 0);
     return () => { document.title = previous; };
   }, [title]);
@@ -37,7 +37,7 @@ function Shell({ title, subtitle, onBack, children }) {
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
         <button
           onClick={onBack}
-          aria-label="Back to Quran Reflect"
+          aria-label="Back to Quran Reflections"
           style={{
             background: "transparent", border: "none", cursor: "pointer",
             fontSize: 20, color: "var(--on-surface)", display: "flex",
@@ -53,7 +53,7 @@ function Shell({ title, subtitle, onBack, children }) {
       }}>{subtitle}</p>
       {children}
       <button onClick={onBack} style={{ ...secondaryBtnStyle, marginTop: 8 }}>
-        ← Back to Quran Reflect
+        ← Back to Quran Reflections
       </button>
     </main>
   );
@@ -72,12 +72,12 @@ export function PrivacyPage({ onBack, onOpenData }) {
     <Shell title="Privacy Policy" subtitle={`Effective ${EFFECTIVE}`} onBack={onBack}>
       <Section title="In short">
         <p style={bodyStyle}>
-          Quran Reflect has no accounts and collects no personal information. There is no
+          Quran Reflections has no accounts and collects no personal information. There is no
           analytics, advertising or tracking. Your reflections, favourites and settings are stored
           on your device and are never sent to us — we have no server that could receive them.
         </p>
         <p style={{ ...bodyStyle, marginBottom: 0 }}>
-          Quran Reflect is published by Nabil Pervez Consulting (“we”, “us”). This policy covers the
+          Quran Reflections is published by Nabil Pervez Consulting (“we”, “us”). This policy covers the
           website at quran-reflection.netlify.app and the Android app, which displays that same site.
         </p>
       </Section>
@@ -149,7 +149,7 @@ export function PrivacyPage({ onBack, onOpenData }) {
         <p style={bodyStyle}>
           <strong>Settings → Clear All Data</strong> permanently erases your reflections and
           favourites. To remove everything, including preferences and cached content, uninstall the
-          Android app, or clear storage for Quran Reflect in your phone’s app settings, or clear this
+          Android app, or clear storage for Quran Reflections in your phone’s app settings, or clear this
           site’s data in your browser.
         </p>
         <p style={{ ...bodyStyle, marginBottom: 0 }}>
@@ -160,7 +160,7 @@ export function PrivacyPage({ onBack, onOpenData }) {
 
       <Section title="Children">
         <p style={{ ...bodyStyle, marginBottom: 0 }}>
-          Quran Reflect is suitable for all ages. It collects no personal information from anyone,
+          Quran Reflections is suitable for all ages. It collects no personal information from anyone,
           including children.
         </p>
       </Section>
@@ -184,11 +184,11 @@ const DATA_ROWS = [
 
 export function DataPage({ onBack, onOpenPrivacy, onOpenSettings }) {
   return (
-    <Shell title="Your Data" subtitle="Everything Quran Reflect keeps, and how to control it" onBack={onBack}>
+    <Shell title="Your Data" subtitle="Everything Quran Reflections keeps, and how to control it" onBack={onBack}>
       <Section title="Where your data lives">
         <p style={bodyStyle}>
           Everything is stored on this device only. Nothing below is ever uploaded, synced or
-          backed up by Quran Reflect.
+          backed up by Quran Reflections.
         </p>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "var(--on-surface-variant)" }}>
@@ -225,7 +225,7 @@ export function DataPage({ onBack, onOpenPrivacy, onOpenSettings }) {
       <Section title="Delete your data">
         <ul style={{ ...listStyle, marginBottom: 0 }}>
           <li><strong>Reflections and favourites:</strong> Settings → Clear All Data. This cannot be undone.</li>
-          <li><strong>Everything, including preferences and cache:</strong> uninstall the Android app, or open your phone’s Settings → Apps → Quran Reflect → Storage → Clear storage. In a browser, clear this site’s data.</li>
+          <li><strong>Everything, including preferences and cache:</strong> uninstall the Android app, or open your phone’s Settings → Apps → Quran Reflections → Storage → Clear storage. In a browser, clear this site’s data.</li>
         </ul>
       </Section>
 

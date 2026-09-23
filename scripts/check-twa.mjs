@@ -8,7 +8,7 @@
 // Exit code is 1 if anything required is wrong, so it can gate a release.
 
 const DEFAULT_ORIGIN = "https://quran-reflection.netlify.app";
-const EXPECTED_PACKAGE = "com.nabilpervezconsulting.quranreflect";
+const EXPECTED_PACKAGE = "com.nabilpervez.quranreflections";
 
 const origin = (process.argv[2] || DEFAULT_ORIGIN).replace(/\/+$/, "");
 let failures = 0;
