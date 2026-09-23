@@ -228,7 +228,7 @@ export default function App() {
           color: "var(--on-surface)"
         }}>
           <div>
-            <div style={{ fontWeight: 600, marginBottom: 2 }}>Install Quran Reflect</div>
+            <div style={{ fontWeight: 600, marginBottom: 2 }}>Install Quran Reflections</div>
             <div style={{ color: "var(--on-surface-variant)", fontSize: 11 }}>Add to home screen for offline access</div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>

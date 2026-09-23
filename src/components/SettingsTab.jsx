@@ -371,7 +371,7 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
       <div style={settingsSectionStyle}>
         <h2 style={settingsTitleStyle}>About</h2>
         <p style={settingsDescStyle}>
-          Quran Reflect is a privacy-first Tadabbur journal. No accounts, no analytics, no tracking.
+          Quran Reflections is a privacy-first Tadabbur journal. No accounts, no analytics, no tracking.
           Verses, tafsir and recitation load from public Quran APIs; your reflections and settings
           stay on this device and are never uploaded.
         </p>
