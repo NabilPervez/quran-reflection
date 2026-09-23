@@ -1,0 +1,47 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+# ---------------------------------------------------------------------------
+# Android (Trusted Web Activity)
+#
+# Chrome only hides the address bar when it can fetch this file as JSON and
+# find the app's signing-key fingerprint in it. Without a rule, Netlify's
+# default types are fine for .json, but set it explicitly so a future rewrite
+# can't turn it into HTML.
+# ---------------------------------------------------------------------------
+
+[[headers]]
+  for = "/.well-known/assetlinks.json"
+  [headers.values]
+    Content-Type = "application/json"
+    Access-Control-Allow-Origin = "*"
+    Cache-Control = "public, max-age=300"
+
+# Netlify serves .webmanifest as application/octet-stream by default, which
+# Bubblewrap and some installers reject.
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+# The service worker must never be cached, or an update can't reach
+# installed copies of the app.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+# ---------------------------------------------------------------------------
+# Routing
+#
+# Netlify serves a file that exists before applying a non-forced rewrite, so
+# this catch-all never shadows assets, the manifest or assetlinks.json. It
+# only answers paths with no file behind them — /privacy, /data, and any
+# other route the app handles — with the app shell instead of a 404.
+# ---------------------------------------------------------------------------
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -9,14 +9,24 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "favicon.ico", "apple-touch-icon-180x180.png"],
       manifest: {
+        id: "/",
         name: "Quran Reflect",
         short_name: "Quran Reflect",
-        description: "A privacy-first Tadabbur journal — select verses, read Arabic & Clear Quran translation, and save your reflections locally.",
-        theme_color: "#1A4D2E",
-        background_color: "#FAF9F6",
-        display: "standalone",
-        orientation: "portrait",
+        description:
+          "Read the Quran ayah by ayah with Arabic, transliteration, translation, tafsir and recitation, and keep a private reflection journal that never leaves your device.",
+        lang: "en",
+        dir: "ltr",
         start_url: "/",
+        scope: "/",
+        display: "standalone",
+        // Any orientation: the reader has dedicated phone and tablet landscape
+        // layouts, and a TWA locks to whatever this says.
+        orientation: "any",
+        // Match the light reading surface so the Android splash screen and
+        // status bar blend into the first frame instead of flashing green.
+        theme_color: "#FAFAF8",
+        background_color: "#FAFAF8",
+        categories: ["books", "education", "lifestyle"],
         icons: [
           { src: "pwa-64x64.png", sizes: "64x64", type: "image/png" },
           { src: "pwa-192x192.png", sizes: "192x192", type: "image/png" },
@@ -26,8 +36,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
-        navigateFallback: "/offline.html",
-        navigateFallbackDenylist: [/^\/api\//],
+        // Every navigation gets the app shell, so /privacy and /data resolve in
+        // React and the journal still opens offline (it reads IndexedDB).
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/api\//, /^\/\.well-known\//],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

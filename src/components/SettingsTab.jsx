@@ -5,7 +5,7 @@ import ConfirmModal from "./ConfirmModal";
 import { RECITERS } from "../lib/api";
 import { FONT_SCALE_MIN, FONT_SCALE_MAX, FONT_SCALE_STEP, clampFontScale } from "../lib/fonts";
 
-export default function SettingsTab({ translation, setTranslation, reciter, setReciter, fontScales, setFontScales, showToast, theme, setTheme, colorScheme, setColorScheme, onBack }) {
+export default function SettingsTab({ onOpenPage, translation, setTranslation, reciter, setReciter, fontScales, setFontScales, showToast, theme, setTheme, colorScheme, setColorScheme, onBack }) {
   const [clearConfirm1, setClearConfirm1] = useState(false);
   const [clearConfirm2, setClearConfirm2] = useState(false);
   const [entryCount, setEntryCount] = useState(null);
@@ -371,10 +371,14 @@ export default function SettingsTab({ translation, setTranslation, reciter, setR
       <div style={settingsSectionStyle}>
         <h2 style={settingsTitleStyle}>About</h2>
         <p style={settingsDescStyle}>
-          Quran Reflect is a privacy-first Tadabbur journal. No accounts, no servers, no tracking.
-          Verse data is fetched from the AlQuran.cloud API using your selected English translation.
-          All reflections live entirely on your device in IndexedDB.
+          Quran Reflect is a privacy-first Tadabbur journal. No accounts, no analytics, no tracking.
+          Verses, tafsir and recitation load from public Quran APIs; your reflections and settings
+          stay on this device and are never uploaded.
         </p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+          <button onClick={() => onOpenPage("privacy")} style={secondaryBtnStyle}>Privacy Policy</button>
+          <button onClick={() => onOpenPage("data")} style={secondaryBtnStyle}>Your Data</button>
+        </div>
         <p style={{ ...settingsDescStyle, marginBottom: 0, fontSize: 11, opacity: 0.55 }}>Version 1.0.0 · MVP</p>
       </div>
 

@@ -1,4 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#1A4D2E"/>
-  <text x="16" y="22" font-size="16" text-anchor="middle" fill="#FAF9F6" font-family="serif">✦</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+      <stop offset="0" stop-color="#22603B"/>
+      <stop offset="0.6" stop-color="#1A4D2E"/>
+      <stop offset="1" stop-color="#133A22"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#F3DC8C" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#F3DC8C" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F6E3A1"/>
+      <stop offset="0.5" stop-color="#E2C26A"/>
+      <stop offset="1" stop-color="#B8923A"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="226.8" fill="url(#glow)"/>
+  <path d="M 256 88
+    Q 282.88 229.12 424 256
+    Q 282.88 282.88 256 424
+    Q 229.12 282.88 88 256
+    Q 229.12 229.12 256 88 Z" fill="url(#gold)"/>
 </svg>
