@@ -47,70 +47,69 @@ replace the fingerprint in `assetlinks.json` with the new one's.
 
 ---
 
-## Part A — Get the website live (5 minutes)
+## Part A — Website (done)
 
-1. Merge `feat/play-store-prep` into `main`. Netlify deploys it automatically.
-2. When the deploy finishes, run:
+Merged and deployed. `npm run twa:check` against the live site passes, with two expected
+warnings: the 13-character launcher name, and "Only one fingerprint" (correct until Part C2).
 
-   ```bash
-   npm run twa:check
-   ```
+Re-run it any time the manifest, icons, service worker, pages or Digital Asset Links change:
 
-   **Expected:** `✓ Ready` with two warnings: the 13-character launcher name, and "Only one
-   fingerprint". The second one is correct until Part C.
+```bash
+npm run twa:check
+```
 
 ---
 
-## Part B — Build the app (15 minutes)
+## Part B — Build the app
 
-Bubblewrap, the JDK and the Android SDK are already on your machine from Bullet Journal.
+**The Android project is already generated** at `C:\Users\perve\quran-reflect-android`. Its
+`twa-manifest.json` was written directly, so there were no `bubblewrap init` prompts to answer:
 
-```bash
-mkdir C:\Users\perve\quran-reflect-android
-cd C:\Users\perve\quran-reflect-android
-bubblewrap init --manifest=https://quran-reflection.netlify.app/manifest.webmanifest
-```
-
-Keep this folder **outside the repo and outside OneDrive**, as before.
-
-Answers to the prompts:
-
-| Prompt | Answer |
+| Setting | Value |
 | --- | --- |
-| Domain | `quran-reflection.netlify.app` |
-| URL path | `/` |
-| Application name | `Quran Reflect` |
-| Short name | Your launcher-name choice from the table above |
-| Application ID | `com.nabilpervezconsulting.quranreflect` |
-| Starting version code | `1` |
-| Display mode | `standalone` |
-| Orientation | `default` |
-| Status bar color | `#FAFAF8` |
-| Splash screen color | `#FAFAF8` |
-| Icon URL / Maskable icon URL | Accept the defaults it reads from the manifest |
-| Monochrome icon | Skip |
-| Shortcuts | No |
-| Play Billing | No |
-| Location delegation | No |
-| Key store location | `C:\Users\perve\bullet-journal-android\android.keystore` |
-| Key name (alias) | The alias you used for Bullet Journal |
+| Package | `com.nabilpervezconsulting.quranreflect` |
+| Launcher name | `Quran Reflect` |
+| Orientation | `any` |
+| Status bar / splash | `#FAFAF8`, dark `#1C1F1A` |
+| Icons | Read from the live manifest |
+| Signing key | `C:\Users\perve\bullet-journal-android\android.keystore`, alias `android` |
+| Version | `versionCode 2`, `versionName "2"` |
+| Target SDK | 36 — meets Play's requirement for new apps |
 
-Before building, open `twa-manifest.json` in that folder and add dark-mode colours so the status
-bar matches when a phone is in dark mode:
-
-```json
-"themeColorDark": "#1C1F1A",
-"navigationColorDark": "#1C1F1A",
-```
-
-Then:
+**The only step left is the signed build, which asks for your keystore passwords:**
 
 ```bash
+cd C:\Users\perve\quran-reflect-android
 bubblewrap build
 ```
 
-It asks for the keystore and key passwords, then writes **`app-release-bundle.aab`**. That's
-the file you upload.
+It writes two files:
+
+- **`app-release-bundle.aab`** — upload this to Play.
+- **`app-release-signed.apk`** — sideload this to your own phone to test before uploading.
+
+Notes:
+
+- The version is 2, not 1, because `bubblewrap update` bumps it on every run. Play only requires
+  each upload to be higher than the last, so this costs nothing.
+- Run `bubblewrap update` only after editing `twa-manifest.json`. It must be run before `build`,
+  or `build` stops to ask whether to apply the changes.
+- To shorten the launcher label, edit `launcherName` in `twa-manifest.json`, then run
+  `bubblewrap update` and `bubblewrap build`.
+- Gradle needs a few GB of free disk space. It fails with
+  `java.io.IOException: There is not enough space on the disk` when the drive is full.
+
+### If the build says `'gradlew.bat' is not recognized`
+
+That means the environment variable `NoDefaultCurrentDirectoryInExePath` is set to `1`, which
+stops Windows running a program from the current directory — Bubblewrap calls `gradlew.bat`
+without a path. It isn't set on your machine at user or system level, so this should not happen
+in your own terminal. If it ever does, clear it for that one shell and rebuild:
+
+```bash
+$env:NoDefaultCurrentDirectoryInExePath = $null
+bubblewrap build
+```
 
 ---
 
