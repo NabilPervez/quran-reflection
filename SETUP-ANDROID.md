@@ -26,6 +26,7 @@ rebuild and re-upload when the app's name, icon, colours or Android settings cha
       Bullet Journal). The Play app signing fingerprint gets added in Part C.
 - [x] `npm run twa:check` checks the live site against all of the above.
 - [x] `.gitignore` blocks keystores and build outputs.
+- [x] Play feature graphic: `store-assets/android/feature-graphic-1024x500.png`.
 
 ---
 
@@ -143,7 +144,7 @@ the file you upload.
 | Field | Use |
 | --- | --- |
 | App icon | `store-assets/android/play-icon-512.png` |
-| Feature graphic (1024×500) | Not made yet. `public/quran-reflect-social.png` has the right look to crop from. |
+| Feature graphic (1024×500) | `store-assets/android/feature-graphic-1024x500.png` |
 | Phone screenshots (2–8) | From the installed app: the reader, Contents, the Journal, Settings |
 | Short description (≤80) | `Read the Quran ayah by ayah and keep a private reflection journal.` |
 | Full description | See below |
