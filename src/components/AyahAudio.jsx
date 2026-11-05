@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { fetchAyahAudio, DEFAULT_RECITER } from "../lib/api";
+import { IcPlay, IcPause, IcLoad } from "./icons";
 
 // Module-level cache so re-visiting an ayah never re-hits the API
 const urlCache = new Map(); // `${reciter}|${surah}:${ayah}` -> [url, ...mirrors]
@@ -31,6 +32,7 @@ export default function AyahAudio({
   onComplete,        // fired after the last repeat finishes
   onPlayStart,       // lets the parent stop English TTS
   label: baseLabel = "Arabic",
+  variant,          // "action" = v2 icon + label style
 }) {
   const [state, setState] = useState("idle"); // idle | loading | playing | paused
   const audioRef = useRef(null);
@@ -145,6 +147,16 @@ export default function AyahAudio({
     state === "playing" ? "❚❚" : "▶";
 
   const active = state === "playing" || state === "paused";
+
+  if (variant === "action") {
+    return (
+      <button type="button" className="v2-action" onClick={handleClick} aria-pressed={active}
+        aria-label={`${label} recitation of ayah ${surahNum}:${ayahNum}`}>
+        {state === "loading" ? <span style={{ display: "inline-flex", animation: "spin 1s linear infinite" }}><IcLoad /></span> : state === "playing" ? <IcPause /> : <IcPlay />}
+        {label}
+      </button>
+    );
+  }
 
   return (
     <button

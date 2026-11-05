@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { dbGetAll } from "../lib/db";
+import { fetchAyah } from "../lib/api";
+import { GearButton } from "./icons";
 import { SURAHS } from "../lib/data";
-import { pageContainerStyle, pageTitleStyle, pageSubtitleStyle, primaryBtnStyle } from "../lib/styles";
-import PageHeader from "./PageHeader";
+import { pageContainerStyle } from "../lib/styles";
 
 // Home — Nabil, 2026-11-05: "continue reading" plus analytics on the journal.
 // Charts are hand-drawn SVG (no chart library), coloured from theme tokens.
@@ -10,6 +11,18 @@ import PageHeader from "./PageHeader";
 const TOTAL_AYAHS = 6236;
 const ORDINAL = (() => { const m = {}; let run = 0; for (const [n, , c] of SURAHS) { m[n] = run; run += c; } return m; })();
 const DAY = 86400000;
+
+// Verse for today: a short, hopeful list, one per day of the year
+const DAILY = ["2:286", "94:5", "94:6", "13:28", "2:152", "39:53", "65:3", "2:186", "3:139", "93:5", "8:46", "2:45", "40:60", "29:69", "20:114", "11:88", "3:173", "57:4", "50:16", "21:87", "25:63", "2:153", "64:11", "12:87", "16:128", "33:41", "17:82", "28:24", "35:2", "4:28", "1:5"];
+const dailyKey = () => { const d = new Date(); const start = new Date(d.getFullYear(), 0, 0); return DAILY[Math.floor((d - start) / DAY) % DAILY.length]; };
+const hijriToday = () => {
+  try {
+    const d = new Date();
+    const wd = d.toLocaleDateString("en-US", { weekday: "long" });
+    const h = new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura", { day: "numeric", month: "long" }).format(d);
+    return `${wd} · ${h}`;
+  } catch { return new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); }
+};
 
 const toDate = (v) => { const d = new Date(typeof v === "string" && /^\d+$/.test(v) ? Number(v) : v); return isNaN(d) ? null : d; };
 const dayKey = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -105,7 +118,14 @@ function WeeklyChart({ weeks }) {
   );
 }
 
-export default function HomeTab({ setTab, onSettings }) {
+export default function HomeTab({ setTab, onSettings, translation, onReflect }) {
+  const [votd, setVotd] = useState(null);
+  useEffect(() => {
+    const c = new AbortController();
+    const [s, a] = dailyKey().split(":").map(Number);
+    fetchAyah(s, a, c.signal, translation).then(setVotd).catch(() => {});
+    return () => c.abort();
+  }, [translation]);
   const [entries, setEntries] = useState(null);
   useEffect(() => { dbGetAll().then(setEntries).catch(() => setEntries([])); }, []);
   const stats = useMemo(() => (entries ? computeStats(entries) : null), [entries]);
@@ -116,21 +136,22 @@ export default function HomeTab({ setTab, onSettings }) {
   const ordinal = (ORDINAL[bs] ?? 0) + ba;
   const pct = (ordinal / TOTAL_AYAHS) * 100;
 
-  const hour = new Date().getHours();
-  const greet = hour < 12 ? "Good morning." : hour < 18 ? "Good afternoon." : "Good evening.";
-  const topMax = stats?.topSurahs[0]?.c || 1;
+    const topMax = stats?.topSurahs[0]?.c || 1;
 
   return (
     <div style={pageContainerStyle}>
-      <PageHeader title="Home" onSettings={onSettings} />
-      <p style={{ ...pageSubtitleStyle, fontFamily: "'Outfit',sans-serif", fontSize: 16 }}>
-        {greet} <span style={{ color: "var(--on-surface-variant)" }}>One ayah at a time.</span>
-      </p>
+      <div className="v2-head">
+        <div>
+          <p className="v2-eyebrow">{hijriToday()}</p>
+          <h1 className="v2-h1">As-salamu alaykum. <span className="soft">One ayah at a time.</span></h1>
+        </div>
+        {onSettings && <GearButton onClick={onSettings} />}
+      </div>
 
-      <div style={{ display: "grid", gap: 16 }}>
+      <div className="v2-stack">
         {/* Continue reading */}
-        <section style={card}>
-          <p style={eyebrow}>Continue reading</p>
+        <section className="v2-panel">
+          <p className="v2-eyebrow" style={{ marginBottom: 8 }}>Continue reading</p>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
             <div style={{ minWidth: 0 }}>
               <h2 style={h2}>{surahName} · {bs}:{ba}</h2>
@@ -138,14 +159,31 @@ export default function HomeTab({ setTab, onSettings }) {
                 {ordinal.toLocaleString()} of {TOTAL_AYAHS.toLocaleString()} ayahs · {pct < 1 ? pct.toFixed(2) : pct.toFixed(1)}%
               </p>
             </div>
-            <button style={primaryBtnStyle} onClick={() => setTab("read")}>Resume</button>
+            <button className="v2-btn" onClick={() => setTab("read")}>Resume</button>
           </div>
           <div style={{ height: 4, borderRadius: 4, background: "var(--outline-ghost)", marginTop: 16, overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${Math.max(1, pct)}%`, background: "var(--primary-container)", borderRadius: 4 }} />
           </div>
         </section>
 
+        {/* Verse for today */}
+        {votd && (
+          <section>
+            <p className="v2-eyebrow">Verse for today</p>
+            <p className="v2-ar" style={{ textAlign: "right", marginTop: 16 }}>{votd.arabic}</p>
+            <p className="v2-en" style={{ textAlign: "left", margin: "12px 0 0" }}>{votd.english}</p>
+            <p className="v2-muted" style={{ marginTop: 8 }}>{SURAHS.find((x) => x[0] === votd.surahNum)?.[1]} {votd.verseKey}</p>
+            {onReflect && (
+              <div style={{ marginTop: 16 }}>
+                <button className="v2-btn ghost" onClick={() => onReflect({ surahNum: votd.surahNum, start: votd.ayahNum, end: votd.ayahNum })}>Reflect on this</button>
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Headline numbers */}
+        <div>
+        <p className="v2-eyebrow" style={{ marginBottom: 12 }}>Your practice</p>
         <section aria-label="Your practice" style={{
           display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))",
           border: "1px solid var(--outline-ghost)", borderRadius: 16, overflow: "hidden",
@@ -166,10 +204,11 @@ export default function HomeTab({ setTab, onSettings }) {
             </div>
           ))}
         </section>
+        </div>
 
         {/* Weekly activity */}
         {stats && (
-          <section style={card}>
+          <section className="v2-panel">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
               <p style={{ ...eyebrow, margin: 0 }}>Last 12 weeks</p>
               <div style={{ display: "flex", gap: 14 }}>
@@ -183,7 +222,7 @@ export default function HomeTab({ setTab, onSettings }) {
 
         {/* Most visited surahs */}
         {stats && stats.topSurahs.length > 0 && (
-          <section style={card}>
+          <section className="v2-panel">
             <p style={eyebrow}>Surahs you return to</p>
             <div style={{ display: "grid", gap: 12 }}>
               {stats.topSurahs.map((s) => (
@@ -201,7 +240,7 @@ export default function HomeTab({ setTab, onSettings }) {
 
         {/* Themes */}
         {stats && stats.tags.length > 0 && (
-          <section style={card}>
+          <section className="v2-panel">
             <p style={eyebrow}>Themes in your reflections</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {stats.tags.map(([t, c]) => (
@@ -215,7 +254,7 @@ export default function HomeTab({ setTab, onSettings }) {
 
         {/* Latest reflection */}
         {stats?.latest && (
-          <section style={card}>
+          <section className="v2-panel">
             <p style={eyebrow}>Latest reflection</p>
             <h2 style={{ ...h2, fontSize: 18 }}>{stats.latest.surahName} {stats.latest.startAyah}{Number(stats.latest.endAyah) !== Number(stats.latest.startAyah) ? `–${stats.latest.endAyah}` : ""}</h2>
             <p style={{ fontFamily: "'Outfit',sans-serif", fontSize: 16, lineHeight: 1.7, color: "var(--on-surface)", margin: "8px 0 0", display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
@@ -228,7 +267,7 @@ export default function HomeTab({ setTab, onSettings }) {
         )}
 
         {entries && entries.length === 0 && (
-          <section style={{ ...card, textAlign: "center" }}>
+          <section className="v2-panel" style={{ textAlign: "center" }}>
             <h2 style={{ ...h2, fontSize: 18 }}>Your numbers start here.</h2>
             <p style={{ ...muted, marginTop: 8 }}>Favorite or reflect on an ayah in Read, and your streak and charts will appear.</p>
           </section>

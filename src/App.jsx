@@ -207,8 +207,8 @@ export default function App() {
       <div className="app-shell" style={{ minHeight: "100dvh", background: "var(--surface-low)", maxWidth: "var(--content-max)", margin: "0 auto", position: "relative" }}>
         <div key={tab} style={{ animation: "pageFade 0.28s ease" }}>
           <ErrorBoundary key={`eb-${tab}`}>
-            {tab === "home"     && <HomeTab setTab={switchTab} onSettings={() => switchTab("settings")} />}
-            {tab === "read"     && <ReadTab    translation={translation} reciter={reciter} onReflect={handleReflect} showToast={showToast} playback={playback} setPlayback={setPlayback}                                                                 onSettings={() => switchTab("settings")} />}
+            {tab === "home"     && <HomeTab setTab={switchTab} onSettings={() => switchTab("settings")} translation={translation} onReflect={handleReflect} />}
+            {tab === "read"     && <ReadTab    translation={translation} reciter={reciter} onReflect={handleReflect} showToast={showToast} playback={playback} setPlayback={setPlayback} setFontScales={setFontScales}                                                                 onSettings={() => switchTab("settings")} />}
             {tab === "reflect"  && <ReflectTab translation={translation} reciter={reciter} onSaved={() => {
               setJournalKey((k) => k + 1);
               if (returnToRead) {

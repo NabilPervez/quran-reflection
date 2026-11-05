@@ -9,6 +9,8 @@ import TableOfContents from "./TableOfContents";
 import LayerMenu from "./LayerMenu";
 import EnglishSpeak from "./EnglishSpeak";
 import { repeatLabel, nextRepeat, stopSpeaking } from "../lib/playback";
+import { IcRepeat, IcHeart, IcBook, IcPen, IcMinus, IcPlus, GearButton } from "./icons";
+import { clampFontScale, FONT_SCALE_STEP } from "../lib/fonts";
 
 // ── Pre-compute cumulative ayah ordinals for the progress bar ─────────────────
 // AYAH_ORDINALS[surahNum] = ordinal (1-based) of the first ayah in that surah
@@ -35,7 +37,7 @@ function skeletonLine(widthPct) {
   };
 }
 
-export default function ReadTab({ translation, reciter, onReflect, showToast, onSettings, playback, setPlayback }) {
+export default function ReadTab({ translation, reciter, onReflect, showToast, onSettings, playback, setPlayback, setFontScales }) {
   // Hands-free reading: which player should auto-start on the next ayah
   const [autoKind, setAutoKind] = useState(null);
   const [arNonce, setArNonce] = useState(0);
@@ -269,243 +271,136 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
     );
   }
 
+  const sData = SURAHS.find((s) => s[0] === currentPos.surah);
+  const favKey = `${currentPos.surah}:${currentPos.ayah}`;
+  const isFirst = currentPos.surah === 1 && currentPos.ayah === 1;
+  const isLast = currentPos.surah === 114 && currentPos.ayah === 6;
+  const bumpSize = (dir) => setFontScales?.((prev) => {
+    const next = {};
+    for (const k of Object.keys(prev)) next[k] = clampFontScale(prev[k] + dir * FONT_SCALE_STEP);
+    return next;
+  });
+  const layerChips = [
+    { key: "arabic", label: "Arabic", on: showArabic, set: setShowArabic },
+    { key: "translit", label: "Transliteration", on: showTranslit, set: setShowTranslit },
+    { key: "english", label: "English", on: showEnglish, set: setShowEnglish },
+  ];
+  const rep = playback?.repeat ?? 1;
+
   return (
     <div style={pageContainerStyle} ref={topRef}>
-      {/* H3 — Reading Progress Bar */}
-      <div style={{
-        position: "sticky", top: 0, left: 0, right: 0, zIndex: 50,
-        height: 3, background: "var(--outline-ghost)",
-        marginBottom: "var(--block-gap)",
-      }}>
-        <div style={{
-          height: "100%",
-          width: `${readingProgress}%`,
-          background: "linear-gradient(90deg, var(--primary) 0%, var(--primary-container) 100%)",
-          transition: "width 0.4s ease",
-          borderRadius: "0 2px 2px 0",
-        }} />
+      {/* Sticky surah bar — tap the name for contents (Nabil, 2026-11-05: prototype layout) */}
+      <div className="v2-read-top">
+        <div className="row1">
+          <button className="v2-surah-btn" id="contents-btn" onClick={() => setShowContents(true)} aria-label="Choose surah">
+            <b>{sData?.[1] ?? ""} ▾</b>
+            <span>Surah {currentPos.surah} · {sData?.[2]} ayahs</span>
+          </button>
+          <button className="v2-icon-btn" onClick={() => bumpSize(-1)} aria-label="Smaller text"><IcMinus /></button>
+          <button className="v2-icon-btn" onClick={() => bumpSize(1)} aria-label="Larger text"><IcPlus /></button>
+          {onSettings && <GearButton onClick={onSettings} />}
+        </div>
+        <div className="v2-progress" aria-label={`${readingProgress.toFixed(2)}% of the Quran`}><i style={{ width: `${Math.max(0.5, readingProgress)}%` }} /></div>
       </div>
 
-      <PageHeader
-        title="Read & Reflect"
-        onSettings={onSettings}
-        actions={[
-          {
-            id: "contents-btn",
-            icon: "☰",
-            label: `Contents — ${SURAHS.find((s) => s[0] === currentPos.surah)?.[1] ?? ""} ${currentPos.ayah}`,
-            onClick: () => setShowContents(true),
-          },
-          {
-            id: "bookmark-btn",
-            icon: bookmarked ? "🔖" : "☆",
-            label: bookmarked ? "Remove bookmark" : "Save bookmark",
-            onClick: toggleBookmark,
-            active: bookmarked,
-          },
-        ]}
-      />
+      <div className="v2-chips" style={{ margin: "16px 0 0" }}>
+        {layerChips.map((c) => (
+          <button key={c.key} className="v2-chip" aria-pressed={c.on}
+            disabled={c.key === "translit" && ayah && !ayah.transliteration}
+            onClick={() => {
+              const others = layerChips.filter((x) => x.key !== c.key).some((x) => x.on);
+              if (c.on && !others) return; // keep at least one layer visible
+              c.set((v) => !v);
+            }}>{c.label}</button>
+        ))}
+      </div>
 
-      {/* Only surfaces when the saved bookmark is somewhere other than here */}
-      {savedBookmark && savedBookmark !== `${currentPos.surah}:${currentPos.ayah}` && (
-        <button
-          onClick={() => {
-            const [sNum, aNum] = savedBookmark.split(":");
-            goToAyah(Number(sNum), Number(aNum));
-          }}
-          className="landscape-hide"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            marginBottom: "var(--block-gap)",
-            padding: "6px 14px", borderRadius: 40,
-            background: "var(--surface-lowest)", border: "1px solid var(--outline-ghost)",
-            color: "var(--ink-accent)",
-            fontFamily: "'Outfit',sans-serif", fontSize: 12, fontWeight: 600,
-            cursor: "pointer", transition: "all 0.3s ease",
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-light)"}
-          onMouseLeave={(e) => e.currentTarget.style.background = "var(--surface-lowest)"}
-        >
-          Resume at {savedBookmark.replace(":", " Ayah ")}
-        </button>
-      )}
-
-
-      {/* (Page indicator removed as requested) */}
-      {/* Loading skeletons */}
       {loading && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            <div style={{ ...verseAreaStyle, padding: "28px 24px" }}>
-              <div style={{ textAlign: "right", marginBottom: 16 }}>
-                <div style={{ ...skeletonLine(70), marginLeft: "auto", marginBottom: 10 }} />
-                <div style={{ ...skeletonLine(85), marginLeft: "auto", marginBottom: 10 }} />
-                <div style={{ ...skeletonLine(55), marginLeft: "auto" }} />
-              </div>
-              <div style={skeletonLine(90)} />
-              <div style={skeletonLine(75)} />
-              <div style={skeletonLine(60)} />
-            </div>
+        <div className="v2-focus" aria-busy="true">
+          <div style={{ ...skeletonLine(30), margin: "0 auto 28px" }} />
+          <div style={{ ...skeletonLine(85), height: 22, margin: "0 auto 14px" }} />
+          <div style={{ ...skeletonLine(65), height: 22, margin: "0 auto 28px" }} />
+          <div style={{ ...skeletonLine(90), margin: "0 auto 12px" }} />
+          <div style={{ ...skeletonLine(70), margin: "0 auto" }} />
         </div>
       )}
 
-      {/* Error */}
       {fetchError && !loading && (
-        <div style={{ ...verseAreaStyle, background: "#fef2f2" }}>
-          <p style={{ color: "#b91c1c", fontFamily: "'Outfit',sans-serif", fontSize: 13, margin: 0 }}>⚠ {fetchError}</p>
+        <div className="v2-focus" style={{ textAlign: "center" }}>
+          <p className="v2-h2" style={{ fontSize: 18 }}>This ayah didn't load.</p>
+          <p className="v2-muted" style={{ marginTop: 8 }}>Check your connection, then try again.</p>
+          <div style={{ marginTop: 16 }}><button className="v2-btn ghost" onClick={() => goToAyah(currentPos.surah, currentPos.ayah)}>Try again</button></div>
         </div>
       )}
 
-      {/* Ayah list — fades on page change */}
       {!loading && !fetchError && ayah && (
-        <div key={contentKey} style={{ display: "flex", flexDirection: "column", gap: 20, animation: "pageFade 0.35s ease" }}>
-          {(() => {
-            const surahName = SURAHS.find((s) => s[0] === ayah.surahNum)?.[1] ?? "";
-            return (
-              <div key={ayah.verseKey}>
+        <div key={contentKey} className="v2-focus">
+          <div className="v2-focus-head">
+            <span className="v2-ayah-no">{ayah.surahNum}:{ayah.ayahNum}</span>
+          </div>
+          {showArabic && <p className="v2-ar">{ayah.arabic}</p>}
+          {showTranslit && ayah.transliteration && <p className="v2-tr">{ayah.transliteration}</p>}
+          {showEnglish && <p className="v2-en">{ayah.english}</p>}
 
+          {showTafsir && (
+            <div className="v2-tafsir">
+              <h4>Tafsir Ibn Kathir</h4>
+              <div dangerouslySetInnerHTML={{ __html: ayah.tafsir }} />
+            </div>
+          )}
 
-                <div style={cardStyle}>
-                  {/* Verse toolbar — reference, tafsir and the layer
-                      dropdown share one row, so the verse starts higher. */}
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    flexWrap: "wrap", marginBottom: "var(--block-gap)",
-                  }}>
-                    <span style={{ background: "var(--primary-light)", color: "var(--ink-accent)", fontFamily: "'Outfit',sans-serif", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>
-                      {ayah.surahNum}:{ayah.ayahNum}
-                    </span>
-                    <button
-                      onClick={() => setShowTafsir(!showTafsir)}
-                      style={{
-                        background: showTafsir ? "var(--primary-light)" : "transparent",
-                        border: "1px solid var(--primary-container)", borderRadius: 20,
-                        padding: "3px 10px", fontSize: 10, fontWeight: 700,
-                        color: "var(--ink-accent)", cursor: "pointer",
-                        fontFamily: "'Outfit',sans-serif", letterSpacing: "0.06em",
-                        transition: "all 0.2s ease",
-                      }}
-                    >
-                      {showTafsir ? "Hide Tafsir" : "Tafsir"}
-                    </button>
-                    <LayerMenu
-                      layers={[
-                        { key: "arabic",   label: "Arabic",          active: showArabic,   disabled: false,                 toggle: () => setShowArabic(v => !v) },
-                        { key: "translit", label: "Transliteration", active: showTranslit, disabled: !ayah.transliteration, toggle: () => setShowTranslit(v => !v) },
-                        { key: "english",  label: "Translation",     active: showEnglish,  disabled: false,                 toggle: () => setShowEnglish(v => !v) },
-                      ]}
-                    />
-                  </div>
-
-                  {/* Arabic */}
-                  {showArabic && (
-                  <p style={{ fontFamily: "'Noto Naskh Arabic','Amiri',serif", fontSize: "var(--ayah-size)", lineHeight: "var(--ayah-lh)", color: "var(--on-surface)", direction: "rtl", textAlign: "right", margin: "0 0 var(--block-gap)", textWrap: "pretty" }}>
-                    {ayah.arabic}
-                  </p>
-                  )}
-
-                  {/* Transliteration */}
-                  {showTranslit && ayah.transliteration && (
-                    <p style={{ fontFamily: "\'Outfit\',sans-serif", fontSize: "var(--translit-size)", lineHeight: "var(--translit-lh)", color: "var(--verse-translit)", fontStyle: "italic", margin: "0 0 14px", maxWidth: "var(--trans-measure)" }}>
-                      {ayah.transliteration}
-                    </p>
-                  )}
-
-                  {/* English — text */}
-                  {showEnglish && (
-                  <span style={{ fontFamily: "\'Outfit\',sans-serif", fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)", color: "var(--verse-translation)", display: "block", marginBottom: "var(--block-gap)", fontWeight: 400, maxWidth: "var(--trans-measure)" }}>
-                    {ayah.english}
-                  </span>
-                  )}
-
-                  {showTafsir && (
-                    <div style={{ padding: "16px", marginBottom: "20px", background: "var(--surface-lowest)", borderRadius: 8, border: "1px solid var(--outline-ghost)" }}>
-                      <h4 style={{ margin: "0 0 8px 0", fontFamily: "'Outfit',sans-serif", fontSize: 12, color: "var(--ink-accent)", textTransform: "uppercase" }}>Tafsir (Ibn Kathir)</h4>
-                      <div style={{ fontFamily: "\'Outfit\',sans-serif", fontSize: "var(--trans-size)", color: "var(--verse-translation)", lineHeight: "var(--trans-lh)", maxWidth: "var(--trans-measure)" }} dangerouslySetInnerHTML={{ __html: ayah.tafsir }} />
-                    </div>
-                  )}
-
-                  {/* Action buttons */}
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", alignItems: "stretch" }}>
-                    {/* Arabic recitation — speed + repeat from Settings */}
-                    <AyahAudio
-                      key={`audio-${ayah.verseKey}-${reciter}-${arNonce}`}
-                      surahNum={ayah.surahNum}
-                      ayahNum={ayah.ayahNum}
-                      reciter={reciter}
-                      rate={playback?.arRate ?? 1}
-                      repeat={playback?.repeat ?? 1}
-                      autoStart={autoKind === "ar"}
-                      onPlayStart={() => { enStopRef.current?.(); setAutoKind((k) => (k === "ar" ? k : null)); }}
-                      onComplete={() => handleComplete("ar")}
-                      onError={(msg) => showToast && showToast(msg, "error")}
-                    />
-                    {/* English TTS */}
-                    <EnglishSpeak
-                      key={`en-${ayah.verseKey}`}
-                      text={ayah.english}
-                      rate={playback?.enRate ?? 1}
-                      voice={playback?.enVoice ?? ""}
-                      repeat={playback?.repeat ?? 1}
-                      autoStart={autoKind === "en"}
-                      register={(fn) => { enStopRef.current = fn; }}
-                      onPlayStart={() => { setArNonce((n) => n + 1); setAutoKind((k) => (k === "en" ? k : null)); }}
-                      onComplete={() => handleComplete("en")}
-                    />
-                    {/* Favorite button */}
-                    <button
-                      onClick={() => handleFavorite(ayah)}
-                      style={{ ...chipBtn(favorites[`${ayah.surahNum}:${ayah.ayahNum}`]), color: favorites[`${ayah.surahNum}:${ayah.ayahNum}`] ? 'inherit' : 'var(--on-surface-variant)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.borderColor = "var(--primary-container)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = favorites[`${ayah.surahNum}:${ayah.ayahNum}`] ? "var(--primary-light)" : "transparent"; e.currentTarget.style.borderColor = "var(--outline-ghost)"; }}
-                    >
-                      <span style={{ fontSize: 14, color: favorites[`${ayah.surahNum}:${ayah.ayahNum}`] ? '#e11d48' : 'inherit' }}>♥</span> Favorite
-                    </button>
-                    {/* Reflect button */}
-                    <button
-                      id={`reflect-${ayah.verseKey}`}
-                      onClick={() => onReflect({ surahNum: ayah.surahNum, start: ayah.ayahNum, end: ayah.ayahNum })}
-                      style={chipBtn(false)}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.borderColor = "var(--primary-container)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "var(--outline-ghost)"; }}
-                    >
-                      <span style={{ fontSize: 14 }}>✦</span> Reflect
-                    </button>
-                    {/* Repeat — cycles Off / 3 / 5 / 10 / until stopped */}
-                    <button
-                      onClick={() => {
-                        const r = nextRepeat(playback?.repeat ?? 1);
-                        setPlayback?.((p) => ({ ...p, repeat: r }));
-                        showToast?.(r === 1 ? "Repeat off" : r === 0 ? "Repeats until you stop it" : `Repeats ${r} times`);
-                      }}
-                      aria-pressed={(playback?.repeat ?? 1) !== 1}
-                      style={chipBtn((playback?.repeat ?? 1) !== 1)}
-                    >
-                      <span style={{ fontSize: 14 }}>↻</span> {repeatLabel(playback?.repeat ?? 1)}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
+          <div className="v2-actions">
+            <AyahAudio
+              key={`audio-${ayah.verseKey}-${reciter}-${arNonce}`}
+              variant="action"
+              surahNum={ayah.surahNum}
+              ayahNum={ayah.ayahNum}
+              reciter={reciter}
+              rate={playback?.arRate ?? 1}
+              repeat={rep}
+              autoStart={autoKind === "ar"}
+              onPlayStart={() => { enStopRef.current?.(); setAutoKind((k) => (k === "ar" ? k : null)); }}
+              onComplete={() => handleComplete("ar")}
+              onError={(msg) => showToast && showToast(msg, "error")}
+            />
+            <EnglishSpeak
+              key={`en-${ayah.verseKey}`}
+              variant="action"
+              text={ayah.english}
+              rate={playback?.enRate ?? 1}
+              voice={playback?.enVoice ?? ""}
+              repeat={rep}
+              autoStart={autoKind === "en"}
+              register={(fn) => { enStopRef.current = fn; }}
+              onPlayStart={() => { setArNonce((n) => n + 1); setAutoKind((k) => (k === "en" ? k : null)); }}
+              onComplete={() => handleComplete("en")}
+            />
+            <button className="v2-action" aria-pressed={rep !== 1} onClick={() => {
+              const r = nextRepeat(rep);
+              setPlayback?.((p) => ({ ...p, repeat: r }));
+              showToast?.(r === 1 ? "Repeat off" : r === 0 ? "Repeats until you stop it" : `Repeats ${r} times`);
+            }}><IcRepeat />{repeatLabel(rep)}</button>
+            <button className="v2-action fav" aria-pressed={!!favorites[favKey]} onClick={() => handleFavorite(ayah)}>
+              <IcHeart />{favorites[favKey] ? "Favorited" : "Favorite"}
+            </button>
+            <button className="v2-action" aria-pressed={showTafsir} aria-expanded={showTafsir} onClick={() => setShowTafsir(!showTafsir)}>
+              <IcBook />Tafsir
+            </button>
+            <button className="v2-action" id={`reflect-${ayah.verseKey}`}
+              onClick={() => onReflect({ surahNum: ayah.surahNum, start: ayah.ayahNum, end: ayah.ayahNum })}>
+              <IcPen />Reflect
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Pagination controls */}
       {!fetchError && (
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: "var(--chrome-gap)" }}>
-          <button id="prev-ayah" onClick={manualPrev} disabled={currentPos.surah === 1 && currentPos.ayah === 1 || loading}
-            style={{ ...secondaryBtnStyle, padding: "12px 24px", borderRadius: 40, opacity: (currentPos.surah === 1 && currentPos.ayah === 1 || loading) ? 0.35 : 1, cursor: (currentPos.surah === 1 && currentPos.ayah === 1 || loading) ? "not-allowed" : "pointer", flex: 1 }}
-          >
-            ← Prev Ayah
-          </button>
-          <button id="next-ayah" onClick={manualNext} disabled={currentPos.surah === 114 && currentPos.ayah === 6 || loading}
-            style={{ ...primaryBtnStyle, padding: "12px 24px", borderRadius: 40, opacity: (currentPos.surah === 114 && currentPos.ayah === 6 || loading) ? 0.35 : 1, cursor: (currentPos.surah === 114 && currentPos.ayah === 6 || loading) ? "not-allowed" : "pointer", flex: 1 }}
-          >
-            Next Ayah →
-          </button>
+        <div className="v2-pager">
+          <button className="v2-btn ghost" id="prev-ayah" onClick={manualPrev} disabled={isFirst || loading}>← Previous</button>
+          <span className="count">Ayah {currentPos.ayah} of {sData?.[2]}</span>
+          <button className="v2-btn" id="next-ayah" onClick={manualNext} disabled={isLast || loading}>Next →</button>
         </div>
       )}
-
     </div>
   );
 }

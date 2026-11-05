@@ -12,31 +12,33 @@ export const pageSubtitleStyle = {
 };
 
 export const labelStyle = {
-  display: "block", marginBottom: 10,
-  fontFamily: "'Outfit', sans-serif", fontSize: 11, fontWeight: 600,
-  color: "var(--on-surface-variant)", letterSpacing: "0.08em", textTransform: "uppercase",
+  display: "block", marginBottom: 8,
+  fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 500,
+  color: "var(--on-surface)",
 };
 
-// Underline-style input — no enclosing box, bottom bar only
+// v2 (2026-11-05): boxed hairline field replaces the underline input
 export const underlineInputStyle = {
-  background: "transparent",
-  border: "none",
-  borderBottom: "2px solid rgba(193,201,191,0.4)",
-  borderRadius: 0,
-  padding: "10px 2px",
-  color: "var(--on-surface)", fontSize: 15,
-  transition: "border-color 0.3s ease, box-shadow 0.3s ease",
+  background: "var(--surface-lowest)",
+  border: "1px solid var(--outline-ghost)",
+  borderRadius: 12,
+  padding: "13px 16px",
+  color: "var(--on-surface)", fontSize: 16,
   fontFamily: "'Outfit', sans-serif",
 };
 
 export const underlineSelectStyle = {
   ...underlineInputStyle,
   appearance: "none", cursor: "pointer",
+  backgroundImage: "linear-gradient(45deg, transparent 50%, var(--on-surface-variant) 50%), linear-gradient(135deg, var(--on-surface-variant) 50%, transparent 50%)",
+  backgroundPosition: "calc(100% - 20px) 50%, calc(100% - 15px) 50%",
+  backgroundSize: "5px 5px", backgroundRepeat: "no-repeat", paddingRight: 40,
 };
 
 // "surface-container-low" tonal area for verse display
 export const verseAreaStyle = {
-  background: "var(--surface-low)",
+  background: "var(--surface-lowest)",
+  border: "1px solid var(--outline-ghost)",
   borderRadius: 16, padding: "var(--card-pad)",
   marginBottom: 0,
 };
@@ -85,20 +87,19 @@ export const secondaryBtnStyle = {
 };
 
 // Settings section — tonal card (surface-lowest)
+// v2: sections are open, separated by space + hairline rows, not boxed cards
 export const settingsSectionStyle = {
-  background: "var(--surface-lowest)",
-  borderRadius: 16, padding: "22px 24px", marginBottom: 14,
-  border: "1px solid var(--outline-ghost)", /* hairline, not shadow — Quiet Precision */
+  padding: "0 0 8px", marginBottom: 32,
 };
 
 export const settingsTitleStyle = {
-  fontFamily: "'Outfit',sans-serif", fontWeight: 600,
-  color: "var(--on-surface)", fontSize: 15, marginBottom: 6,
+  fontFamily: "'Outfit',sans-serif", fontWeight: 600, letterSpacing: "-0.02em",
+  color: "var(--on-surface)", fontSize: 22, margin: "0 0 8px",
 };
 
 export const settingsDescStyle = {
-  fontFamily: "'Outfit',sans-serif", fontSize: 13,
-  color: "var(--on-surface-variant)", lineHeight: 1.7, marginBottom: 16,
+  fontFamily: "'Outfit',sans-serif", fontSize: 14,
+  color: "var(--on-surface-variant)", lineHeight: 1.6, marginBottom: 16, marginTop: 0,
 };
 
 export function skeletonLine(widthPct) {

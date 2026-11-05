@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { dbGetAll, dbAdd, dbClear } from "../lib/db";
 import { secondaryBtnStyle, settingsSectionStyle, settingsTitleStyle, settingsDescStyle, pageTitleStyle, pageSubtitleStyle , pageContainerStyle } from "../lib/styles";
 import ConfirmModal from "./ConfirmModal";
+import { IcBack } from "./icons";
 import { REPEAT_OPTIONS, canSpeak, englishVoices, speakOnce, stopSpeaking } from "../lib/playback";
 import { RECITERS } from "../lib/api";
 import { FONT_SCALE_MIN, FONT_SCALE_MAX, FONT_SCALE_STEP, clampFontScale } from "../lib/fonts";
@@ -146,14 +147,23 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
     showToast("All data cleared");
   };
 
+  // Light ground, light accent, dark ground, dark accent — from index.html
+  const SWATCHES = {
+    default: ["#ffffff", "#c9a84c", "#131510", "#4caf7d"],
+    "sacred-marble": ["#FDFBF7", "#D4AF37", "#121212", "#E5C05C"],
+    andalusian: ["#F0F8FF", "#008080", "#0A192F", "#64FFDA"],
+    fajr: ["#FFFCF5", "#E67E22", "#2C1E16", "#F5B041"],
+    medina: ["#F0FDF4", "#10B981", "#022C22", "#34D399"],
+    "gilded-amethyst": ["#EDEAFB", "#A87406", "#0F0B2E", "#FFD966"],
+  };
   const themeOptions = [
-    { value: "system", label: "System Default" },
-    { value: "light", label: "Light Mode" },
-    { value: "dark", label: "Dark Mode" },
+    { value: "system", label: "System" },
+    { value: "light", label: "Light" },
+    { value: "dark", label: "Dark" },
   ];
 
   const schemeOptions = [
-    { value: "default", label: "Default" },
+    { value: "default", label: "Classic" },
     { value: "sacred-marble", label: "Sacred Marble" },
     { value: "andalusian", label: "Andalusian Courtyard" },
     { value: "fajr", label: "Fajr Glow" },
@@ -173,26 +183,44 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
 
   return (
     <div style={pageContainerStyle}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-        {onBack && (
-          <button
-            onClick={onBack}
-            style={{
-              background: "transparent", border: "none", cursor: "pointer",
-              fontSize: 20, color: "var(--on-surface)", display: "flex",
-              alignItems: "center", justifyContent: "center",
-              width: 38, height: 38, borderRadius: "50%",
-              transition: "background 0.3s ease",
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "var(--surface-low)"}
-            onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-          >
-            ←
-          </button>
-        )}
-        <h1 style={{ ...pageTitleStyle, marginBottom: 0 }}>Settings</h1>
+      <div className="v2-head">
+        <div>
+          <p className="v2-eyebrow">Settings</p>
+          <h1 className="v2-h1">Make it yours.</h1>
+          <p className="v2-muted" style={{ marginTop: 8 }}>Everything is stored on this device only.</p>
+        </div>
+        {onBack && <button className="v2-icon-btn" onClick={onBack} aria-label="Back"><IcBack /></button>}
       </div>
-      <p style={pageSubtitleStyle}>All data is stored locally on your device only.</p>
+
+      {/* Colour scheme + appearance (v2) */}
+      <div style={settingsSectionStyle}>
+        <h2 style={settingsTitleStyle}>Colour scheme</h2>
+        <div className="v2-schemes">
+          {schemeOptions.map((opt) => {
+            const sw = SWATCHES[opt.value] || [];
+            return (
+              <button key={opt.value} id={`scheme-${opt.value}`} className="v2-scheme" aria-pressed={colorScheme === opt.value} onClick={() => setColorScheme(opt.value)}>
+                <span className="sw">{sw.map((c, i) => <i key={i} style={{ background: c }} />)}</span>
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={settingsSectionStyle}>
+        <h2 style={settingsTitleStyle}>Appearance</h2>
+        <div className="v2-rows">
+          <div className="v2-row">
+            <div><div className="v2-label">Theme</div><p className="v2-muted">System follows your phone</p></div>
+            <div className="v2-seg" role="group" aria-label="Theme">
+              {themeOptions.map((opt) => (
+                <button key={opt.value} id={`theme-${opt.value}`} aria-pressed={theme === opt.value} onClick={() => setTheme(opt.value)}>{opt.label}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Translation */}
       <div style={settingsSectionStyle}>
@@ -201,11 +229,7 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
           <select
             value={translation}
             onChange={(e) => setTranslation(e.target.value)}
-            style={{
-              width: "100%", padding: "10px 14px", borderRadius: 8,
-              border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)",
-              color: "var(--on-surface)", fontFamily: "'Outfit',sans-serif", fontSize: 14,
-            }}
+            className="v2-select"
           >
             {translationOptions.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -222,11 +246,7 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
           <select
             value={reciter}
             onChange={(e) => setReciter(e.target.value)}
-            style={{
-              width: "100%", padding: "10px 14px", borderRadius: 8,
-              border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)",
-              color: "var(--on-surface)", fontFamily: "'Outfit',sans-serif", fontSize: 14,
-            }}
+            className="v2-select"
           >
             {RECITERS.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -257,7 +277,7 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
             <label htmlFor="pb-voice" style={{ flex: 1, fontFamily: "'Outfit',sans-serif", fontSize: 14, color: "var(--on-surface)" }}>English voice</label>
             <select id="pb-voice" value={playback.enVoice} onChange={(e) => { setP({ enVoice: e.target.value }); sample({ enVoice: e.target.value }); }}
-              style={{ maxWidth: "55%", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)", color: "var(--on-surface)", fontFamily: "'Outfit',sans-serif", fontSize: 14 }}>
+            className="v2-select pill">
               <option value="">Device default</option>
               {voices.map((v) => <option key={v.name} value={v.name}>{v.name}</option>)}
             </select>
@@ -266,7 +286,7 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
           <label htmlFor="pb-repeat" style={{ flex: 1, fontFamily: "'Outfit',sans-serif", fontSize: 14, color: "var(--on-surface)" }}>Repeat each ayah</label>
           <select id="pb-repeat" value={playback.repeat} onChange={(e) => setP({ repeat: Number(e.target.value) })}
-            style={{ maxWidth: "55%", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)", color: "var(--on-surface)", fontFamily: "'Outfit',sans-serif", fontSize: 14 }}>
+            className="v2-select pill">
             {REPEAT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
@@ -381,51 +401,6 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
         >
           Reset to default
         </button>
-      </div>
-
-      {/* Appearance */}
-      <div style={settingsSectionStyle}>
-        <h2 style={settingsTitleStyle}>Appearance Mode</h2>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
-          {themeOptions.map((opt) => (
-            <button
-              key={opt.value}
-              id={`theme-${opt.value}`}
-              onClick={() => setTheme(opt.value)}
-              style={{
-                padding: "9px 20px", borderRadius: 40,
-                border: "none",
-                background: theme === opt.value
-                  ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)"
-                  : "var(--surface-low)",
-                color: theme === opt.value ? "var(--on-primary)" : "var(--on-surface-variant)",
-                cursor: "pointer", fontFamily: "'Outfit',sans-serif",
-                fontSize: 13, fontWeight: 500, transition: "all 0.3s ease",
-              }}
-            >{opt.label}</button>
-          ))}
-        </div>
-
-        <h2 style={settingsTitleStyle}>Color Scheme</h2>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {schemeOptions.map((opt) => (
-            <button
-              key={opt.value}
-              id={`scheme-${opt.value}`}
-              onClick={() => setColorScheme(opt.value)}
-              style={{
-                padding: "9px 20px", borderRadius: 40,
-                border: "none",
-                background: colorScheme === opt.value
-                  ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)"
-                  : "var(--surface-low)",
-                color: colorScheme === opt.value ? "var(--on-primary)" : "var(--on-surface-variant)",
-                cursor: "pointer", fontFamily: "'Outfit',sans-serif",
-                fontSize: 13, fontWeight: 500, transition: "all 0.3s ease",
-              }}
-            >{opt.label}</button>
-          ))}
-        </div>
       </div>
 
       {/* Export */}

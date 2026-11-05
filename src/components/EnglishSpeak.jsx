@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { canSpeak, speakOnce } from "../lib/playback";
+import { IcSpeak, IcStop } from "./icons";
 
 /**
  * Reads the ayah's English translation aloud with the device voice.
  * Shares the repeat / speed settings with the Arabic recitation button.
  */
-export default function EnglishSpeak({ text, rate = 1, voice = "", repeat = 1, autoStart = false, onComplete, onPlayStart, register }) {
+export default function EnglishSpeak({ text, rate = 1, voice = "", repeat = 1, autoStart = false, onComplete, onPlayStart, register, variant }) {
   const [playing, setPlaying] = useState(false);
   const [plays, setPlays] = useState(0);
   const cancelRef = useRef(null);
@@ -43,6 +44,15 @@ export default function EnglishSpeak({ text, rate = 1, voice = "", repeat = 1, a
   const label = playing
     ? (repeat !== 1 ? `English ${plays + 1}${repeat ? "/" + repeat : ""}` : "Stop")
     : "English";
+
+  if (variant === "action") {
+    return (
+      <button type="button" className="v2-action" onClick={() => (playing ? stop() : start())} aria-pressed={playing}
+        aria-label={playing ? "Stop reading English aloud" : "Read English translation aloud"}>
+        {playing ? <IcStop /> : <IcSpeak />}{label}
+      </button>
+    );
+  }
 
   return (
     <button

@@ -7,7 +7,7 @@ import { SURAHS } from "../lib/data";
 import {
   labelStyle, underlineInputStyle, underlineSelectStyle,
   verseAreaStyle, primaryBtnStyle, pageContainerStyle } from "../lib/styles";
-import PageHeader from "./PageHeader";
+import { GearButton } from "./icons";
 import AyahAudio from "./AyahAudio";
 
 export default function ReflectTab({ translation, reciter, onSaved, showToast, readHandoff, clearHandoff, onSettings }) {
@@ -125,11 +125,17 @@ export default function ReflectTab({ translation, reciter, onSaved, showToast, r
 
   return (
     <div style={pageContainerStyle}>
-      <PageHeader title="New Reflection" subtitle="Select a passage and record your Tadabbur" onSettings={onSettings} />
+      <div className="v2-head">
+        <div>
+          <p className="v2-eyebrow">Reflect</p>
+          <h1 className="v2-h1">{selectedSurah ? <>{selectedSurah[1]}{startAyah ? ` ${startAyah}${endAyah && endAyah !== startAyah ? "–" + endAyah : ""}` : ""}.</> : <>New reflection. <span className="soft">Record your tadabbur.</span></>}</h1>
+        </div>
+        {onSettings && <GearButton onClick={onSettings} />}
+      </div>
 
       {/* Surah Selector */}
       <div style={{ marginBottom: 24 }}>
-        <label style={labelStyle}>Surah</label>
+        <label style={labelStyle} htmlFor="surah-search">Surah</label>
         <div ref={surahRef} style={{ position: "relative" }}>
           <input
             id="surah-search"
@@ -146,8 +152,7 @@ export default function ReflectTab({ translation, reciter, onSaved, showToast, r
               background: "var(--surface-lowest)",
               borderRadius: 14, maxHeight: 240, overflowY: "auto",
               zIndex: 100,
-              boxShadow: "0 40px 60px rgba(26,28,26,0.06)",
-              outline: "1px solid rgba(193,201,191,0.15)",
+              border: "1px solid var(--outline-ghost)",
             }}>
               {filteredSurahs.length === 0 && (
                 <div style={{ padding: "14px 18px", color: "var(--on-surface-variant)", fontFamily: "'Outfit',sans-serif", fontSize: 13 }}>No results</div>
@@ -183,7 +188,7 @@ export default function ReflectTab({ translation, reciter, onSaved, showToast, r
       {/* Ayah Selectors */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 32 }}>
         <div>
-          <label style={labelStyle}>Start Āyah</label>
+          <label style={labelStyle} htmlFor="start-ayah">Start ayah</label>
           <select
             id="start-ayah"
             disabled={!selectedSurah}
@@ -198,7 +203,7 @@ export default function ReflectTab({ translation, reciter, onSaved, showToast, r
           </select>
         </div>
         <div>
-          <label style={labelStyle}>End Āyah</label>
+          <label style={labelStyle} htmlFor="end-ayah">End ayah</label>
           <select
             id="end-ayah"
             disabled={!startAyah}
@@ -249,14 +254,14 @@ export default function ReflectTab({ translation, reciter, onSaved, showToast, r
 
           <div style={{ textAlign: "center", direction: "rtl", padding: "8px 0 var(--block-gap)", lineHeight: "var(--ayah-lh)" }}>
             {verses.arabic.map((a) => (
-              <span key={a.number} style={{ fontFamily: "'Amiri', 'Scheherazade New', serif", fontSize: "var(--ayah-size)", color: "var(--on-surface)", display: "inline" }}>
+              <span key={a.number} style={{ fontFamily: "'Noto Naskh Arabic','Amiri',serif", fontSize: "var(--ayah-size)", color: "var(--on-surface)", display: "inline" }}>
                 {a.text}{" "}
                 <span style={{ fontSize: 14, color: "var(--ink-accent)", opacity: 0.9 }}>﴿{a.number}﴾</span>{" "}
               </span>
             ))}
           </div>
 
-          <div style={{ background: "var(--surface-lowest)", borderRadius: 12, padding: "18px 20px", boxShadow: "0 2px 16px rgba(26,28,26,0.04)" }}>
+          <div style={{ background: "var(--surface-lowest)", borderRadius: 12, padding: "18px 20px", border: "1px solid var(--outline-ghost)" }}>
             {verses.english.map((a) => (
               <p key={a.number} style={{ fontFamily: "\'Outfit\', serif", fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)", color: "var(--verse-translation)", margin: "0 0 10px", fontWeight: 400 }}>
                 <span style={{ color: "var(--ink-accent)", fontWeight: 600, fontSize: 11, marginRight: 4 }}>[{a.number}]</span>
@@ -280,7 +285,7 @@ export default function ReflectTab({ translation, reciter, onSaved, showToast, r
 
       {/* Reflection input */}
       <div style={{ marginTop: 40, marginBottom: 24 }}>
-        <label style={labelStyle}>Your Reflection</label>
+        <label style={labelStyle} htmlFor="reflection-input">Your reflection</label>
         <textarea
           id="reflection-input"
           ref={textRef}
@@ -292,57 +297,39 @@ export default function ReflectTab({ translation, reciter, onSaved, showToast, r
             ...underlineInputStyle,
             width: "100%", boxSizing: "border-box",
             resize: "none", minHeight: 120, lineHeight: 1.8,
-            fontSize: 15, overflow: "hidden",
+            fontSize: 16, overflow: "hidden",
           }}
         />
       </div>
 
-      {/* M2 — Tags */}
+      {/* Tags — tap to toggle (v2) */}
       <div style={{ marginBottom: 32 }}>
-        <label style={labelStyle}>Tags <span style={{ opacity: 0.5, fontWeight: 400, textTransform: "none", fontSize: 10 }}>(optional)</span></label>
-        <div style={{ display: "flex", gap: 10, alignItems: "center", overflowX: "auto", whiteSpace: "nowrap" }}>
-          <select
-            value=""
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val && !tags.includes(val)) setTags([...tags, val]);
-            }}
-            style={{ ...underlineSelectStyle, minWidth: 140, padding: "6px 2px", height: 32 }}
-          >
-            <option value="">+ Add Tag</option>
-            {PRESET_TAGS.filter(t => !tags.includes(t)).map(tag => (
-              <option key={tag} value={tag}>{tag}</option>
-            ))}
-          </select>
-          {tags.map((tag) => (
-            <button
-              key={tag} type="button" onClick={() => setTags(tags.filter(t => t !== tag))}
-              style={{ padding: "4px 12px", borderRadius: 40, border: "1px solid var(--primary-container)", background: "var(--primary-light)", color: "var(--ink-accent)", fontFamily: "'Outfit',sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}
-            >
-              {tag} <span>×</span>
+        <label style={labelStyle}>Tags <span style={{ color: "var(--on-surface-variant)", fontWeight: 400 }}>(optional)</span></label>
+        <div className="v2-chips">
+          {PRESET_TAGS.map((tag) => (
+            <button key={tag} type="button" className="v2-chip" aria-pressed={tags.includes(tag)}
+              onClick={() => setTags(tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag])}>
+              {tag}
             </button>
           ))}
         </div>
       </div>
-
       <button
         id="save-reflection"
         onClick={handleSave}
         disabled={!canSave || saving}
         style={{
           width: "100%", padding: "16px 0",
-          background: canSave && !saving
-            ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)"
-            : "var(--surface-low)",
+          background: canSave && !saving ? "var(--primary-container)" : "var(--surface-lowest)",
           color: canSave && !saving ? "var(--on-primary)" : "var(--on-surface-variant)",
-          border: "none", borderRadius: 6,
-          fontFamily: "'Outfit', sans-serif", fontSize: 15, fontWeight: 600,
+          border: canSave && !saving ? "none" : "1px solid var(--outline-ghost)", borderRadius: 999,
+          fontFamily: "'Outfit', sans-serif", fontSize: 15, fontWeight: 500,
           cursor: canSave && !saving ? "pointer" : "not-allowed",
           transition: "all 0.3s ease", letterSpacing: "0.02em",
-          boxShadow: canSave && !saving ? "0 8px 40px rgba(0,54,26,0.18)" : "none",
+
         }}
       >
-        {saving ? "Saving…" : "Save Reflection ✦"}
+        {saving ? "Saving…" : "Save reflection"}
       </button>
     </div>
   );
