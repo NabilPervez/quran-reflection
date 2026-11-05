@@ -1,5 +1,7 @@
 import { useState, useEffect, Component } from "react";
+import HomeTab     from "./components/HomeTab";
 import ReadTab     from "./components/ReadTab";
+import { loadPlayback, savePlayback } from "./lib/playback";
 import ReflectTab  from "./components/ReflectTab";
 import JournalTab  from "./components/JournalTab";
 import SettingsTab from "./components/SettingsTab";
@@ -28,7 +30,7 @@ class ErrorBoundary extends Component {
       return (
         <div style={{
           padding: "60px 24px", maxWidth: 480, margin: "0 auto", textAlign: "center",
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "'Outfit', sans-serif",
         }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
           <h2 style={{ color: "var(--on-surface)", marginBottom: 10, fontSize: 20, fontWeight: 600 }}>
@@ -43,7 +45,7 @@ class ErrorBoundary extends Component {
               padding: "10px 24px", borderRadius: 6, border: "none",
               background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)",
               color: "var(--on-primary)", cursor: "pointer",
-              fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600,
+              fontFamily: "'Outfit',sans-serif", fontSize: 14, fontWeight: 600,
             }}
           >
             Try again
@@ -57,8 +59,10 @@ class ErrorBoundary extends Component {
 
 // ── Root App ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [tab, setTab]               = useState("read");
-  const [prevTab, setPrevTab]       = useState("read");
+  const [tab, setTab]               = useState("home");
+  const [prevTab, setPrevTab]       = useState("home");
+  const [playback, setPlayback]     = useState(loadPlayback);
+  useEffect(() => { savePlayback(playback); }, [playback]);
   const [toast, setToast]           = useState(null);
   const [journalKey, setJournalKey] = useState(0);
   const [firstVisit, setFirstVisit] = useState(false);
@@ -91,6 +95,10 @@ export default function App() {
     setReturnToRead(true);
     switchTab("reflect");
   };
+
+  // Every screen opens at the top
+  useEffect(() => { try { window.history.scrollRestoration = "manual"; } catch { /* old browsers */ } }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, [tab]);
 
   useEffect(() => {
     const seen = localStorage.getItem("qr_seen");
@@ -199,7 +207,8 @@ export default function App() {
       <div className="app-shell" style={{ minHeight: "100dvh", background: "var(--surface-low)", maxWidth: "var(--content-max)", margin: "0 auto", position: "relative" }}>
         <div key={tab} style={{ animation: "pageFade 0.28s ease" }}>
           <ErrorBoundary key={`eb-${tab}`}>
-            {tab === "read"     && <ReadTab    translation={translation} reciter={reciter} onReflect={handleReflect} showToast={showToast}                                                                 onSettings={() => switchTab("settings")} />}
+            {tab === "home"     && <HomeTab setTab={switchTab} onSettings={() => switchTab("settings")} />}
+            {tab === "read"     && <ReadTab    translation={translation} reciter={reciter} onReflect={handleReflect} showToast={showToast} playback={playback} setPlayback={setPlayback}                                                                 onSettings={() => switchTab("settings")} />}
             {tab === "reflect"  && <ReflectTab translation={translation} reciter={reciter} onSaved={() => {
               setJournalKey((k) => k + 1);
               if (returnToRead) {
@@ -208,7 +217,7 @@ export default function App() {
               }
             }} showToast={showToast} readHandoff={readHandoff} clearHandoff={() => setReadHandoff(null)} onSettings={() => switchTab("settings")} />}
             {tab === "journal"  && <JournalTab refreshKey={journalKey} showToast={showToast}                                                                       onSettings={() => switchTab("settings")} setTab={switchTab} />}
-            {tab === "settings" && <SettingsTab onOpenPage={openPage} translation={translation} setTranslation={setTranslation} reciter={reciter} setReciter={setReciter} fontScales={fontScales} setFontScales={setFontScales} showToast={showToast} theme={theme} setTheme={setTheme} colorScheme={colorScheme} setColorScheme={setColorScheme} onBack={() => setTab(prevTab)} />}
+            {tab === "settings" && <SettingsTab onOpenPage={openPage} translation={translation} setTranslation={setTranslation} reciter={reciter} setReciter={setReciter} fontScales={fontScales} setFontScales={setFontScales} showToast={showToast} theme={theme} setTheme={setTheme} colorScheme={colorScheme} setColorScheme={setColorScheme} playback={playback} setPlayback={setPlayback} onBack={() => setTab(prevTab)} />}
           </ErrorBoundary>
         </div>
         <BottomNav tab={tab} setTab={switchTab} />
@@ -221,7 +230,7 @@ export default function App() {
           background: "rgba(250,249,246,0.9)", backdropFilter: "blur(12px)",
           border: "1px solid var(--outline-ghost)",
           padding: "12px 16px", borderRadius: 12,
-          fontFamily: "'DM Sans',sans-serif", fontSize: 13,
+          fontFamily: "'Outfit',sans-serif", fontSize: 13,
           zIndex: 9999, boxShadow: "0 8px 30px rgba(0,0,0,0.1)",
           animation: "fadeIn 0.5s ease",
           display: "flex", alignItems: "center", gap: 12,
@@ -251,7 +260,7 @@ export default function App() {
           background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)",
           color: "var(--on-primary)",
           padding: "12px 28px", borderRadius: 40,
-          fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 500,
+          fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: 500,
           zIndex: 9999, boxShadow: "0 8px 40px rgba(0,54,26,0.20)",
           animation: "fadeIn 0.5s ease", whiteSpace: "nowrap",
         }}>

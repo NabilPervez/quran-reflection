@@ -40,8 +40,8 @@ export default function LayerMenu({ layers }) {
           background: open ? "var(--primary-light)" : "transparent",
           border: "1px solid var(--primary-container)", borderRadius: 20,
           padding: "3px 10px", fontSize: 10, fontWeight: 700,
-          color: "var(--primary-container)", cursor: "pointer",
-          fontFamily: "'DM Sans',sans-serif", letterSpacing: "0.06em",
+          color: "var(--ink-accent)", cursor: "pointer",
+          fontFamily: "'Outfit',sans-serif", letterSpacing: "0.06em",
           display: "inline-flex", alignItems: "center", gap: 5,
           transition: "all 0.2s ease",
         }}
@@ -88,7 +88,7 @@ export default function LayerMenu({ layers }) {
                   cursor: blocked ? "not-allowed" : "pointer",
                   opacity: l.disabled ? 0.4 : 1,
                   color: l.active ? "var(--primary-container)" : "var(--on-surface-variant)",
-                  fontFamily: "'DM Sans',sans-serif", fontSize: 13,
+                  fontFamily: "'Outfit',sans-serif", fontSize: 13,
                   fontWeight: l.active ? 600 : 500,
                   transition: "background 0.2s ease",
                 }}

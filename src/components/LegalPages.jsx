@@ -13,7 +13,7 @@ const CONTACT = "nabilpervezconsulting@gmail.com";
 
 const bodyStyle = { ...settingsDescStyle, marginBottom: 12 };
 const listStyle = { ...settingsDescStyle, paddingLeft: 20, marginBottom: 12 };
-const linkStyle = { color: "var(--primary-container)", textDecoration: "underline" };
+const linkStyle = { color: "var(--ink-accent)", textDecoration: "underline" };
 
 function Section({ title, children }) {
   return (
@@ -48,7 +48,7 @@ function Shell({ title, subtitle, onBack, children }) {
         <h1 style={{ ...pageTitleStyle, marginBottom: 0 }}>{title}</h1>
       </div>
       <p style={{
-        color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif",
+        color: "var(--on-surface-variant)", fontFamily: "'Outfit',sans-serif",
         fontSize: 13, margin: "0 0 var(--chrome-gap) 50px",
       }}>{subtitle}</p>
       {children}
@@ -103,7 +103,7 @@ export function PrivacyPage({ onBack, onOpenData }) {
           favourites or preferences.
         </p>
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "var(--on-surface-variant)" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'Outfit',sans-serif", fontSize: 13, color: "var(--on-surface-variant)" }}>
             <thead>
               <tr>
                 {["Service", "Address", "Used for"].map((h) => (
@@ -191,7 +191,7 @@ export function DataPage({ onBack, onOpenPrivacy, onOpenSettings }) {
           backed up by Quran Reflections.
         </p>
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "var(--on-surface-variant)" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'Outfit',sans-serif", fontSize: 13, color: "var(--on-surface-variant)" }}>
             <thead>
               <tr>
                 {["Data", "Stored in", "Sent anywhere?", "How to remove"].map((h) => (

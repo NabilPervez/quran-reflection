@@ -2,10 +2,50 @@ import { useState, useEffect } from "react";
 import { dbGetAll, dbAdd, dbClear } from "../lib/db";
 import { secondaryBtnStyle, settingsSectionStyle, settingsTitleStyle, settingsDescStyle, pageTitleStyle, pageSubtitleStyle , pageContainerStyle } from "../lib/styles";
 import ConfirmModal from "./ConfirmModal";
+import { REPEAT_OPTIONS, canSpeak, englishVoices, speakOnce, stopSpeaking } from "../lib/playback";
 import { RECITERS } from "../lib/api";
 import { FONT_SCALE_MIN, FONT_SCALE_MAX, FONT_SCALE_STEP, clampFontScale } from "../lib/fonts";
 
-export default function SettingsTab({ onOpenPage, translation, setTranslation, reciter, setReciter, fontScales, setFontScales, showToast, theme, setTheme, colorScheme, setColorScheme, onBack }) {
+// Older exports stored numbers as strings, verse arrays as Python-style
+// strings and tags as "[]" text. Normalise all of it on import.
+function parseLoose(v, fallback) {
+  if (Array.isArray(v)) return v;
+  if (typeof v !== "string" || !v.trim()) return fallback;
+  try { return JSON.parse(v); } catch { /* not JSON */ }
+  try {
+    return JSON.parse(v.replace(/'/g, '"').replace(/\bNone\b/g, "null").replace(/\bTrue\b/g, "true").replace(/\bFalse\b/g, "false"));
+  } catch { /* still not parseable */ }
+  // Last resort: pull text values out of [{'number': n, 'text': '...'}]
+  const out = [...v.matchAll(/'number':\s*(\d+),\s*'text':\s*(['"])([\s\S]*?)\2\s*}/g)].map((m) => ({ number: Number(m[1]), text: m[3] }));
+  return out.length ? out : fallback;
+}
+function normalizeRecord(r) {
+  if (!r || !r.reflection || !r.surahName) return null;
+  const { id: _id, ...rest } = r;
+  const tags = parseLoose(r.tags, []);
+  return {
+    ...rest,
+    surahNumber: Number(r.surahNumber),
+    startAyah: Number(r.startAyah),
+    endAyah: Number(r.endAyah ?? r.startAyah),
+    arabic: parseLoose(r.arabic, []),
+    english: parseLoose(r.english, []),
+    tags: Array.isArray(tags) ? tags.filter(Boolean) : [],
+    createdAt: r.createdAt ?? new Date().toISOString(),
+  };
+}
+
+export default function SettingsTab({ onOpenPage, translation, setTranslation, reciter, setReciter, fontScales, setFontScales, showToast, theme, setTheme, colorScheme, setColorScheme, playback, setPlayback, onBack }) {
+  const [voices, setVoices] = useState([]);
+  useEffect(() => {
+    if (!canSpeak) return;
+    const load = () => setVoices(englishVoices());
+    load();
+    window.speechSynthesis.addEventListener("voiceschanged", load);
+    return () => { window.speechSynthesis.removeEventListener("voiceschanged", load); stopSpeaking(); };
+  }, []);
+  const setP = (patch) => setPlayback?.((p) => ({ ...p, ...patch }));
+  const sample = (patch = {}) => { stopSpeaking(); const p = { ...playback, ...patch }; speakOnce("Guide us to the straight path.", { rate: p.enRate, voice: p.enVoice }); };
   const [clearConfirm1, setClearConfirm1] = useState(false);
   const [clearConfirm2, setClearConfirm2] = useState(false);
   const [entryCount, setEntryCount] = useState(null);
@@ -45,9 +85,9 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
       if (!Array.isArray(records)) throw new Error("Invalid format");
       let count = 0;
       for (const r of records) {
-        if (!r.reflection || !r.surahName) continue;
-        const { id: _id, ...rest } = r;
-        await dbAdd({ ...rest, createdAt: r.createdAt ?? new Date().toISOString() });
+        const clean = normalizeRecord(r);
+        if (!clean) continue;
+        await dbAdd(clean);
         count++;
       }
       setEntryCount((c) => (c ?? 0) + count);
@@ -164,7 +204,7 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
             style={{
               width: "100%", padding: "10px 14px", borderRadius: 8,
               border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)",
-              color: "var(--on-surface)", fontFamily: "'DM Sans',sans-serif", fontSize: 14,
+              color: "var(--on-surface)", fontFamily: "'Outfit',sans-serif", fontSize: 14,
             }}
           >
             {translationOptions.map(opt => (
@@ -177,7 +217,7 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
       {/* Reciter */}
       <div style={settingsSectionStyle}>
         <h2 style={settingsTitleStyle}>Reciter</h2>
-        <p style={settingsDescStyle}>Voice used by the Listen button on each ayah.</p>
+        <p style={settingsDescStyle}>Voice used by the Arabic button on each ayah.</p>
         <div style={{ marginBottom: 20 }}>
           <select
             value={reciter}
@@ -185,7 +225,7 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
             style={{
               width: "100%", padding: "10px 14px", borderRadius: 8,
               border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)",
-              color: "var(--on-surface)", fontFamily: "'DM Sans',sans-serif", fontSize: 14,
+              color: "var(--on-surface)", fontFamily: "'Outfit',sans-serif", fontSize: 14,
             }}
           >
             {RECITERS.map(opt => (
@@ -194,6 +234,51 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
           </select>
         </div>
       </div>
+
+      {/* Playback — Nabil, 2026-11-05 */}
+      {playback && (
+      <div style={settingsSectionStyle}>
+        <h2 style={settingsTitleStyle}>Playback</h2>
+        <p style={settingsDescStyle}>Arabic and English each have their own button and speed. Repeat helps you memorise an ayah.</p>
+        {[
+          ["pb-ar", "Arabic speed", "arRate", 0.5, 1.5],
+          ...(canSpeak ? [["pb-en", "English speed", "enRate", 0.6, 1.4]] : []),
+        ].map(([id, label, key, min, max]) => (
+          <div key={id} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <label htmlFor={id} style={{ flex: 1, fontFamily: "'Outfit',sans-serif", fontSize: 14, color: "var(--on-surface)" }}>{label}</label>
+            <input id={id} type="range" min={min} max={max} step="0.05" value={playback[key]}
+              onChange={(e) => setP({ [key]: Number(e.target.value) })}
+              onPointerUp={() => key === "enRate" && sample()}
+              style={{ width: "45%", accentColor: "var(--primary-container)" }} />
+            <span style={{ width: 44, textAlign: "right", fontFamily: "'Outfit',sans-serif", fontSize: 13, color: "var(--on-surface-variant)", fontVariantNumeric: "tabular-nums" }}>{Number(playback[key]).toFixed(2)}×</span>
+          </div>
+        ))}
+        {canSpeak && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <label htmlFor="pb-voice" style={{ flex: 1, fontFamily: "'Outfit',sans-serif", fontSize: 14, color: "var(--on-surface)" }}>English voice</label>
+            <select id="pb-voice" value={playback.enVoice} onChange={(e) => { setP({ enVoice: e.target.value }); sample({ enVoice: e.target.value }); }}
+              style={{ maxWidth: "55%", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)", color: "var(--on-surface)", fontFamily: "'Outfit',sans-serif", fontSize: 14 }}>
+              <option value="">Device default</option>
+              {voices.map((v) => <option key={v.name} value={v.name}>{v.name}</option>)}
+            </select>
+          </div>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+          <label htmlFor="pb-repeat" style={{ flex: 1, fontFamily: "'Outfit',sans-serif", fontSize: 14, color: "var(--on-surface)" }}>Repeat each ayah</label>
+          <select id="pb-repeat" value={playback.repeat} onChange={(e) => setP({ repeat: Number(e.target.value) })}
+            style={{ maxWidth: "55%", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--outline-ghost)", background: "var(--surface-lowest)", color: "var(--on-surface)", fontFamily: "'Outfit',sans-serif", fontSize: 14 }}>
+            {REPEAT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+          <span style={{ flex: 1 }}>
+            <span style={{ display: "block", fontFamily: "'Outfit',sans-serif", fontSize: 14, color: "var(--on-surface)" }}>Keep reading aloud</span>
+            <span style={{ display: "block", fontFamily: "'Outfit',sans-serif", fontSize: 12, color: "var(--on-surface-variant)" }}>Moves to the next ayah after playback and repeats finish</span>
+          </span>
+          <input type="checkbox" checked={playback.autoAdvance} onChange={(e) => setP({ autoAdvance: e.target.checked })} style={{ width: 22, height: 22, accentColor: "var(--primary-container)" }} />
+        </label>
+      </div>
+      )}
 
       {/* Reading size */}
       <div style={settingsSectionStyle}>
@@ -211,7 +296,7 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
           overflow: "hidden",
         }}>
           <p style={{
-            fontFamily: "'Amiri','Scheherazade New',serif",
+            fontFamily: "'Noto Naskh Arabic','Amiri',serif",
             fontSize: "var(--ayah-size)", lineHeight: "var(--ayah-lh)",
             color: "var(--on-surface)", direction: "rtl", textAlign: "right",
             margin: "0 0 10px",
@@ -219,14 +304,14 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
             بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
           </p>
           <p style={{
-            fontFamily: "'Cormorant Garamond',serif", fontStyle: "italic",
+            fontFamily: "'Outfit',sans-serif", fontStyle: "italic",
             fontSize: "var(--translit-size)", lineHeight: "var(--translit-lh)",
             color: "var(--verse-translit)", margin: "0 0 8px",
           }}>
             Bismi Allahi ar-Rahmani ar-Raheem
           </p>
           <p style={{
-            fontFamily: "'Cormorant Garamond',serif",
+            fontFamily: "'Outfit',sans-serif",
             fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)",
             color: "var(--verse-translation)", margin: 0,
           }}>
@@ -260,7 +345,7 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
                 fontSize: 16, fontWeight: 600, lineHeight: 1,
                 cursor: disabled ? "not-allowed" : "pointer",
                 opacity: disabled ? 0.35 : 1,
-                fontFamily: "'DM Sans',sans-serif",
+                fontFamily: "'Outfit',sans-serif",
               }}
             >{glyph}</button>
           );
@@ -271,14 +356,14 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
               borderTop: "1px solid var(--outline-ghost)",
             }}>
               <span style={{
-                fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 500,
+                fontFamily: "'Outfit',sans-serif", fontSize: 14, fontWeight: 500,
                 color: "var(--on-surface)",
               }}>{label}</span>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 {stepBtn(-1, atMin, "−")}
                 <span style={{
                   minWidth: 52, textAlign: "center",
-                  fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600,
+                  fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: 600,
                   color: "var(--on-surface-variant)", fontVariantNumeric: "tabular-nums",
                 }}>{Math.round(value * 100)}%</span>
                 {stepBtn(1, atMax, "+")}
@@ -314,7 +399,7 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
                   ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)"
                   : "var(--surface-low)",
                 color: theme === opt.value ? "var(--on-primary)" : "var(--on-surface-variant)",
-                cursor: "pointer", fontFamily: "'DM Sans',sans-serif",
+                cursor: "pointer", fontFamily: "'Outfit',sans-serif",
                 fontSize: 13, fontWeight: 500, transition: "all 0.3s ease",
               }}
             >{opt.label}</button>
@@ -335,7 +420,7 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
                   ? "linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%)"
                   : "var(--surface-low)",
                 color: colorScheme === opt.value ? "var(--on-primary)" : "var(--on-surface-variant)",
-                cursor: "pointer", fontFamily: "'DM Sans',sans-serif",
+                cursor: "pointer", fontFamily: "'Outfit',sans-serif",
                 fontSize: 13, fontWeight: 500, transition: "all 0.3s ease",
               }}
             >{opt.label}</button>

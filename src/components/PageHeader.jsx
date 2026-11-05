@@ -6,10 +6,10 @@ const iconBtnStyle = (active) => ({
   background: active ? "var(--primary-light)" : "var(--surface-low)",
   border: active ? "1px solid var(--primary-container)" : "1px solid transparent",
   borderRadius: "50%",
-  width: 38, height: 38,
+  width: 40, height: 40,
   display: "flex", alignItems: "center", justifyContent: "center",
   cursor: "pointer",
-  color: active ? "var(--primary-container)" : "var(--on-surface-variant)",
+  color: active ? "var(--ink-accent)" : "var(--on-surface-variant)",
   fontSize: 17,
   flexShrink: 0,
   transition: "background 0.3s ease, color 0.3s ease, border-color 0.3s ease",
@@ -41,7 +41,7 @@ export default function PageHeader({ title, subtitle, onSettings, actions = [] }
               onMouseEnter={() => setShowTip(true)} 
               onMouseLeave={() => setShowTip(false)}
               onClick={() => setShowTip(!showTip)}
-              style={{ cursor: "pointer", color: "var(--primary-container)", fontSize: 18, marginTop: 4, opacity: 0.8 }}
+              style={{ cursor: "pointer", color: "var(--ink-accent)", fontSize: 18, marginTop: 4, opacity: 0.8 }}
               title="How to use this page"
             >
               ℹ️
@@ -56,8 +56,8 @@ export default function PageHeader({ title, subtitle, onSettings, actions = [] }
             padding: "16px", borderRadius: 12, boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
             width: 250, 
           }}>
-            <h4 style={{ margin: "0 0 8px 0", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "var(--on-surface)" }}>How to use this page</h4>
-            <ul style={{ margin: 0, paddingLeft: 18, color: "var(--on-surface-variant)", fontSize: 12, fontFamily: "'DM Sans',sans-serif", lineHeight: 1.6 }}>
+            <h4 style={{ margin: "0 0 8px 0", fontFamily: "'Outfit',sans-serif", fontSize: 13, color: "var(--on-surface)" }}>How to use this page</h4>
+            <ul style={{ margin: 0, paddingLeft: 18, color: "var(--on-surface-variant)", fontSize: 12, fontFamily: "'Outfit',sans-serif", lineHeight: 1.6 }}>
               {tooltipText.split('\n').map((line, i) => <li key={i}>{line}</li>)}
             </ul>
           </div>
@@ -92,7 +92,10 @@ export default function PageHeader({ title, subtitle, onSettings, actions = [] }
             onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.color = "var(--primary-container)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface-low)"; e.currentTarget.style.color = "var(--on-surface-variant)"; }}
           >
-            ⚙️
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+            </svg>
           </button>
         )}
       </div>

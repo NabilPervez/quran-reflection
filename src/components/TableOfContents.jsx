@@ -75,7 +75,7 @@ export default function TableOfContents({ current, onSelect, onClose }) {
             </h1>
           </div>
           <p style={{
-            color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif",
+            color: "var(--on-surface-variant)", fontFamily: "'Outfit',sans-serif",
             fontSize: 13, margin: "0 0 var(--chrome-gap) 46px",
           }}>
             {surah[2]} ayat — choose where to start
@@ -87,8 +87,8 @@ export default function TableOfContents({ current, onSelect, onClose }) {
               width: "100%", padding: "14px 18px", marginBottom: "var(--block-gap)",
               borderRadius: 12, cursor: "pointer", textAlign: "left",
               border: "1px solid var(--primary-container)",
-              background: "var(--primary-light)", color: "var(--primary-container)",
-              fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600,
+              background: "var(--primary-light)", color: "var(--ink-accent)",
+              fontFamily: "'Outfit',sans-serif", fontSize: 14, fontWeight: 600,
             }}
           >
             Read from the beginning
@@ -112,7 +112,7 @@ export default function TableOfContents({ current, onSelect, onClose }) {
                     border: `1px solid ${isCurrent ? "var(--primary-container)" : "var(--outline-ghost)"}`,
                     background: isCurrent ? "var(--primary-light)" : "var(--surface-lowest)",
                     color: isCurrent ? "var(--primary-container)" : "var(--on-surface)",
-                    fontFamily: "'DM Sans',sans-serif", fontSize: 14,
+                    fontFamily: "'Outfit',sans-serif", fontSize: 14,
                     fontWeight: isCurrent ? 700 : 500,
                     fontVariantNumeric: "tabular-nums",
                     transition: "all 0.2s ease",
@@ -144,7 +144,7 @@ export default function TableOfContents({ current, onSelect, onClose }) {
           {/* Juz shortcuts */}
           <div style={{ marginBottom: "var(--block-gap)" }}>
             <p style={{
-              fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 600,
+              fontFamily: "'Outfit',sans-serif", fontSize: 11, fontWeight: 600,
               letterSpacing: "0.08em", textTransform: "uppercase",
               color: "var(--on-surface-variant)", margin: "0 0 10px",
             }}>Jump to Juz</p>
@@ -158,7 +158,7 @@ export default function TableOfContents({ current, onSelect, onClose }) {
                     minWidth: 38, padding: "7px 10px", borderRadius: 40, cursor: "pointer",
                     border: "1px solid var(--outline-ghost)", background: "transparent",
                     color: "var(--on-surface-variant)",
-                    fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600,
+                    fontFamily: "'Outfit',sans-serif", fontSize: 12, fontWeight: 600,
                     fontVariantNumeric: "tabular-nums", transition: "all 0.2s ease",
                   }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; e.currentTarget.style.color = "var(--primary-container)"; }}
@@ -169,7 +169,7 @@ export default function TableOfContents({ current, onSelect, onClose }) {
           </div>
 
           {filtered.length === 0 && (
-            <p style={{ color: "var(--on-surface-variant)", fontFamily: "'DM Sans',sans-serif", fontSize: 14 }}>
+            <p style={{ color: "var(--on-surface-variant)", fontFamily: "'Outfit',sans-serif", fontSize: 14 }}>
               No surah matches that search.
             </p>
           )}
@@ -193,16 +193,16 @@ export default function TableOfContents({ current, onSelect, onClose }) {
                 >
                   <span style={{
                     flexShrink: 0, minWidth: 30, textAlign: "center",
-                    color: "var(--primary-container)", fontWeight: 700, fontSize: 12,
-                    fontFamily: "'DM Sans',sans-serif", fontVariantNumeric: "tabular-nums",
+                    color: "var(--ink-accent)", fontWeight: 700, fontSize: 12,
+                    fontFamily: "'Outfit',sans-serif", fontVariantNumeric: "tabular-nums",
                   }}>{num}</span>
                   <span style={{
                     flex: 1, color: "var(--on-surface)", fontSize: 15,
-                    fontFamily: "'DM Sans',sans-serif", fontWeight: 500,
+                    fontFamily: "'Outfit',sans-serif", fontWeight: 500,
                   }}>{name}</span>
                   <span style={{
                     color: "var(--on-surface-variant)", fontSize: 12,
-                    fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap",
+                    fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap",
                   }}>{count} ayat</span>
                   <span style={{ color: "var(--on-surface-variant)", fontSize: 14, opacity: 0.6 }}>&rsaquo;</span>
                 </button>

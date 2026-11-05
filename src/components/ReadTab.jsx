@@ -7,6 +7,8 @@ import PageHeader from "./PageHeader";
 import AyahAudio from "./AyahAudio";
 import TableOfContents from "./TableOfContents";
 import LayerMenu from "./LayerMenu";
+import EnglishSpeak from "./EnglishSpeak";
+import { repeatLabel, nextRepeat, stopSpeaking } from "../lib/playback";
 
 // ── Pre-compute cumulative ayah ordinals for the progress bar ─────────────────
 // AYAH_ORDINALS[surahNum] = ordinal (1-based) of the first ayah in that surah
@@ -33,7 +35,12 @@ function skeletonLine(widthPct) {
   };
 }
 
-export default function ReadTab({ translation, reciter, onReflect, showToast, onSettings }) {
+export default function ReadTab({ translation, reciter, onReflect, showToast, onSettings, playback, setPlayback }) {
+  // Hands-free reading: which player should auto-start on the next ayah
+  const [autoKind, setAutoKind] = useState(null);
+  const [arNonce, setArNonce] = useState(0);
+  const enStopRef = useRef(null);
+  useEffect(() => () => stopSpeaking(), []);
   const [currentPos, setCurrentPos] = useState(() => {
     const saved = localStorage.getItem(BOOKMARK_KEY);
     if (saved) {
@@ -182,13 +189,23 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
     }
   }, [currentPos, goToAyah]);
 
+  // Manual navigation cancels hands-free mode and any speech
+  const manualNext = useCallback(() => { setAutoKind(null); enStopRef.current?.(); nextAyah(); }, [nextAyah]);
+  const manualPrev = useCallback(() => { setAutoKind(null); enStopRef.current?.(); prevAyah(); }, [prevAyah]);
+  const handleComplete = (kind) => {
+    if (!playback?.autoAdvance) return;
+    if (currentPos.surah === 114 && currentPos.ayah === 6) return;
+    setAutoKind(kind);
+    nextAyah();
+  };
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e) => {
       const tag = document.activeElement?.tagName;
       const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
-      if (e.key === "ArrowLeft"  && !isTyping) { e.preventDefault(); prevAyah(); }
-      if (e.key === "ArrowRight" && !isTyping) { e.preventDefault(); nextAyah(); }
+      if (e.key === "ArrowLeft"  && !isTyping) { e.preventDefault(); manualPrev(); }
+      if (e.key === "ArrowRight" && !isTyping) { e.preventDefault(); manualNext(); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -205,7 +222,7 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
       const dy = Math.abs(e.changedTouches[0].clientY - touchStartRef.current.y);
       touchStartRef.current = null;
       if (Math.abs(dx) < 60 || dy > 40) return; // not a clean horizontal swipe
-      if (dx < 0) nextAyah(); else prevAyah();
+      if (dx < 0) manualNext(); else manualPrev();
     };
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchend", onTouchEnd, { passive: true });
@@ -213,7 +230,7 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchEnd);
     };
-  }, [nextAyah, prevAyah]);
+  }, [manualNext, manualPrev]);
 
   const toggleBookmark = () => {
     const currentStr = `${currentPos.surah}:${currentPos.ayah}`;
@@ -231,8 +248,8 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
     padding: "7px 16px", borderRadius: 40,
     border: "1px solid var(--outline-ghost)",
     background: active ? "var(--primary-light)" : "transparent",
-    color: "var(--primary-container)",
-    fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600,
+    color: "var(--ink-accent)",
+    fontFamily: "'Outfit',sans-serif", fontSize: 12, fontWeight: 600,
     cursor: "pointer", transition: "all 0.3s ease",
   });
 
@@ -302,8 +319,8 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
             marginBottom: "var(--block-gap)",
             padding: "6px 14px", borderRadius: 40,
             background: "var(--surface-lowest)", border: "1px solid var(--outline-ghost)",
-            color: "var(--primary-container)",
-            fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600,
+            color: "var(--ink-accent)",
+            fontFamily: "'Outfit',sans-serif", fontSize: 12, fontWeight: 600,
             cursor: "pointer", transition: "all 0.3s ease",
           }}
           onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-light)"}
@@ -334,7 +351,7 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
       {/* Error */}
       {fetchError && !loading && (
         <div style={{ ...verseAreaStyle, background: "#fef2f2" }}>
-          <p style={{ color: "#b91c1c", fontFamily: "'DM Sans',sans-serif", fontSize: 13, margin: 0 }}>⚠ {fetchError}</p>
+          <p style={{ color: "#b91c1c", fontFamily: "'Outfit',sans-serif", fontSize: 13, margin: 0 }}>⚠ {fetchError}</p>
         </div>
       )}
 
@@ -354,7 +371,7 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
                     display: "flex", alignItems: "center", gap: 8,
                     flexWrap: "wrap", marginBottom: "var(--block-gap)",
                   }}>
-                    <span style={{ background: "var(--primary-light)", color: "var(--primary-container)", fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>
+                    <span style={{ background: "var(--primary-light)", color: "var(--ink-accent)", fontFamily: "'Outfit',sans-serif", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.06em" }}>
                       {ayah.surahNum}:{ayah.ayahNum}
                     </span>
                     <button
@@ -363,8 +380,8 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
                         background: showTafsir ? "var(--primary-light)" : "transparent",
                         border: "1px solid var(--primary-container)", borderRadius: 20,
                         padding: "3px 10px", fontSize: 10, fontWeight: 700,
-                        color: "var(--primary-container)", cursor: "pointer",
-                        fontFamily: "'DM Sans',sans-serif", letterSpacing: "0.06em",
+                        color: "var(--ink-accent)", cursor: "pointer",
+                        fontFamily: "'Outfit',sans-serif", letterSpacing: "0.06em",
                         transition: "all 0.2s ease",
                       }}
                     >
@@ -381,41 +398,58 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
 
                   {/* Arabic */}
                   {showArabic && (
-                  <p style={{ fontFamily: "'Amiri','Scheherazade New',serif", fontSize: "var(--ayah-size)", lineHeight: "var(--ayah-lh)", color: "var(--on-surface)", direction: "rtl", textAlign: "right", margin: "0 0 var(--block-gap)", textWrap: "pretty" }}>
+                  <p style={{ fontFamily: "'Noto Naskh Arabic','Amiri',serif", fontSize: "var(--ayah-size)", lineHeight: "var(--ayah-lh)", color: "var(--on-surface)", direction: "rtl", textAlign: "right", margin: "0 0 var(--block-gap)", textWrap: "pretty" }}>
                     {ayah.arabic}
                   </p>
                   )}
 
                   {/* Transliteration */}
                   {showTranslit && ayah.transliteration && (
-                    <p style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: "var(--translit-size)", lineHeight: "var(--translit-lh)", color: "var(--verse-translit)", fontStyle: "italic", margin: "0 0 14px", maxWidth: "var(--trans-measure)" }}>
+                    <p style={{ fontFamily: "\'Outfit\',sans-serif", fontSize: "var(--translit-size)", lineHeight: "var(--translit-lh)", color: "var(--verse-translit)", fontStyle: "italic", margin: "0 0 14px", maxWidth: "var(--trans-measure)" }}>
                       {ayah.transliteration}
                     </p>
                   )}
 
                   {/* English — text */}
                   {showEnglish && (
-                  <span style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)", color: "var(--verse-translation)", display: "block", marginBottom: "var(--block-gap)", fontWeight: 400, maxWidth: "var(--trans-measure)" }}>
+                  <span style={{ fontFamily: "\'Outfit\',sans-serif", fontSize: "var(--trans-size)", lineHeight: "var(--trans-lh)", color: "var(--verse-translation)", display: "block", marginBottom: "var(--block-gap)", fontWeight: 400, maxWidth: "var(--trans-measure)" }}>
                     {ayah.english}
                   </span>
                   )}
 
                   {showTafsir && (
                     <div style={{ padding: "16px", marginBottom: "20px", background: "var(--surface-lowest)", borderRadius: 8, border: "1px solid var(--outline-ghost)" }}>
-                      <h4 style={{ margin: "0 0 8px 0", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "var(--primary-container)", textTransform: "uppercase" }}>Tafsir (Ibn Kathir)</h4>
-                      <div style={{ fontFamily: "\'Cormorant Garamond\',serif", fontSize: "var(--trans-size)", color: "var(--verse-translation)", lineHeight: "var(--trans-lh)", maxWidth: "var(--trans-measure)" }} dangerouslySetInnerHTML={{ __html: ayah.tafsir }} />
+                      <h4 style={{ margin: "0 0 8px 0", fontFamily: "'Outfit',sans-serif", fontSize: 12, color: "var(--ink-accent)", textTransform: "uppercase" }}>Tafsir (Ibn Kathir)</h4>
+                      <div style={{ fontFamily: "\'Outfit\',sans-serif", fontSize: "var(--trans-size)", color: "var(--verse-translation)", lineHeight: "var(--trans-lh)", maxWidth: "var(--trans-measure)" }} dangerouslySetInnerHTML={{ __html: ayah.tafsir }} />
                     </div>
                   )}
 
                   {/* Action buttons */}
-                  <div style={{ display: "flex", gap: 8, flexWrap: "nowrap", justifyContent: "center", alignItems: "stretch" }}>
-                    {/* Listen button */}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", alignItems: "stretch" }}>
+                    {/* Arabic recitation — speed + repeat from Settings */}
                     <AyahAudio
-                      key={`audio-${ayah.verseKey}-${reciter}`}
+                      key={`audio-${ayah.verseKey}-${reciter}-${arNonce}`}
                       surahNum={ayah.surahNum}
                       ayahNum={ayah.ayahNum}
                       reciter={reciter}
+                      rate={playback?.arRate ?? 1}
+                      repeat={playback?.repeat ?? 1}
+                      autoStart={autoKind === "ar"}
+                      onPlayStart={() => { enStopRef.current?.(); setAutoKind((k) => (k === "ar" ? k : null)); }}
+                      onComplete={() => handleComplete("ar")}
                       onError={(msg) => showToast && showToast(msg, "error")}
+                    />
+                    {/* English TTS */}
+                    <EnglishSpeak
+                      key={`en-${ayah.verseKey}`}
+                      text={ayah.english}
+                      rate={playback?.enRate ?? 1}
+                      voice={playback?.enVoice ?? ""}
+                      repeat={playback?.repeat ?? 1}
+                      autoStart={autoKind === "en"}
+                      register={(fn) => { enStopRef.current = fn; }}
+                      onPlayStart={() => { setArNonce((n) => n + 1); setAutoKind((k) => (k === "en" ? k : null)); }}
+                      onComplete={() => handleComplete("en")}
                     />
                     {/* Favorite button */}
                     <button
@@ -436,6 +470,18 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
                     >
                       <span style={{ fontSize: 14 }}>✦</span> Reflect
                     </button>
+                    {/* Repeat — cycles Off / 3 / 5 / 10 / until stopped */}
+                    <button
+                      onClick={() => {
+                        const r = nextRepeat(playback?.repeat ?? 1);
+                        setPlayback?.((p) => ({ ...p, repeat: r }));
+                        showToast?.(r === 1 ? "Repeat off" : r === 0 ? "Repeats until you stop it" : `Repeats ${r} times`);
+                      }}
+                      aria-pressed={(playback?.repeat ?? 1) !== 1}
+                      style={chipBtn((playback?.repeat ?? 1) !== 1)}
+                    >
+                      <span style={{ fontSize: 14 }}>↻</span> {repeatLabel(playback?.repeat ?? 1)}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -447,12 +493,12 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
       {/* Pagination controls */}
       {!fetchError && (
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: "var(--chrome-gap)" }}>
-          <button id="prev-ayah" onClick={prevAyah} disabled={currentPos.surah === 1 && currentPos.ayah === 1 || loading}
+          <button id="prev-ayah" onClick={manualPrev} disabled={currentPos.surah === 1 && currentPos.ayah === 1 || loading}
             style={{ ...secondaryBtnStyle, padding: "12px 24px", borderRadius: 40, opacity: (currentPos.surah === 1 && currentPos.ayah === 1 || loading) ? 0.35 : 1, cursor: (currentPos.surah === 1 && currentPos.ayah === 1 || loading) ? "not-allowed" : "pointer", flex: 1 }}
           >
             ← Prev Ayah
           </button>
-          <button id="next-ayah" onClick={nextAyah} disabled={currentPos.surah === 114 && currentPos.ayah === 6 || loading}
+          <button id="next-ayah" onClick={manualNext} disabled={currentPos.surah === 114 && currentPos.ayah === 6 || loading}
             style={{ ...primaryBtnStyle, padding: "12px 24px", borderRadius: 40, opacity: (currentPos.surah === 114 && currentPos.ayah === 6 || loading) ? 0.35 : 1, cursor: (currentPos.surah === 114 && currentPos.ayah === 6 || loading) ? "not-allowed" : "pointer", flex: 1 }}
           >
             Next Ayah →

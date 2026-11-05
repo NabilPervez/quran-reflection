@@ -39,7 +39,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Noto+Naskh+Arabic:wght@400;500&family=Amiri:wght@400&display=swap"
     />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -403,7 +403,8 @@
          applied separately, since that silently lowers contrast again. */
       :root {
         --verse-translit:     color-mix(in srgb, var(--on-surface) 70%, var(--primary-container));
-        --verse-translation:  color-mix(in srgb, var(--on-surface) 80%, var(--surface-lowest));
+        --verse-translation:  var(--on-surface); /* Nabil, 2026-11-05: full-contrast translation for readability */
+        --ink-accent:         color-mix(in srgb, var(--primary-container) 68%, var(--on-surface)); /* accent text that passes contrast on every scheme */
       }
 
       /* Effective reading sizes = responsive base x the user's scale */
@@ -425,7 +426,7 @@
       body {
         background: var(--surface-low);
         color: var(--on-surface);
-        font-family: 'DM Sans', sans-serif;
+        font-family: 'Outfit', sans-serif;
       }
       select option { background: var(--surface-lowest); color: var(--on-surface); }
 
