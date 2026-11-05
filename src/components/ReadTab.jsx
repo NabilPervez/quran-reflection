@@ -288,7 +288,7 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
   const rep = playback?.repeat ?? 1;
 
   return (
-    <div style={pageContainerStyle} ref={topRef}>
+    <div style={{ ...pageContainerStyle, paddingTop: 0 }} ref={topRef}>
       {/* Sticky surah bar — tap the name for contents (Nabil, 2026-11-05: prototype layout) */}
       <div className="v2-read-top">
         <div className="row1">
@@ -303,7 +303,7 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
         <div className="v2-progress" aria-label={`${readingProgress.toFixed(2)}% of the Quran`}><i style={{ width: `${Math.max(0.5, readingProgress)}%` }} /></div>
       </div>
 
-      <div className="v2-chips" style={{ margin: "16px 0 0" }}>
+      <div className="v2-chips" style={{ margin: "8px 0 0" }}>
         {layerChips.map((c) => (
           <button key={c.key} className="v2-chip" aria-pressed={c.on}
             disabled={c.key === "translit" && ayah && !ayah.transliteration}
