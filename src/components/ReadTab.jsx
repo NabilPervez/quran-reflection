@@ -1,3 +1,4 @@
+import { PRESET_TAGS } from "../lib/tags";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { fetchAyah } from "../lib/api";
 import { dbGetAll, dbAdd, dbDelete, dbUpdate } from "../lib/db";
@@ -27,7 +28,6 @@ const TOTAL_AYAHS = 6236;
 
 const BOOKMARK_KEY = "qr_bookmark_ayah";
 
-const PRESET_TAGS = ["Gratitude", "Dua", "Lesson", "Patience", "Tawakkul", "Tawbah", "Reflection", "Reminder"];
 
 function skeletonLine(widthPct) {
   return {
@@ -294,7 +294,7 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
         <div className="row1">
           <button className="v2-surah-btn" id="contents-btn" onClick={() => setShowContents(true)} aria-label="Choose surah">
             <b>{sData?.[1] ?? ""} ▾</b>
-            <span>Surah {currentPos.surah} · {sData?.[2]} ayahs</span>
+            <span>{currentPos.surah}:{currentPos.ayah} · Ayah {currentPos.ayah} of {sData?.[2]}</span>
           </button>
           <button className="v2-icon-btn" onClick={() => bumpSize(-1)} aria-label="Smaller text"><IcMinus /></button>
           <button className="v2-icon-btn" onClick={() => bumpSize(1)} aria-label="Larger text"><IcPlus /></button>
@@ -335,9 +335,6 @@ export default function ReadTab({ translation, reciter, onReflect, showToast, on
 
       {!loading && !fetchError && ayah && (
         <div key={contentKey} className="v2-focus">
-          <div className="v2-focus-head">
-            <span className="v2-ayah-no">{ayah.surahNum}:{ayah.ayahNum}</span>
-          </div>
           {showArabic && <p className="v2-ar">{ayah.arabic}</p>}
           {showTranslit && ayah.transliteration && <p className="v2-tr">{ayah.transliteration}</p>}
           {showEnglish && <p className="v2-en">{ayah.english}</p>}

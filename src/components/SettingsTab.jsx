@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { dbGetAll, dbAdd, dbClear } from "../lib/db";
+import { dbGetAll, dbAdd, dbClear, dbUpdate } from "../lib/db";
 import { secondaryBtnStyle, settingsSectionStyle, settingsTitleStyle, settingsDescStyle, pageTitleStyle, pageSubtitleStyle , pageContainerStyle } from "../lib/styles";
 import ConfirmModal from "./ConfirmModal";
 import { IcBack } from "./icons";
@@ -84,15 +84,28 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
       const text = await file.text();
       const records = JSON.parse(text);
       if (!Array.isArray(records)) throw new Error("Invalid format");
-      let count = 0;
+      // Re-importing an export updates matching entries (e.g. new categories)
+      // instead of adding duplicates.
+      const existing = await dbGetAll();
+      const keyOf = (e) => `${e.createdAt}|${Number(e.surahNumber)}|${Number(e.startAyah)}|${Number(e.endAyah)}`;
+      const byKey = new Map(existing.map((e) => [keyOf(e), e]));
+      let count = 0, updated = 0;
       for (const r of records) {
         const clean = normalizeRecord(r);
         if (!clean) continue;
+        const match = byKey.get(keyOf(clean));
+        if (match) {
+          const tags = [...new Set([...(match.tags || []), ...(clean.tags || [])])];
+          if (tags.length !== (match.tags || []).length) { await dbUpdate({ ...match, tags }); updated++; }
+          continue;
+        }
         await dbAdd(clean);
         count++;
       }
       setEntryCount((c) => (c ?? 0) + count);
-      showToast(`Imported ${count} reflection${count !== 1 ? "s" : ""} ✦`);
+      showToast(updated
+        ? `Updated ${updated}, added ${count} new`
+        : `Imported ${count} reflection${count !== 1 ? "s" : ""} ✦`);
     } catch {
       showToast("Import failed — invalid JSON file.", "error");
     }
@@ -125,7 +138,9 @@ export default function SettingsTab({ onOpenPage, translation, setTranslation, r
         count++;
       }
       setEntryCount((c) => (c ?? 0) + count);
-      showToast(`Imported ${count} reflection${count !== 1 ? "s" : ""} ✦`);
+      showToast(updated
+        ? `Updated ${updated}, added ${count} new`
+        : `Imported ${count} reflection${count !== 1 ? "s" : ""} ✦`);
     } catch {
       showToast("Import failed — invalid CSV file.", "error");
     }

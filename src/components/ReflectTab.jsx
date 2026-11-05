@@ -1,6 +1,6 @@
+import { PRESET_TAGS } from "../lib/tags";
 import { useState, useEffect, useRef } from "react";
 
-const PRESET_TAGS = ["Gratitude", "Dua", "Lesson", "Patience", "Tawakkul", "Tawbah", "Reflection", "Reminder"];
 import { fetchVerses } from "../lib/api";
 import { dbAdd } from "../lib/db";
 import { SURAHS } from "../lib/data";

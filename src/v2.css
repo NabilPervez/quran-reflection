@@ -35,7 +35,7 @@
 .v2-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* Ayah actions: icon + label, no boxes */
-.v2-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 6px; margin-top: 28px; }
+.v2-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 6px; margin-top: 20px; }
 .v2-action { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 0; background: none; border-radius: 999px;
   font: 500 15px/1 'Outfit', sans-serif; color: var(--on-surface-variant); cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .v2-action svg { width: 20px; height: 20px; flex-shrink: 0; }
@@ -61,13 +61,14 @@
 .v2-progress { height: 4px; border-radius: 4px; background: var(--outline-ghost); overflow: hidden; margin: 12px 0 0; }
 .v2-progress > i { display: block; height: 100%; background: var(--primary-container); border-radius: 4px; transition: width .5s cubic-bezier(.16,1,.3,1); }
 .v2-read-top .v2-progress { margin: 10px 0 12px; }
-.v2-focus { min-height: 48vh; display: flex; flex-direction: column; justify-content: center; padding: 24px 0 8px; animation: v2rise .6s cubic-bezier(.16,1,.3,1); }
+/* Nabil, 2026-11-05: no forced height or ayah pill — less scrolling on long ayahs */
+.v2-focus { display: flex; flex-direction: column; padding: 20px 0 0; animation: v2rise .6s cubic-bezier(.16,1,.3,1); }
 .v2-focus-head { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 .v2-tafsir { margin: 20px auto 0; max-width: 34em; border-left: 2px solid var(--primary-container); padding: 4px 0 4px 16px;
   font: 400 15px/1.75 'Outfit', sans-serif; color: var(--on-surface-variant); text-align: left; }
 .v2-tafsir h4 { margin: 0 0 6px; font: 500 12px/1 'Outfit', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-accent); }
-.v2-pager { position: sticky; bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom, 0px)); z-index: 30;
-  display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 24px; }
+/* Not sticky: a pinned pager covered the action buttons on long ayahs */
+.v2-pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 24px; }
 .v2-pager .v2-btn { min-width: 0; padding: 14px 20px; }
 .v2-pager .count { font: 400 14px/1 'Outfit', sans-serif; color: var(--on-surface-variant); font-variant-numeric: tabular-nums; white-space: nowrap; }
 @keyframes v2rise { from { transform: translateY(14px); opacity: .4 } to { transform: none; opacity: 1 } }

@@ -1,10 +1,10 @@
+import { PRESET_TAGS } from "../lib/tags";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { dbGetAll, dbDelete, dbUpdate } from "../lib/db";
 import { cardStyle, chipBtnStyle, primaryBtnStyle, ghostBtnStyle, underlineInputStyle , pageContainerStyle } from "../lib/styles";
 import PageHeader from "./PageHeader";
 import ConfirmModal from "./ConfirmModal";
 
-const PRESET_TAGS = ["Gratitude", "Dua", "Lesson", "Patience", "Tawakkul", "Tawbah", "Reflection", "Reminder"];
 
 /** H4 — Share a reflection as formatted text using Web Share API with clipboard fallback */
 async function shareEntry(entry, showToast) {
